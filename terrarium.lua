@@ -5,6 +5,7 @@
 -- E1 choose a part
 -- E2 E3 shape it
 -- K2 swap its module
+-- hold K2 + E2: its variant
 -- K3 gesture
 -- hold K1: peek + settings
 --
@@ -65,6 +66,7 @@ end
 function sc.wind() return math.max(0, sc.cur(1).wind(sc)) end
 
 local sel, focus_t, k1 = 1, 0, false
+local k2, k2_turned = false, false -- K2 tap swaps the module; hold K2 + E2 picks its variant
 local toast, toast_t = "", 0
 local set_cursor = 1
 local dirty_sound = true
@@ -322,6 +324,18 @@ function enc(n, d)
     else params:delta(SETTINGS[set_cursor], d) end
     return
   end
+  if k2 and n == 2 then -- holding K2: the module's variant (Plaits engine, Rings model...)
+    k2_turned = true
+    local mod = sc.cur(sel)
+    if mod.variant then
+      params:delta(mod.variant, d)
+      say(params:string(mod.variant))
+    else
+      say(mod.name .. ": one kind")
+    end
+    focus()
+    return
+  end
   if n == 1 then
     sel = H.clamp(sel + d, 1, 4)
   else
@@ -340,12 +354,22 @@ function key(n, z)
     k1 = z == 1
     return
   end
+  if n == 2 then -- swap on release, unless E2 picked a variant while it was held
+    if z == 1 then
+      k2, k2_turned = true, false
+      return
+    end
+    k2 = false
+    if not k2_turned then
+      local L = LAYERS[sel]
+      params:set(L.id .. "_kind", params:get(L.id .. "_kind") % #L.mods + 1)
+      say(sc.cur(sel).name)
+    end
+    focus()
+    return
+  end
   if z == 0 then return end
-  if n == 2 then
-    local L = LAYERS[sel]
-    params:set(L.id .. "_kind", params:get(L.id .. "_kind") % #L.mods + 1)
-    say(sc.cur(sel).name)
-  elseif n == 3 then
+  if n == 3 then
     if sel == 1 then
       Brain.new_phrase(sc.t)
       say("new phrase")

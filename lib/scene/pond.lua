@@ -13,6 +13,7 @@ local pond = {
     { id = "damping",   name = "damping",   default = 0.35 },
   },
   extra_count = 1,
+  variant = "pond_kind",
   rings = {},
 }
 

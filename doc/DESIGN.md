@@ -43,6 +43,10 @@ condensing on it (more beads at faster rates, some run down), and frost growing 
 corners while the air is frozen. The weather's wind (rain's change, or a wilder storm) also
 pushes the clouds and fireflies, so the sky and the grass move together.
 
+Hold K2 and turn E2 to pick the module's variant: the Plaits engine for the meadow (each grows
+its own flower), the DX bank for crystals, the Rings model for the pond, the mode for clouds. A K2
+tap still swaps the module (on release, so the hold can't swap it).
+
 K3 is a gesture per part: new phrase (brain), strike (voice, color), freeze (air).
 E1 picks a part, and the others dim for a moment so it's clear which one you're steering.
 
@@ -88,6 +92,10 @@ E1 picks a part, and the others dim for a moment so it's clear which one you're 
   named on screen for how they move (fronts, gusts, tides, squalls; not "seasons", which is
   taken), one drift setting scaled per attractor so slow/medium/fast feel alike. Off by default, like
   seasons. The params stay plain, so norns mods and MIDI still work on top.
+- **One gesture for variants (October 2026).** The Plaits engine, DX bank, Rings model and Clouds
+  mode used to be PARAMS-only. Hold K2 + E2 reaches all of them the same way, keeps harmonics and
+  timbre on E2/E3 for every engine, and leaves K3 free for its gesture. The meadow's flora list
+  grew to twelve melodic Plaits engines.
 - **nb voices get their own slot later ("visitors")** rather than hiding behind crystals. nb voices
   each define their own parameters, so the scene can only promise E2 → the voice's generic
   `modulate`, E3 → note length.

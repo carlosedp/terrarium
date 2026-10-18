@@ -36,9 +36,26 @@ lightning double strikes and new notes accent higher).
 | E3 timbre | `timbre` | 0.1 → 0.9 |
 | E3 timbre | `morph` | 0.35 → 0.65 (follows timbre, narrower) |
 
-- **Fixed:** `engine` from a curated "flora" list in PARAMS. Suggested default: **12 modal**.
-  The others: 11 string, 4 additive, 5 wavetable, 22 string machine.
-  The drums, speech, chord and noise engines don't fit a melodic meadow.
+- **Variant (hold K2 + E2):** `engine` from the "flora" list of melodic Plaits engines, each drawn
+  as its own flower. Default **12 modal**. Numbers are MiPlaits' (0–15 classic, 16–23 newer):
+
+  | Flora | Engine | Flower |
+  | --- | --- | --- |
+  | modal | 12 | bell |
+  | string | 11 | seed spike |
+  | additive | 4 | petals |
+  | wavetable | 5 | tulip |
+  | string machine | 22 | umbel |
+  | chords | 6 | umbel |
+  | va filter | 16 | tulip |
+  | phase dist | 17 | star |
+  | wave terrain | 21 | dandelion |
+  | waveshaper | 1 | star |
+  | fm | 2 | star |
+  | grain | 3 | dandelion |
+
+  New entries go at the end so saved PSETs keep their flora. Left out: speech, swarm, noise,
+  particle, the drums and chiptune; the 6-op banks (18–20) belong to crystals.
 - **Fixed:** `lpg_colour` 0.5. Each note fires `trigger`, with `level` set from accent.
 - **Coupled:** `decay` ← brain rate: fast rain plays shorter notes (0.75 at slow rate → 0.4 at fast).
 - Polyphony: Plaits is mono per instance. Run 2–3 instances round-robin so notes ring over each other.
@@ -109,7 +126,7 @@ and fires `trig`.
 | E3 size | `size` | 0.1 → 0.85 |
 | E3 size | `tex` | 0.3 → 0.7 |
 
-- **Fixed:** `mode` 0 granular (PARAMS "cloud kind": stretch, looping delay, spectral).
+- **Variant (hold K2 + E2):** `mode`: granular (default), pitch shifter, looping delay, spectral.
   `drywet` 0.45, `spread` 0.7, `rvb` 0.3, `pos` drifts slowly (a 20 s LFO, 0.3 ↔ 0.7) so the clouds move.
 - **Coupled:** `pit` jitter ← brain change (±0 → ±0.3 semitones of drift), so windy weather wobbles the grains.
 - **K3:** `freeze`.

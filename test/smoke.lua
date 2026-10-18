@@ -34,6 +34,27 @@ for layer = 1, 4 do
   end
 end
 
+-- hold K2 + E2 picks the variant and doesn't swap the module; a K2 tap still swaps
+for layer = 1, 4 do
+  turn(1, -4); turn(1, 1, layer - 1)
+  local kind_id = names[layer] .. "_kind"
+  local before = params:get(kind_id)
+  key(2, 1); turn(2, 1, 2); key(2, 0)
+  assert(params:get(kind_id) == before, names[layer] .. ": hold K2 + E2 swapped the module")
+  press(2)
+  assert(params:get(kind_id) ~= before or #params:lookup(kind_id).options == 1, names[layer] .. ": K2 tap did not swap")
+  press(2); if #params:lookup(kind_id).options == 3 then press(2) end -- back to the first module
+end
+check("hold K2 + E2 variants")
+
+-- every meadow flora (Plaits engine) blooms its own flower
+turn(1, -4); turn(1, 1)
+for f = 1, #params:lookup("meadow_flora").options do
+  params:set("meadow_flora", f)
+  press(3); M.run(0.4)
+end
+check(("meadow: %d flora"):format(#params:lookup("meadow_flora").options))
+
 -- settings while holding K1: every setting, both directions, plus seasons running
 hold1(function()
   for s = 1, 5 do

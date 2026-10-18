@@ -219,7 +219,7 @@ kbd { font-family: var(--font-mono); font-size: 0.85em; border: 1px solid var(--
           <span><kbd>A</kbd><kbd>S</kbd> E2</span>
           <span><kbd>Z</kbd><kbd>X</kbd> E3</span>
           <span><kbd>J</kbd> K1 hold</span>
-          <span><kbd>K</kbd> K2</span>
+          <span><kbd>K</kbd> K2 (hold + <kbd>A</kbd><kbd>S</kbd>: variant)</span>
           <span><kbd>L</kbd> K3</span>
         </div>
       </div>
@@ -250,7 +250,7 @@ kbd { font-family: var(--font-mono); font-size: 0.85em; border: 1px solid var(--
       </fieldset>
       <div class="layers" id="layers"></div>
       <div class="notes">
-        <p><strong>E1</strong> picks a part. Everything else dims for a moment so you can see which part you're steering. <strong>E2 and E3</strong> are that part's two macros. <strong>K2</strong> swaps its module. <strong>K3</strong> is a gesture: a new phrase on the brain, a manual strike on the voice and color, freeze on the air. Hold <strong>K1</strong> to peek at the parts and reach the settings: while it's held, E2 picks a setting and E3 changes it.</p>
+        <p><strong>E1</strong> picks a part. Everything else dims for a moment so you can see which part you're steering. <strong>E2 and E3</strong> are that part's two macros. <strong>K2</strong> swaps its module; hold <strong>K2</strong> and turn <strong>E2</strong> to pick the module's variant: the Plaits engine (each grows its own flower), the DX bank, the Rings model, the Clouds mode. <strong>K3</strong> is a gesture: a new phrase on the brain, a manual strike on the voice and color, freeze on the air. Hold <strong>K1</strong> to peek at the parts and reach the settings: while it's held, E2 picks a setting and E3 changes it.</p>
         <p>Every note is a place. Where an event lands across the screen sets its pitch within the key and scale from the settings, so a melody is something you can see. The brain keeps its phrase in a Turing Machine-style register: each stored note leaves a mark on the ground, and <strong>change</strong> sets how often notes get replaced, dropped to a rest, or added back. Turn change all the way down and the phrase repeats forever.</p>
         <p><strong>Seasons</strong> lets the key turn on its own. At the end of a phrase it moves to a close neighbor that shares all but one or two notes, like dorian to minor or C to G. Shared notes stay where they are, so the phrase carries on and only a note or two shifts. The key you set is home: the seasons drift away and keep finding their way back. Slow, steady and quick turn every 8, 4 or 2 phrases.</p>
         <p>The sounds here are rough Web Audio stand-ins. On norns each module would be the real mi-UGen (Plaits, Rings, Ripples, Clouds, Beads, MiVerb) or any nb voice, and the drawing code ports almost line for line to the norns screen API.</p>
@@ -342,8 +342,8 @@ const LAYERS = [
     { id: "rain",      name: "rain",      ugen: "clocked", sees: "Rain falls on a steady clock and plays where it lands. Puddles mark the notes of the phrase. More change brings wind, and the phrase starts to drift.", macros: [["rate", .45], ["change", .2]] },
     { id: "lightning", name: "lightning", ugen: "random",  sees: "Lightning strikes at random times, sometimes twice, and plays where it hits. Scorch marks hold the phrase, and an unchanged step strikes with the same bolt. More change, wilder storm.", macros: [["rate", .35], ["change", .3]] }]},
   { id: "voice", name: "voice", mods: [
-    { id: "meadow",   name: "meadow",   ugen: "Plaits",   sees: "Every note blooms a flower. Harmonics grow the grass, timbre adds petals.", macros: [["harmonics", .35], ["timbre", .5]] },
-    { id: "crystals", name: "crystals", ugen: "nb voice", sees: "Glassy FM spires that glint when struck. Ratio grows them taller and sharper, index throws more sparks.", macros: [["ratio", .4], ["index", .45]] }]},
+    { id: "meadow",   name: "meadow",   ugen: "Plaits",   sees: "Every note blooms a flower, and each flora (Plaits engine) grows its own kind. Harmonics grow the grass, timbre adds petals.", macros: [["harmonics", .35], ["timbre", .5]] },
+    { id: "crystals", name: "crystals", ugen: "Plaits 6-op", sees: "Glassy FM spires that glint when struck. Ratio grows them taller and sharper, index throws more sparks.", macros: [["ratio", .4], ["index", .45]] }]},
   { id: "color", name: "color", mods: [
     { id: "pond", name: "pond", ugen: "Rings",   sees: "Each note rings out as ripples. Structure adds rings, damping shortens how long they spread.", macros: [["structure", .5], ["damping", .35]] },
     { id: "fog",  name: "fog",  ugen: "Ripples", sees: "A low filter is a foggy, dim scene. Clarity lifts the fog and opens the filter, shimmer waves it as resonance rises.", macros: [["clarity", .55], ["shimmer", .3]] }]},
@@ -353,6 +353,15 @@ const LAYERS = [
     { id: "mountains", name: "mountains", ugen: "MiVerb", sees: "Bigger rooms are bigger ranges. Each note echoes back off the far ridge.", macros: [["size", .45], ["echo", .45]] }]}
 ];
 for (const L of LAYERS) for (const m of L.mods) m.macros = m.macros.map(([n, v]) => ({ n, v }));
+// variants: hold K2 + E2 (the Plaits engine, the DX bank, the Rings model, the Clouds mode)
+const FLORA_SHAPE = ["bell", "spike", "petals", "tulip", "umbel", "umbel", "tulip", "star", "puff", "star", "star", "puff"];
+const VARIANTS = {
+  meadow: ["modal", "string", "additive", "wavetable", "string machine", "chords", "va filter", "phase dist", "wave terrain", "waveshaper", "fm", "grain"],
+  crystals: ["dx bank 1", "dx bank 2", "dx bank 3"],
+  pond: ["modal", "sympathetic strings", "inharmonic string", "fm voice", "quantized strings", "string + reverb"],
+  clouds: ["granular", "pitch shifter", "looping delay", "spectral"]
+};
+for (const L of LAYERS) for (const m of L.mods) m.vi = 0;
 const modIdx = [0, 0, 0, 0];
 const cur = i => LAYERS[i].mods[modIdx[i]];
 // ---------- climate: a chaotic attractor moving the macros like CV ----------
@@ -410,6 +419,7 @@ const mv = (i, k) => {
 };
 
 let sel = 0, focusT = 0, k1 = false, frozen = false, time = 0;
+let k2 = false, k2Turned = false;
 let toast = { text: "", t: 0 };
 let nextEv = 0.4;
 
@@ -687,7 +697,7 @@ function drawPhrase(kind) {
 
 function trigger(x) {
   const v = cur(1), c = cur(2), s = cur(3);
-  if (v.id === "meadow") { flowers.push({ x, t: 0, n: 3 + Math.round(mv(1, 1) * 5) }); if (flowers.length > 14) flowers.shift(); }
+  if (v.id === "meadow") { flowers.push({ x, t: 0, n: 3 + Math.round(mv(1, 1) * 5), shape: FLORA_SHAPE[v.vi] }); if (flowers.length > 14) flowers.shift(); }
   else {
     let ci = 0; CRYSTALS.forEach((cr, i) => { if (Math.abs(cr.x - x) < Math.abs(CRYSTALS[ci].x - x)) ci = i; });
     const n = 2 + Math.round(mv(1, 1) * 8);
@@ -883,6 +893,26 @@ function drawLightning() {
   }
   drawPhrase("lightning");
 }
+// a flower head per flora (Plaits engine family): rad is its size, n its petals
+const SHAPES = {
+  petals(cx, cy, r, n, l, seed) { for (let k = 0; k < n; k++) { const a = k / n * 6.283 + seed; S.px(cx + Math.cos(a) * r, cy + Math.sin(a) * r * 0.8, l); } },
+  bell(cx, cy, r, n, l) { S.ellipse(cx, cy, r + 0.5, r + 0.5, l, Math.PI, 2 * Math.PI); S.px(cx - r - 1, cy + 1, l * 0.7); S.px(cx + r + 1, cy + 1, l * 0.7); S.px(cx, cy + 1, l); },
+  spike(cx, cy, r, n, l) { for (let k = 0; k < n; k++) S.px(cx + (k % 2 === 0 ? 1 : -1), cy - k * (0.6 + r * 0.3), l * (1 - k / (n + 2))); },
+  tulip(cx, cy, r, n, l) { S.line(cx - r, cy - r, cx, cy, l); S.line(cx + r, cy - r, cx, cy, l); S.px(cx, cy - r, l * 0.7); },
+  umbel(cx, cy, r, n, l) {
+    for (let k = 0; k < n; k++) {
+      const a = -Math.PI / 2 + (k / Math.max(1, n - 1) - 0.5) * 1.8, hx = cx + Math.cos(a) * r * 1.4, hy = cy + Math.sin(a) * r * 1.4;
+      S.line(cx, cy, hx, hy, l * 0.35); S.px(hx, hy, l);
+    }
+  },
+  puff(cx, cy, r, n, l) { for (let k = 0; k < 2 * n; k++) { const a = k / (2 * n) * 6.283; S.px(cx + Math.cos(a) * (r + 0.5), cy + Math.sin(a) * (r + 0.5), l * 0.5); } },
+  star(cx, cy, r, n, l, seed) {
+    for (let k = 0; k < n; k++) {
+      const a = k / n * 6.283 + seed, tx = cx + Math.cos(a) * (r + 1), ty = cy + Math.sin(a) * (r + 1) * 0.8;
+      S.line(cx, cy, tx, ty, l * 0.5); S.px(tx, ty, l);
+    }
+  }
+};
 function drawMeadow() {
   const hs = 3 + mv(1, 0) * 10;
   const windy = cur(0).id === "rain" ? clamp(windOf() / 28, 0.1, 1) : 0.15;
@@ -897,10 +927,7 @@ function drawMeadow() {
     const cx = b.x + sway, cy = GY - h - 2;
     const life = 1 - f.t / 1.8, grow = Math.min(1, f.t / 0.15), r = (1 + tb * 2.2) * grow;
     S.line(b.x, GY, cx, cy, 5 * life + 2);
-    for (let k = 0; k < f.n; k++) {
-      const a = k / f.n * 6.283 + f.x;
-      S.px(cx + Math.cos(a) * r, cy + Math.sin(a) * r * 0.8, 11 * life);
-    }
+    SHAPES[f.shape || "petals"](cx, cy, r, f.n, 11 * life, f.x);
     S.px(cx, cy, 15 * life);
   }
 }
@@ -1060,6 +1087,8 @@ function noteOn(x) {
     const h = mv(1, 0), tb = mv(1, 1);
     const car = ctx.createOscillator(), mod = ctx.createOscillator(), mg = ctx.createGain();
     car.frequency.value = f; mod.frequency.value = f * RATIOS[Math.min(7, Math.floor(h * 8))];
+    // a rough nod to the flora: each flower family gets its own carrier wave
+    car.type = { bell: "sine", spike: "triangle", petals: "sine", tulip: "sawtooth", umbel: "triangle", puff: "triangle", star: "square" }[FLORA_SHAPE[v.vi]];
     mg.gain.setValueAtTime(f * (0.2 + tb * 5), t); mg.gain.exponentialRampToValueAtTime(f * 0.05 + 0.01, t + 0.5);
     mod.connect(mg); mg.connect(car.frequency); car.connect(out);
     dur = 0.9 + h * 0.7; env(out, t, 0.26, dur);
@@ -1103,6 +1132,12 @@ function enc(n, d) {
     else { SETTINGS[setCursor].nudge(d); syncSettings(); }
     spin(n, d); return;
   }
+  if (k2 && n === 2) {                     // holding K2: the module's variant
+    k2Turned = true;
+    const m = cur(sel), vs = VARIANTS[m.id];
+    if (vs) { m.vi = clamp(m.vi + d, 0, vs.length - 1); say(vs[m.vi]); } else say(m.name + ": one kind");
+    focus(); spin(n, d); renderGuide(); return;
+  }
   if (n === 1) { sel = clamp(sel + d, 0, 3); focus(); }
   else {
     const m = cur(sel).macros[n - 2];
@@ -1113,13 +1148,19 @@ function enc(n, d) {
 }
 function key(n, z) {
   if (n === 1) { k1 = !!z; return; }
+  if (n === 2) {                           // swap on release, unless E2 picked a variant meanwhile
+    if (z) { k2 = true; k2Turned = false; return; }
+    k2 = false;
+    if (!k2Turned) {
+      const L = LAYERS[sel];
+      modIdx[sel] = (modIdx[sel] + 1) % L.mods.length;
+      if (sel === 0) nextEv = time;
+      say(cur(sel).name); rewire(); applyParams();
+    }
+    focus(); renderGuide(); return;
+  }
   if (!z) return;
-  if (n === 2) {
-    const L = LAYERS[sel];
-    modIdx[sel] = (modIdx[sel] + 1) % L.mods.length;
-    if (sel === 0) nextEv = time;
-    say(cur(sel).name); focus(); rewire(); applyParams();
-  } else if (n === 3) {
+  if (n === 3) {
     if (sel === 0) {
       newPhrase(); say("new phrase");
     } else if (sel === 3) {
@@ -1236,7 +1277,7 @@ function renderGuide() {
     row.innerHTML =
       `<div class="lname">${L.name}</div>` +
       `<div class="mods">${L.mods.map((x, j) => `<span class="chip${j === modIdx[i] ? " on" : ""}">${x.name} <span class="ugen">${x.ugen}</span></span>`).join("")}</div>` +
-      `<p class="sees">${m.sees}</p>` +
+      `<p class="sees">${m.sees}${VARIANTS[m.id] ? ` <strong>${VARIANTS[m.id][m.vi]}</strong>` : ""}</p>` +
       `<div class="macros">${m.macros.map((x, k) => `<span>E${k + 2} ${x.n}</span><span class="bar"><b style="width:${Math.round(x.v * 100)}%"></b></span>`).join("")}<span>K3</span><span>${k3}</span></div>`;
     layersEl.appendChild(row);
   });

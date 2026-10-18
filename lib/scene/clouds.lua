@@ -3,7 +3,7 @@
 
 local H = include('lib/helpers')
 
-local KINDS = { "granular", "stretch", "looping delay", "spectral" }
+local KINDS = { "granular", "pitch shifter", "looping delay", "spectral" }
 
 local clouds = {
   id = "clouds", name = "clouds", about = "Clouds",
@@ -12,6 +12,7 @@ local clouds = {
     { id = "size",    name = "size",    default = 0.5 },
   },
   extra_count = 1,
+  variant = "clouds_kind",
 }
 
 local CLOUDS = {}

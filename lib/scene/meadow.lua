@@ -1,10 +1,16 @@
 -- meadow (voice, MiPlaits): every note blooms a flower.
--- harmonics grows the grass, timbre adds petals.
+-- harmonics grows the grass, timbre adds petals. The flora is the Plaits
+-- engine (hold K2 + E2), and each one grows its own kind of flower.
 
 local H = include('lib/helpers')
 
-local FLORA = { "modal", "string", "additive", "wavetable", "string machine" }
-local FLORA_ENGINE = { 12, 11, 4, 5, 22 } -- Plaits engine numbers
+-- melodic Plaits engines (numbers from MiPlaits: 0-15 classic, 16-23 newer);
+-- new entries go at the end so saved PSETs keep their flora
+local FLORA = { "modal", "string", "additive", "wavetable", "string machine", "chords",
+  "va filter", "phase dist", "wave terrain", "waveshaper", "fm", "grain" }
+local FLORA_ENGINE = { 12, 11, 4, 5, 22, 6, 16, 17, 21, 1, 2, 3 }
+local FLORA_SHAPE = { "bell", "spike", "petals", "tulip", "umbel", "umbel",
+  "tulip", "star", "puff", "star", "star", "puff" }
 
 local meadow = {
   id = "meadow", name = "meadow", about = "Plaits",
@@ -13,6 +19,7 @@ local meadow = {
     { id = "timbre",    name = "timbre",    default = 0.5 },
   },
   extra_count = 1,
+  variant = "meadow_flora",
   flowers = {},
 }
 
@@ -40,7 +47,8 @@ function meadow:sound(sc)
 end
 
 function meadow:on_note(x, sc)
-  table.insert(self.flowers, { x = x, t = 0, n = 3 + H.round(sc.m(2, 2) * 5) })
+  local shape = FLORA_SHAPE[params:get("meadow_flora")]
+  table.insert(self.flowers, { x = x, t = 0, n = 3 + H.round(sc.m(2, 2) * 5), shape = shape })
   if #self.flowers > 14 then table.remove(self.flowers, 1) end
 end
 
@@ -51,6 +59,52 @@ function meadow:update(dt)
     if f.t >= 1.8 then table.remove(self.flowers, i) end
   end
 end
+
+-- a flower head at (cx, cy): rad is its size, n its petals, l its brightness
+local SHAPES = {
+  petals = function(cv, cx, cy, rad, n, l, seed) -- additive: partials around a center
+    for k = 0, n - 1 do
+      local a = k / n * 6.283 + seed
+      cv.px(cx + math.cos(a) * rad, cy + math.sin(a) * rad * 0.8, l)
+    end
+  end,
+  bell = function(cv, cx, cy, rad, _, l) -- modal: a bell, open side down
+    cv.ellipse(cx, cy, rad + 0.5, rad + 0.5, l, math.pi, 2 * math.pi)
+    cv.px(cx - rad - 1, cy + 1, l * 0.7)
+    cv.px(cx + rad + 1, cy + 1, l * 0.7)
+    cv.px(cx, cy + 1, l)
+  end,
+  spike = function(cv, cx, cy, rad, n, l) -- string: seeds up a stalk
+    for k = 0, n - 1 do cv.px(cx + (k % 2 == 0 and 1 or -1), cy - k * (0.6 + rad * 0.3), l * (1 - k / (n + 2))) end
+  end,
+  tulip = function(cv, cx, cy, rad, _, l) -- wavetable, va filter: a cup
+    cv.line(cx - rad, cy - rad, cx, cy, l)
+    cv.line(cx + rad, cy - rad, cx, cy, l)
+    cv.px(cx, cy - rad, l * 0.7)
+  end,
+  umbel = function(cv, cx, cy, rad, n, l) -- chords, string machine: many small heads
+    for k = 0, n - 1 do
+      local a = -math.pi / 2 + (k / math.max(1, n - 1) - 0.5) * 1.8
+      local hx, hy = cx + math.cos(a) * rad * 1.4, cy + math.sin(a) * rad * 1.4
+      cv.line(cx, cy, hx, hy, l * 0.35)
+      cv.px(hx, hy, l)
+    end
+  end,
+  puff = function(cv, cx, cy, rad, n, l) -- grain, wave terrain: a dandelion clock
+    for k = 0, 2 * n - 1 do
+      local a = k / (2 * n) * 6.283
+      cv.px(cx + math.cos(a) * (rad + 0.5), cy + math.sin(a) * (rad + 0.5), l * 0.5)
+    end
+  end,
+  star = function(cv, cx, cy, rad, n, l, seed) -- fm, phase dist, waveshaper: sharp rays
+    for k = 0, n - 1 do
+      local a = k / n * 6.283 + seed
+      local tx, ty = cx + math.cos(a) * (rad + 1), cy + math.sin(a) * (rad + 1) * 0.8
+      cv.line(cx, cy, tx, ty, l * 0.5)
+      cv.px(tx, ty, l)
+    end
+  end,
+}
 
 function meadow:draw(cv, sc)
   local GY, t = sc.GY, sc.t
@@ -67,10 +121,7 @@ function meadow:draw(cv, sc)
     local life, grow = 1 - f.t / 1.8, math.min(1, f.t / 0.15)
     local rad = (1 + tb * 2.2) * grow
     cv.line(b.x, GY, cx, cy, 5 * life + 2)
-    for k = 0, f.n - 1 do
-      local a = k / f.n * 6.283 + f.x
-      cv.px(cx + math.cos(a) * rad, cy + math.sin(a) * rad * 0.8, 11 * life)
-    end
+    SHAPES[f.shape or "petals"](cv, cx, cy, rad, f.n, 11 * life, f.x)
     cv.px(cx, cy, 15 * life)
   end
 end

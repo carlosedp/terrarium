@@ -13,6 +13,7 @@ local crystals = {
     { id = "index", name = "index", default = 0.45 },
   },
   extra_count = 1,
+  variant = "crystals_bank",
   glints = {},
 }
 
