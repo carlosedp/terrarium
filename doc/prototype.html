@@ -1,4 +1,4 @@
-<title>Scenery for norns</title>
+<title>Terrarium for norns</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -177,14 +177,21 @@ kbd { font-family: var(--font-mono); font-size: 0.85em; border: 1px solid var(--
 .bar { height: 4px; background: var(--rule); border-radius: 2px; overflow: hidden; }
 .bar b { display: block; height: 100%; background: var(--ink); }
 .sees { grid-column: 2; font-size: var(--step--1); color: var(--muted); margin: 0; }
+.ideas { border: 1px solid var(--rule); border-radius: 10px; padding: 12px 14px 14px; margin: 0; display: grid; gap: 8px; min-width: 0; }
+.ideas legend { padding: 0 6px; }
+.ideas label { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; align-items: start; font-size: var(--step--1); color: var(--muted); cursor: pointer; }
+.ideas label b { color: var(--ink); margin-right: 4px; }
+.ideas input { accent-color: var(--accent); width: 16px; height: 16px; margin: 2px 0 0; }
+.idea-actions { display: flex; flex-wrap: wrap; gap: 8px; }
+.btn.small { padding: 4px 12px; font-size: 12px; }
 .notes { font-size: var(--step--1); color: var(--muted); margin: 0; max-width: 62ch; display: grid; gap: 8px; }
 .notes p { margin: 0; }
 </style>
 
 <div class="wrap">
   <header>
-    <h1>Scenery</h1>
-    <p class="lede">A sketch for a norns instrument where the patch is a landscape. Four slots each draw one part of the scene: the brain is the weather, the voice is the ground, the color is the light and water, the space is the air. Swap a module and that part of the scene changes. Turn a macro and the scene moves with the sound. The screen shows no numbers.</p>
+    <h1>Terrarium</h1>
+    <p class="lede">A sketch for a norns instrument where the patch is a small landscape behind glass. Four slots each draw one part of the scene: the brain is the weather, the voice is the ground, the color is the light and water, the space is the air. Swap a module and that part of the scene changes. Turn a macro and the scene moves with the sound. The screen shows no numbers.</p>
   </header>
 
   <div class="stage">
@@ -192,7 +199,7 @@ kbd { font-family: var(--font-mono); font-size: 0.85em; border: 1px solid var(--
       <div class="norns" id="device">
         <div class="k1slot">
           <div class="ctl"><button class="key" data-k="1" aria-label="K1, hold to peek at the parts"></button><small>K1</small></div>
-          <span class="brand">scenery</span>
+          <span class="brand">terrarium</span>
         </div>
         <div class="e1slot">
           <div class="ctl"><button class="enc" data-e="1" aria-label="E1, choose a part of the scene"><i></i></button><small>E1</small></div>
@@ -229,6 +236,16 @@ kbd { font-family: var(--font-mono); font-size: 0.85em; border: 1px solid var(--
         <label for="set-len">Length<select id="set-len"><option value="4">4 steps</option><option value="8" selected>8 steps</option><option value="12">12 steps</option><option value="16">16 steps</option></select></label>
         <label for="set-seasons">Seasons<select id="set-seasons"><option value="0" selected>off</option><option value="8">slow</option><option value="4">steady</option><option value="2">quick</option></select></label>
       </form>
+      <fieldset class="ideas" id="ideas">
+        <legend class="settings-title">Scene details <span class="ugen">toggle to compare</span></legend>
+        <div class="idea-actions"><button type="button" class="btn small" data-all="1">All on</button><button type="button" class="btn small" data-all="0">All off (today's look)</button></div>
+        <label><input type="checkbox" data-fx="glass" checked><span><b>The glass</b> Rounded jar corners and a faint vertical glint on the left, so the scene sits inside a terrarium.</span></label>
+        <label><input type="checkbox" data-fx="beads" checked><span><b>Condensation</b> Rain beads up on the glass, more of it at faster rates. Now and then a bead runs down and leaves a trail. It dries off under lightning.</span></label>
+        <label><input type="checkbox" data-fx="reflect" checked><span><b>Water and soil</b> The pond mirrors the scene and ripples bend the reflection. With fog, the strip under the ground is soil.</span></label>
+        <label><input type="checkbox" data-fx="flash" checked><span><b>Lightning lights the land</b> A strike briefly lights the whole landscape and leaves a faint afterimage of the bolt. Fog muffles the flash, the pond reflects it.</span></label>
+        <label><input type="checkbox" data-fx="frost" checked><span><b>Frost</b> Freeze (K3 on air) frosts the glass from the corners in, and thawing melts it, so you can always see that the air is frozen.</span></label>
+        <label><input type="checkbox" data-fx="wind" checked><span><b>Wind carries the sky</b> Wind from the weather (change) also pushes the clouds and fireflies, so the sky and grass move together.</span></label>
+      </fieldset>
       <div class="layers" id="layers"></div>
       <div class="notes">
         <p><strong>E1</strong> picks a part. Everything else dims for a moment so you can see which part you're steering. <strong>E2 and E3</strong> are that part's two macros. <strong>K2</strong> swaps its module. <strong>K3</strong> is a gesture: a new phrase on the brain, a manual strike on the voice and color, freeze on the air. Hold <strong>K1</strong> to peek at the parts and reach the settings: while it's held, E2 picks a setting and E3 changes it.</p>
@@ -425,6 +442,141 @@ const ridges = [0, 1, 2].map(j => {
 });
 let drops = [], splashes = [], bolts = [], flowers = [], glints = [], rings = [], echoes = [];
 
+// ---------- visual ideas (lab toggles) ----------
+const FX = { glass: true, beads: true, reflect: true, flash: true, frost: true, wind: true };
+// fixed per-pixel noise, so textures (frost, soil) hold still instead of crawling
+const hash = (x, y) => {
+  let h = Math.imul(x * 374761393 + y * 668265263, 1274126177);
+  h = Math.imul(h ^ (h >>> 13), 1274126177);
+  return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+};
+// like px, but never darkens what's already there (things on the glass, reflections)
+function lit(x, y, l) {
+  x = Math.round(x); y = Math.round(y);
+  if (x < 0 || y < 0 || x >= W || y >= H) return;
+  const v = Math.min(15, Math.round(l * S.mul));
+  if (v > buf[y * W + x]) buf[y * W + x] = v;
+}
+// the weather's wind, shared with the sky: rain's sideways wind, or the storm's wildness
+const skyWind = () => !FX.wind ? 0 : cur(0).id === "rain" ? Math.max(0, windOf()) : mv(0, 1) * 14;
+let flyDrift = 0, flySpeed = 1.5;
+let beads = [], frost = 0;
+const FERNS = [[0, 0], [W - 1, 0], [0, H - 1], [W - 1, H - 1]].map(([cx, cy], i) => {
+  const r = rng(400 + i);
+  return { cx, cy, br: Array.from({ length: 6 }, () => ({ a: 0.15 + r() * 1.25, l: 0.45 + r() * 0.55 })) };
+});
+const PEBBLES = (() => { const r = rng(500); return Array.from({ length: 9 }, () => [Math.floor(r() * (W - 2)), GY + 3 + Math.floor(r() * 7)]); })();
+
+function stepFX(dt) {
+  frost = clamp(frost + dt * (frozen && FX.frost ? 0.45 : -0.9), 0, 1);
+  // condensation: beads appear while it rains, faster rain more beads; they dry off otherwise
+  const raining = FX.beads && cur(0).id === "rain", rate = mv(0, 0);
+  const wet = beads.filter(b => !b.run).length;
+  if (raining && wet < 4 + Math.round(rate * 20) && Math.random() < dt * (0.6 + rate * 4)) {
+    const r = Math.random();
+    const x = r < 0.6 ? 3 + Math.random() * (W - 6) : r < 0.8 ? 1 + Math.random() * 8 : W - 2 - Math.random() * 8;
+    const y = r < 0.6 ? 1 + Math.random() * 9 : 6 + Math.random() * 30;
+    beads.push({ x, y, a: 0, vy: 0, run: false, gone: false, trail: [] });
+  }
+  for (const b of beads) {
+    b.a = clamp(b.a + dt * (raining ? 1.5 : -0.4), 0, 1);
+    if (raining && !b.run && Math.random() < dt * 0.012 * (1 + rate * 3)) b.run = true;
+    if (b.run && !b.gone) {
+      if (Math.random() > 0.12) b.vy = Math.min(12, b.vy + dt * 14); else b.vy *= 0.2;   // run, catch, run
+      const y0 = b.y;
+      b.y += b.vy * dt; b.x += (Math.random() - 0.5) * 0.3;
+      for (let yy = Math.ceil(y0); yy <= b.y; yy++) b.trail.push({ x: b.x, y: yy, t: 0 });
+      if (b.y >= GY - 1) b.gone = true;
+    }
+    for (const p of b.trail) p.t += dt;
+    b.trail = b.trail.filter(p => p.t < 1.1);
+  }
+  beads = beads.filter(b => b.a > 0 && !(b.gone && !b.trail.length));
+}
+
+function drawBeads() {
+  for (const b of beads) {
+    for (const p of b.trail) lit(p.x, p.y, 2.4 * (1 - p.t / 1.1) * b.a);
+    if (b.gone) continue;
+    lit(b.x, b.y, (b.run ? 5 : 3) * b.a);
+    if (b.run) lit(b.x, b.y - 1, 2 * b.a);
+  }
+}
+
+function drawFrost() {
+  if (frost <= 0.01) return;
+  const R = frost * 20;
+  for (const c of FERNS) {
+    const sx = c.cx ? -1 : 1, sy = c.cy ? -1 : 1;
+    for (let j = 0; j < R; j++) for (let i = 0; i < R; i++) {
+      const d = Math.hypot(i, j), p = 1 - d / R;
+      if (p <= 0) continue;
+      const x = c.cx + sx * i, y = c.cy + sy * j, h = hash(x, y);
+      if (h < p * p * 0.7) lit(x, y, h < p * 0.12 ? 6 : 2);
+    }
+    for (const b of c.br) {                                   // fern streaks reaching inward
+      const L = R * 1.25 * b.l, dx = sx * Math.cos(b.a), dy = sy * Math.sin(b.a);
+      const ex = c.cx + dx * L, ey = c.cy + dy * L;
+      S.line(c.cx, c.cy, ex, ey, 4);
+      for (const s of [-0.7, 0.7]) {
+        const mx = c.cx + dx * L * 0.55, my = c.cy + dy * L * 0.55, a = Math.atan2(dy, dx) + s;
+        S.line(mx, my, mx + Math.cos(a) * L * 0.3, my + Math.sin(a) * L * 0.3, 3);
+      }
+    }
+  }
+  for (let x = 0; x < W; x++) for (let y = 0; y < frost * 3; y++) {   // a rime along the top and bottom
+    if (hash(x, y) < 0.3) lit(x, y, 2);
+    if (hash(x, H - 1 - y) < 0.3) lit(x, H - 1 - y, 2);
+  }
+}
+
+function drawGlass() {
+  const R = 7;
+  for (const [cx, cy, sx, sy] of [[0, 0, 1, 1], [W - 1, 0, -1, 1], [0, H - 1, 1, -1], [W - 1, H - 1, -1, -1]]) {
+    for (let j = 0; j < R; j++) for (let i = 0; i < R; i++) {
+      const d = Math.hypot(R - i - 0.5, R - j - 0.5), x = cx + sx * i, y = cy + sy * j;
+      if (d > R) S.erase(x, y);
+      else if (d > R - 1.1) lit(x, y, 2);
+    }
+  }
+  for (let y = 6; y <= 32; y++) lit(3, y, 2 * clamp(Math.min((y - 5) / 4, (33 - y) / 7), 0, 1));
+  for (let y = 9; y <= 17; y++) lit(5, y, 1);
+}
+
+// the pond mirrors the scene above it, squashed into the strip under the ground;
+// it wobbles, and each ring bends the reflection where it passes
+function drawWater() {
+  const life = 0.4 + (1 - mv(2, 1)) * 2.4, band = Math.floor(time * 3);
+  for (let y = GY + 1; y < H; y++) {
+    const d = y - GY, sy = GY - d * 2;
+    for (let x = 0; x < W; x++) {
+      let ox = Math.sin(time * 2.1 + y * 1.7 + x * 0.05) * (0.3 + d * 0.08);
+      for (const r of rings) {
+        const rad = r.t * 22;
+        if (rad < 1) continue;
+        const e = Math.hypot(x - r.x, (y - GY - 4) / 0.14);
+        if (Math.abs(e - rad) < 4) ox += 2.2 * (1 - r.t / life) * Math.sin((e - rad) * 1.4);
+      }
+      const sx = Math.round(x + ox);
+      if (sx < 0 || sx >= W) continue;
+      const v = buf[sy * W + sx];
+      if (v) lit(x, y, v * 0.45 * ((y + band) % 4 === 0 ? 0.5 : 1));
+    }
+  }
+}
+
+function drawSoil() {
+  for (let y = GY + 1; y < H; y++) for (let x = 0; x < W; x++) if (hash(x, y) < 0.06 + (y - GY) * 0.006) lit(x, y, 1);
+  for (const [x, y] of PEBBLES) { lit(x, y, 2); lit(x + 1, y, 2); }
+}
+
+// a strike lights the whole scene for a moment: bright, dark, dim
+function flashLevel() {
+  let f = 0;
+  for (const b of bolts) f = Math.max(f, b.t < 0.06 ? 6 : b.t < 0.1 ? 0 : b.t < 0.17 ? 3 : 0);
+  return f;
+}
+
 // ---------- brain: Marbles-style timing, Turing Machine-style phrase ----------
 // The register holds up to 16 steps; each is a note {x, seed, born} or null (a rest).
 // Every time a step plays, "change" is the chance it mutates first:
@@ -515,14 +667,17 @@ function step(dt) {
   });
   const age = (arr, life) => arr.filter(o => (o.t += dt) < (typeof life === "function" ? life(o) : life));
   splashes = age(splashes, 0.18);
-  bolts = age(bolts, 0.32);
+  bolts = age(bolts, FX.flash ? 0.7 : 0.32);
   flowers = age(flowers, 1.8);
   glints = age(glints, 1.0);
   rings = age(rings, () => 0.4 + (1 - mv(2, 1)) * 2.4);
   echoes = age(echoes, 0.5);
-  if (!frozen) for (const cl of clouds) { cl.cx += dt * 2.2; if (cl.cx > W + 24) cl.cx = -24; }
+  const wind = skyWind();
+  if (!frozen) for (const cl of clouds) { cl.cx += dt * (2.2 + wind * 0.35); if (cl.cx > W + 24) cl.cx = -24; }
+  if (!frozen) { flySpeed = 1.5 + wind * 0.25; flyDrift += dt * flySpeed; }
   for (const cl of clouds) cl.spark = Math.max(0, cl.spark - dt * 1.6);
   for (const f of flies) f.spark = Math.max(0, f.spark - dt * 1.4);
+  stepFX(dt);
 }
 
 // ---------- drawing, back to front ----------
@@ -553,13 +708,26 @@ function draw() {
   S.mul = dimE(1);
   if (cur(1).id === "meadow") drawMeadow(); else drawCrystals();
 
+  // a strike lights the land for a moment; fog (drawn next) muffles it
+  if (FX.flash && cur(0).id === "lightning") {
+    const f = flashLevel();
+    if (f) for (let i = 0; i < buf.length; i++) if (buf[i]) buf[i] = Math.min(15, buf[i] + f);
+  }
+
   // color
   S.mul = dimE(2);
-  if (cur(2).id === "pond") drawPond(); else drawFog();
+  if (cur(2).id === "pond") { if (FX.reflect) drawWater(); drawPond(); }
+  else { if (FX.reflect) drawSoil(); drawFog(); }
+
+  // the glass and what's on it
+  S.mul = 1;
+  drawFrost();
+  drawBeads();
+  if (FX.glass) drawGlass();
 
   // overlays
-  S.mul = 1;
-  for (let i = 0; i < 4; i++) S.rect(113 + i * 4, 1, 2, 2, i === sel ? (focusT > 0 ? 13 : 5) : (focusT > 0 ? 3 : 1));
+  const dx = FX.glass ? 106 : 113;
+  for (let i = 0; i < 4; i++) S.rect(dx + i * 4, 1, 2, 2, i === sel ? (focusT > 0 ? 13 : 5) : (focusT > 0 ? 3 : 1));
   if (toast.t > 0) S.text(2, 58, toast.text, Math.round(14 * Math.min(1, toast.t / 0.6)));
   if (k1) drawPeek();
 }
@@ -573,8 +741,8 @@ function drawClouds() {
     S.px(x, y, (frozen ? 5 : 2) + flick + Math.round(cl.spark * 7 * (1 - gr.d)));
   }
 }
-function flyPos(f, t) {
-  const x = ((f.x + Math.sin(t * f.fx + f.ph) * 14 + t * 1.5) % (W + 8) + W + 8) % (W + 8) - 4;
+function flyPos(f, t, dr = flyDrift) {
+  const x = ((f.x + Math.sin(t * f.fx + f.ph) * 14 + dr) % (W + 8) + W + 8) % (W + 8) - 4;
   return [x, f.y + Math.sin(t * f.fy + f.ph * 2) * 5];
 }
 function drawFireflies() {
@@ -584,7 +752,7 @@ function drawFireflies() {
     const blink = Math.pow(Math.max(0, Math.sin(flyTime * f.bf + f.ph)), 3);
     const lv = (frozen ? 6 : 1 + blink * 10) + f.spark * 8;
     for (let k = trail; k >= 1; k--) {
-      const [tx, ty] = flyPos(f, flyTime - k * 0.09);
+      const [tx, ty] = flyPos(f, flyTime - k * 0.09, flyDrift - k * 0.09 * flySpeed);
       S.px(tx, ty, lv * 0.45 * (1 - k / (trail + 1)));
     }
     const [x, y] = flyPos(f, flyTime);
@@ -648,8 +816,11 @@ function drawLightning() {
     if (b.t < 0.05) {
       for (let y = 0; y < GY; y++) for (let x = 0; x < W; x++) if (BAYER[y & 3][x & 3] < 2) S.px(x, y, 1);
     }
-    if (flicker <= 0) continue;
     const { pts, branches } = boltPath(b.x, b.seed, mv(0, 1));
+    if (flicker <= 0) {
+      if (b.t > 0.32) for (let i = 1; i < pts.length; i++) S.line(pts[i - 1][0], pts[i - 1][1], pts[i][0], pts[i][1], 1);   // afterimage
+      continue;
+    }
     for (let i = 1; i < pts.length; i++) S.line(pts[i - 1][0], pts[i - 1][1], pts[i][0], pts[i][1], flicker);
     for (const br of branches) for (let i = 1; i < br.length; i++) S.line(br[i - 1][0], br[i - 1][1], br[i][0], br[i][1], flicker * 0.5);
   }
@@ -702,7 +873,14 @@ function drawPond() {
     for (let i = 0; i < n; i++) {
       const rad = (r.t - i * 0.11) * 22;
       if (rad <= 0.5) continue;
-      S.ellipse(r.x, GY + 4, rad, rad * 0.32, 11 * k * (1 - i / (n + 1)));
+      if (FX.reflect) {   // flat rings that stay in the water
+        const ry = Math.min(5, rad * 0.14), l = 11 * k * (1 - i / (n + 1));
+        const steps = Math.max(8, Math.ceil(rad * 6));
+        for (let s = 0; s <= steps; s++) {
+          const a = s / steps * Math.PI * 2, y = GY + 4 + Math.sin(a) * ry;
+          if (y > GY + 0.5) S.px(r.x + Math.cos(a) * rad, y, l);
+        }
+      } else S.ellipse(r.x, GY + 4, rad, rad * 0.32, 11 * k * (1 - i / (n + 1)));
     }
   }
 }
@@ -1004,6 +1182,14 @@ function frame(now) {
   if (acc >= 1 / 30) { step(acc); acc = 0; draw(); blit(); }
   requestAnimationFrame(frame);
 }
+// ---------- visual idea toggles ----------
+const ideaBoxes = [...document.querySelectorAll("#ideas input[data-fx]")];
+ideaBoxes.forEach(el => el.addEventListener("change", () => { FX[el.dataset.fx] = el.checked; }));
+document.querySelectorAll("#ideas [data-all]").forEach(btn => btn.addEventListener("click", () => {
+  const on = btn.dataset.all === "1";
+  ideaBoxes.forEach(el => { el.checked = on; FX[el.dataset.fx] = on; });
+}));
+
 say(keyName());
 renderGuide();
 for (let i = 0; i < 45; i++) step(1 / 30);   // open on a scene already in motion

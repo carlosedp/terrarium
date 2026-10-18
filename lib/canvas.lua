@@ -29,6 +29,16 @@ function Canvas.px(x, y, l)
   buf[y * W + x + 1] = v
 end
 
+-- like px, but never darkens what's already there (things on the glass, reflections)
+function Canvas.lit(x, y, l)
+  x, y = round(x), round(y)
+  if x < 0 or y < 0 or x >= W or y >= H then return end
+  local v = round(l * Canvas.mul)
+  if v > 15 then v = 15 end
+  local i = y * W + x + 1
+  if v > buf[i] then buf[i] = v end
+end
+
 function Canvas.erase(x, y)
   x, y = round(x), round(y)
   if x >= 0 and y >= 0 and x < W and y < H then buf[y * W + x + 1] = 0 end
@@ -79,6 +89,14 @@ function Canvas.scale(f)
   for i = 1, W * H do
     local v = buf[i]
     if v > 0 then buf[i] = max(1, ceil(v * f)) end
+  end
+end
+
+-- brighten every lit pixel (a lightning flash lights the land)
+function Canvas.add(d)
+  for i = 1, W * H do
+    local v = buf[i]
+    if v > 0 then buf[i] = v + d > 15 and 15 or v + d end
   end
 end
 

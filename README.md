@@ -13,6 +13,9 @@ with the sound. The screen shows no numbers.
 | **color** | light and water: what shapes it | pond (Rings), fog (Ripples) |
 | **air** | the sky: where it rings out | clouds (Clouds), fireflies (Beads), mountains (MiVerb) |
 
+The whole scene sits behind the terrarium's glass. Rain beads up on it, and freezing the air
+frosts it over.
+
 Every note is a place: where it lands across the screen sets its pitch in the current key
 and scale. The brain keeps a Turing Machine-style phrase, and each note leaves a mark on the
 ground. **Change** sets how often notes are replaced, dropped to a rest or added back.
@@ -58,6 +61,7 @@ terrarium.lua            script: parts, params, controls, drawing, the brain clo
 lib/Engine_Terrarium.sc  engine: 2 Plaits voices -> color slot -> air slot -> out
 lib/brain.lua            phrase, pitch mapping, seasons
 lib/canvas.lua           128x64 framebuffer, blitted to the screen as merged runs
+lib/glass.lua            the glass over the scene: rim, condensation, frost
 lib/scene/*.lua          one file per module: its drawing, macros and sound mapping
 lib/installer.lua        mi-UGens check and installer
 doc/SOUND.md             macro -> mi-UGen parameter map (the tuning reference)
@@ -69,8 +73,8 @@ The Lua side owns every macro-to-parameter mapping (each module's `sound()` func
 from [doc/SOUND.md](doc/SOUND.md)); the engine only exposes raw parameters per slot. Tuning the
 sound means editing those functions.
 
-A module is one file under `lib/scene/` with `macros`, `draw`, `update`, and either `wait`/`spawn`
-(brain) or `sound`/`on_note` (voice, color, air). Add it to `LAYERS` in `terrarium.lua`; a new
+A module is one file under `lib/scene/` with `macros`, `draw`, `update`, and either
+`wait`/`spawn`/`wind` (brain; `flash` optional) or `sound`/`on_note` (voice, color, air). Add it to `LAYERS` in `terrarium.lua`; a new
 color or air module also needs a `terrarium_<id>` SynthDef in the engine.
 
 ## Development
@@ -92,7 +96,7 @@ the MI engines).
 
 - [ ] engine loads and every slot sounds; fix anything SuperCollider complains about
 - [ ] CPU with the heaviest combination (2 Plaits + Rings + Beads); pick voice count from it
-- [ ] screen frame time (the smoke test peaks around 1,400 rects in a frame with fog or a lightning flash)
+- [ ] screen frame time (the smoke test averages about 730 screen calls per frame and peaks around 1,550 with fog or a lightning flash; the pond's reflection is the main extra cost)
 - [ ] tune ranges and curves in each module's `sound()` by ear (doc/SOUND.md lists open questions)
 - [ ] nb voices as a third voice option ("visitors")
 - [ ] grid: phrase editing, key/scale picker

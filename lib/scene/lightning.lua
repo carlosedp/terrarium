@@ -1,6 +1,6 @@
 -- lightning (brain, random): strikes at random times, sometimes twice, and
 -- plays where it hits. An unchanged step strikes with the same bolt; more
--- change, wilder storm.
+-- change, wilder storm. A strike lights the land and leaves an afterimage.
 
 local H = include('lib/helpers')
 local marks = include('lib/scene/marks')
@@ -55,8 +55,21 @@ function lightning:update(dt)
   for i = #self.bolts, 1, -1 do
     local b = self.bolts[i]
     b.t = b.t + dt
-    if b.t >= 0.32 then table.remove(self.bolts, i) end
+    if b.t >= 0.7 then table.remove(self.bolts, i) end -- 0.32 lit, then the afterimage
   end
+end
+
+-- the storm's wind for the sky: wilder storms blow harder
+function lightning.wind(sc) return sc.m(1, 2) * 14 end
+
+-- how much a strike lights the whole scene right now: bright, dark, dim
+function lightning:flash()
+  local f = 0
+  for _, b in ipairs(self.bolts) do
+    local v = b.t < 0.06 and 6 or (b.t >= 0.1 and b.t < 0.17) and 3 or 0
+    if v > f then f = v end
+  end
+  return f
 end
 
 local function polyline(cv, pts, l)
@@ -74,6 +87,8 @@ function lightning:draw(cv, sc)
     if flicker > 0 then
       polyline(cv, b.pts, flicker)
       for _, br in ipairs(b.branches) do polyline(cv, br, flicker * 0.5) end
+    elseif b.t > 0.32 then
+      polyline(cv, b.pts, 1) -- afterimage
     end
   end
   marks(cv, sc, "lightning")

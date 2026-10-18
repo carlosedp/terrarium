@@ -25,6 +25,13 @@ function H.rng(seed)
   end
 end
 
+-- fixed noise per pixel (0..1), so textures like frost and soil hold still
+function H.hash(x, y)
+  local h = (math.floor(x) * 374761393 + math.floor(y) * 668265263) & 0xffffffff
+  h = ((h ~ (h >> 13)) * 1274126177) & 0xffffffff
+  return (h ~ (h >> 16)) / 4294967296
+end
+
 -- 4x4 ordered dither, for fog and sky flashes
 H.BAYER = { { 0, 8, 2, 10 }, { 12, 4, 14, 6 }, { 3, 11, 1, 9 }, { 15, 7, 13, 5 } }
 function H.bayer(x, y) return H.BAYER[(math.floor(y) % 4) + 1][(math.floor(x) % 4) + 1] end

@@ -50,7 +50,7 @@ end
 function clouds:update(dt, sc)
   for _, c in ipairs(CLOUDS) do
     if not sc.frozen then
-      c.cx = c.cx + dt * 2.2
+      c.cx = c.cx + dt * (2.2 + sc.wind() * 0.35) -- the weather's wind pushes them
       if c.cx > 152 then c.cx = -24 end
     end
     c.spark = math.max(0, c.spark - dt * 1.6)

@@ -20,8 +20,23 @@ function fog:sound(sc)
   }
 end
 
+-- soil under the ground: fixed specks, denser further down, and a few pebbles
+local r = H.rng(500)
+local PEBBLES = {}
+for i = 1, 9 do PEBBLES[i] = { math.floor(r() * 126), 57 + math.floor(r() * 7) } end
+
+local function soil(cv, GY)
+  for y = GY + 1, 63 do
+    for x = 0, 127 do
+      if H.hash(x, y) < 0.06 + (y - GY) * 0.006 then cv.lit(x, y, 1) end
+    end
+  end
+  for _, p in ipairs(PEBBLES) do cv.lit(p[1], p[2], 2); cv.lit(p[1] + 1, p[2], 2) end
+end
+
 function fog:draw(cv, sc)
   local c, sh, t, GY = sc.m(3, 1), sc.m(3, 2), sc.t, sc.GY
+  soil(cv, GY)
   cv.scale(0.4 + 0.6 * c) -- the whole scene darkens with the filter
   local d = 1 - c
   local ox = math.floor(t * 3)

@@ -16,6 +16,7 @@ local H = include("lib/helpers")
 local cv = include("lib/canvas")
 local Brain = include("lib/brain")
 local installer = include("lib/installer")
+local glass = include("lib/glass")
 
 local FPS = 15
 local GY = 54 -- the ground line
@@ -43,6 +44,8 @@ function sc.m(i, k)
   local mod = sc.cur(i)
   return params:get(mod.id .. "_" .. mod.macros[k].id)
 end
+-- the weather's wind, shared with the sky (never blowing backwards)
+function sc.wind() return math.max(0, sc.cur(1).wind(sc)) end
 
 local sel, focus_t, k1 = 1, 0, false
 local toast, toast_t = "", 0
@@ -228,10 +231,17 @@ function redraw()
     end
   end
   cv.mul = dim(2); sc.cur(2):draw(cv, sc)  -- voice (ground)
+  cv.mul = 1
+  local brain = sc.cur(1)
+  if brain.flash then                      -- a strike lights the land; fog, drawn next, muffles it
+    local f = brain:flash()
+    if f > 0 then cv.add(f) end
+  end
   cv.mul = dim(3); sc.cur(3):draw(cv, sc)  -- color (light, water)
   cv.mul = 1
+  glass.draw(cv)                           -- frost, condensation, the jar's rim
   for i = 1, 4 do
-    cv.rect(112 + (i - 1) * 4, 1, 2, 2, i == sel and (focus_t > 0 and 13 or 5) or (focus_t > 0 and 3 or 1))
+    cv.rect(106 + (i - 1) * 4, 1, 2, 2, i == sel and (focus_t > 0 and 13 or 5) or (focus_t > 0 and 3 or 1))
   end
   if k1 then peek_canvas() end
   cv.blit()
@@ -259,6 +269,7 @@ local function tick()
       local mod = sc.cur(i)
       if mod.update then mod:update(dt, sc) end
     end
+    glass.update(dt, sc)
     if dirty_sound then send_sound() end
   end
   redraw()

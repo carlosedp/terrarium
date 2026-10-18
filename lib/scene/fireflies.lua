@@ -9,6 +9,7 @@ local fireflies = {
     { id = "density", name = "density", default = 0.5 },
     { id = "glow",    name = "glow",    default = 0.4 },
   },
+  drift = 0, speed = 1.5, -- the swarm drifts with the weather's wind
 }
 
 local r = H.rng(200)
@@ -20,8 +21,8 @@ for i = 1, 30 do
   }
 end
 
-local function pos(f, t)
-  local x = (f.x + math.sin(t * f.fx + f.ph) * 14 + t * 1.5) % 136 - 4
+local function pos(f, t, drift)
+  local x = (f.x + math.sin(t * f.fx + f.ph) * 14 + drift) % 136 - 4
   return x, f.y + math.sin(t * f.fy + f.ph * 2) * 5
 end
 
@@ -40,14 +41,18 @@ end
 function fireflies:on_note(x, sc)
   local near = {}
   for _, f in ipairs(FLIES) do
-    local fx = pos(f, sc.fly_t)
+    local fx = pos(f, sc.fly_t, self.drift)
     near[#near + 1] = { d = math.abs(fx - x), f = f }
   end
   table.sort(near, function(a, b) return a.d < b.d end)
   for i = 1, 3 do near[i].f.spark = 1 end
 end
 
-function fireflies:update(dt)
+function fireflies:update(dt, sc)
+  if not sc.frozen then
+    self.speed = 1.5 + sc.wind() * 0.25
+    self.drift = self.drift + dt * self.speed
+  end
   for _, f in ipairs(FLIES) do f.spark = math.max(0, f.spark - dt * 1.4) end
 end
 
@@ -58,10 +63,10 @@ function fireflies:draw(cv, sc)
     local blink = math.max(0, math.sin(t * f.bf + f.ph)) ^ 3
     local lv = (sc.frozen and 6 or 1 + blink * 10) + f.spark * 8
     for k = trail, 1, -1 do
-      local tx, ty = pos(f, t - k * 0.09)
+      local tx, ty = pos(f, t - k * 0.09, self.drift - k * 0.09 * self.speed)
       cv.px(tx, ty, lv * 0.45 * (1 - k / (trail + 1)))
     end
-    local x, y = pos(f, t)
+    local x, y = pos(f, t, self.drift)
     cv.px(x, y, lv)
     if f.spark > 0.4 then cv.px(x + 1, y, lv * 0.5); cv.px(x - 1, y, lv * 0.5) end
   end
