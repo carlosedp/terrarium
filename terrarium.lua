@@ -211,8 +211,10 @@ local function peek_canvas()
     end
   end
   for j = 1, #SETTINGS do cv.rect(100 + (j - 1) * 4, 40, 2, 2, j == set_cursor and 13 or 3) end
-  local n = #Climate.trail -- the attractor's recent path (x across, z up)
-  for j, q in ipairs(Climate.trail) do cv.px(82 + q[1] * 16, 45 - q[2] * 4, 1 + 12 * j / n) end
+  if SETTINGS[set_cursor] == "t_climate" or SETTINGS[set_cursor] == "t_drift" then
+    local n = #Climate.trail -- the attractor's recent path (x across, z up), next to its name
+    for j, q in ipairs(Climate.trail) do cv.px(82 + q[1] * 16, 46 - q[2] * 3.5, 1 + 12 * j / n) end
+  end
   for i = 1, Brain.length do
     cv.rect(2 + (i - 1) * 3, 46, 2, 3, Brain.reg[i] and (i == Brain.last_step and 15 or 7) or 2)
   end
@@ -229,11 +231,14 @@ local function peek_text()
     screen.move(26, y + 5)
     screen.text(sc.cur(i).name)
   end
+  -- the value sits past the widest setting name, so no name runs into it
+  local col = 0
+  for _, name in ipairs(SETTING_NAMES) do col = math.max(col, screen.text_extents(name) or 28) end
   screen.level(6)
   screen.move(2, 44)
   screen.text(SETTING_NAMES[set_cursor])
   screen.level(13)
-  screen.move(26, 44)
+  screen.move(2 + col + 5, 44)
   screen.text(params:string(SETTINGS[set_cursor]))
 end
 

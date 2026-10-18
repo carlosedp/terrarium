@@ -968,9 +968,10 @@ function drawPeek() {
   // settings line: K1 + E2 picks one, K1 + E3 changes it
   const st = SETTINGS[setCursor];
   S.text(2, 39, st.name, 6);
-  S.text(26, 39, st.show(), 13);
+  S.text(2 + Math.max(...SETTINGS.map(s => s.name.length)) * 4 + 4, 39, st.show(), 13);   // past the widest name
   SETTINGS.forEach((_, i) => S.rect(100 + i * 4, 40, 2, 2, i === setCursor ? 13 : 3));
-  climate.trail.forEach(([x, z], j) => S.px(82 + x * 16, 45 - z * 4, 1 + 12 * (j + 1) / climate.trail.length));   // the attractor's path
+  if (st.name === "climate" || st.name === "drift")   // the attractor's path, next to its name
+    climate.trail.forEach(([x, z], j) => S.px(82 + x * 16, 46 - z * 3.5, 1 + 12 * (j + 1) / climate.trail.length));
   for (let i = 0; i < regLen; i++) S.rect(2 + i * 3, 46, 2, 3, reg[i] ? (i === lastStep ? 15 : 7) : 2);
   S.line(0, 51, W - 1, 51, 3);
 }
