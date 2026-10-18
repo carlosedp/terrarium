@@ -9,7 +9,7 @@ with the sound. The screen shows no numbers.
 | Part | In the scene | Modules |
 | --- | --- | --- |
 | **brain** | the weather: when notes happen and which ones | rain (clocked to the norns clock), lightning (random) |
-| **voice** | the ground: what plays | meadow (Plaits), crystals (Plaits 6-op FM), reeds (Rings) |
+| **voice** | the ground: what plays | meadow (Plaits), crystals (Plaits 6-op FM), reeds (Rings), visitors (any [nb](https://github.com/sixolet/nb) voice) |
 | **color** | light and water: what shapes it | pond (Rings), fog (Ripples) |
 | **air** | the sky: where it rings out | clouds (Clouds), fireflies (Beads), mountains (MiVerb) |
 
@@ -40,6 +40,9 @@ From the maiden REPL:
 ;install https://github.com/carlosedp/terrarium
 ```
 
+[nb](https://github.com/sixolet/nb) comes in as a git submodule (`lib/nb`). Cloning by hand,
+use `git clone --recurse-submodules`.
+
 ## Controls
 
 | Control | Does |
@@ -47,7 +50,7 @@ From the maiden REPL:
 | E1 | choose a part (the others dim for a moment) |
 | E2, E3 | that part's two macros |
 | K2 | swap the part's module |
-| hold K2 + E2 | pick the module's variant: Plaits engine (meadow), DX bank (crystals), Rings model (reeds, pond), Clouds mode |
+| hold K2 + E2 | pick the module's variant: Plaits engine (meadow), DX bank (crystals), Rings model (reeds, pond), nb voice (visitors), Clouds mode |
 | K3 | gesture: new phrase (brain), strike (voice, color), freeze (air) |
 | hold K1 | peek at all parts; while held, E2 picks a setting and E3 changes it |
 
@@ -70,6 +73,7 @@ lib/brain.lua            phrase, pitch mapping, seasons
 lib/canvas.lua           128x64 framebuffer, blitted to the screen as merged runs
 lib/glass.lua            the glass over the scene: rim, condensation, frost
 lib/climate.lua          chaotic attractors that modulate the macros
+lib/nb/                  the nb library (git submodule), for visitors
 lib/scene/*.lua          one file per module: its drawing, macros and sound mapping
 lib/installer.lua        mi-UGens check and installer
 doc/SOUND.md             macro -> mi-UGen parameter map (the tuning reference)
@@ -106,7 +110,7 @@ the MI engines).
 - [ ] CPU with the heaviest combination (2 Plaits + Rings + Beads); pick voice count from it
 - [ ] screen frame time (the smoke test averages about 730 screen calls per frame and peaks around 1,550 with fog or a lightning flash; the pond's reflection is the main extra cost)
 - [ ] tune ranges and curves in each module's `sound()` by ear (doc/SOUND.md lists open questions)
-- [ ] nb voices as a third voice option ("visitors")
+- [ ] visitors with real nb voices (Emplaitress, MIDI, Just Friends); they play dry, outside color and air
 - [ ] grid: phrase editing, key/scale picker
 
 ## License

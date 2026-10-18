@@ -91,16 +91,20 @@ other); no Plaits behind it. Most Rings models are strings, drawn as reeds that 
 - **CPU:** reeds with the pond runs two Rings. Measure it; if it's too heavy, the pond could
   switch to its own exciter when reeds is the voice, or that pairing could be blocked.
 
-### A third voice slot for nb
+### Visitors → any nb voice
 
-nb voices (Emplaitress, Doubledecker, monami.e, MIDI, Just Friends…) are better as their own
-voice option than hidden behind crystals. Proposed module name: **visitors**, drawn as something
-that arrives from elsewhere (birds landing, perhaps).
+nb voices (Emplaitress, Doubledecker, monami.e, MIDI, Just Friends…) play as **visitors**,
+drawn as creatures that come in from outside: ants, beetles or moths, fixed per voice.
 
-- Notes go to the nb player chosen in PARAMS (`nb:add_param`).
-- Each nb voice has its own parameters, so the scene can only promise:
-  E2 → `player:modulate(v)` (each voice decides what that does), E3 → note length.
-- Their audio still passes through color and air via the insert on the main output.
+| Macro | Parameter | Range |
+| --- | --- | --- |
+| E2 modulate | `player:modulate(v)` (each voice decides what it does) | 0 → 1, sent only when it changes |
+| E3 length | note length | 0.1 → 2 beats (exponential) |
+
+- **Variant (hold K2 + E2):** the nb voice (`visitors_voice`, from `nb:add_param`). "none" is silent.
+- Each voice's own parameters are in PARAMS under "visitor voices" (`nb:add_player_params`).
+- **Dry:** nb doesn't route audio. Each voice sounds wherever its mod, engine or device sends it,
+  so color and air don't process visitors. The engine's voice slot is empty (`voice_kind none`).
 
 ## Color
 

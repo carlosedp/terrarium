@@ -7,7 +7,7 @@
 // this engine only exposes the slots and their raw parameters:
 //
 //   note(pitch, accent)            play a note on the next voice (and strum Rings)
-//   voice_kind(name)               plaits | rings
+//   voice_kind(name)               plaits | rings | none (nb plays the notes)
 //   voice_set(key, value)          set a parameter on the voice synths
 //   color_kind(name)               pond | fog
 //   color_set(key, value)
@@ -131,7 +131,7 @@ Engine_Terrarium : CroneEngine {
 
 	note { |pitch, accent|
 		var v;
-		if (ready.not) { ^this };
+		if (ready.not or: { voices.isNil }) { ^this };
 		v = voices[nextVoice];
 		nextVoice = (nextVoice + 1) % voices.size;
 		v.set(\pitch, pitch, \level, 0.5 + (0.5 * accent), \pan, 0.3.rand2, \t_trig, 1);
@@ -143,6 +143,12 @@ Engine_Terrarium : CroneEngine {
 	setVoice { |kind|
 		var old = voices, name = ("terrarium_voice_" ++ kind).asSymbol;
 		if (ready.not or: { kind == voiceKind }) { ^this };
+		if (kind == \none) { // visitors: notes go to nb, outside the engine
+			voiceKind = kind;
+			voices = nil;
+			old !? { old.do(_.set(\gate, 0)) };
+			^this
+		};
 		if (SynthDescLib.global.at(name).isNil) {
 			("terrarium: no voice '" ++ kind ++ "'").warn;
 			^this
@@ -157,7 +163,7 @@ Engine_Terrarium : CroneEngine {
 	}
 
 	voiceSet { |key, value|
-		if (voiceKind.isNil) { ^this };
+		if (voiceKind.isNil or: { voiceKind == \none }) { ^this };
 		voiceParams[voiceKind][key] = value;
 		voices !? { voices.do(_.set(key, value)) };
 	}

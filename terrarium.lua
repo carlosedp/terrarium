@@ -19,6 +19,7 @@ local Brain = include("lib/brain")
 local installer = include("lib/installer")
 local glass = include("lib/glass")
 local Climate = include("lib/climate")
+local nb = include("lib/nb/lib/nb")
 
 local FPS = 15
 local GY = 54 -- the ground line
@@ -27,7 +28,8 @@ local GY = 54 -- the ground line
 -- color = light and water, air = sky
 local LAYERS = {
   { id = "brain", name = "brain", mods = { include("lib/scene/rain"), include("lib/scene/lightning") } },
-  { id = "voice", name = "voice", mods = { include("lib/scene/meadow"), include("lib/scene/crystals"), include("lib/scene/reeds") } },
+  { id = "voice", name = "voice", mods = { include("lib/scene/meadow"), include("lib/scene/crystals"), include("lib/scene/reeds"),
+    include("lib/scene/visitors") } },
   { id = "color", name = "color", mods = { include("lib/scene/pond"), include("lib/scene/fog") } },
   { id = "air",   name = "air",   mods = { include("lib/scene/clouds"), include("lib/scene/fireflies"), include("lib/scene/mountains") } },
 }
@@ -44,7 +46,7 @@ local CV_SRC = { { 3, 1 }, { 1, 2 }, { 2, 3 }, { 3, 1 } }
 local CV_DEFAULT = { { 0, 0.3 }, { 0.4, 0.3 }, { 0.35, 0.25 }, { 0.35, 0.3 } }
 
 -- shared scene state handed to every module
-local sc = { t = 0, GY = GY, frozen = false, fly_t = 0, brain = Brain }
+local sc = { t = 0, GY = GY, frozen = false, fly_t = 0, brain = Brain, nb = nb }
 function sc.cur(i) return LAYERS[i].mods[params:get(LAYERS[i].id .. "_kind")] end
 function sc.kind(i) return sc.cur(i).id end
 -- a macro as you set it
@@ -93,7 +95,8 @@ local function send_sound()
 end
 
 local function play(ev, fresh)
-  engine.note(Brain.pitch(ev.x), fresh and 1 or 0.7)
+  local voice, vel = sc.cur(2), fresh and 1 or 0.7
+  if voice.play then voice:play(sc, Brain.pitch(ev.x), vel) else engine.note(Brain.pitch(ev.x), vel) end
   for i = 2, 4 do
     local mod = sc.cur(i)
     if mod.on_note then mod:on_note(ev.x, sc) end
@@ -185,9 +188,13 @@ local function add_params()
           controlspec.new(-1, 1, "lin", 0, CV_DEFAULT[i][k], "", 0.01))
         params:set_action(id .. "_cv", changed)
       end
-      if m.add_params then m:add_params(changed) end
+      if m.add_params then m:add_params(changed, sc) end
     end
   end
+
+  -- each nb voice's own params (visitors play them)
+  params:add_separator("terrarium_nb", "visitor voices")
+  nb:add_player_params()
 end
 
 -- the season turned: show it in the settings without moving home
@@ -401,6 +408,7 @@ function init()
     for _, m in ipairs(LAYERS[4].mods) do if m.id ~= "fireflies" then mods[#mods + 1] = m end end
     LAYERS[4].mods = mods
   end
+  nb:init()
   add_params()
   params:bang()
   Brain.new_phrase(sc.t)
@@ -411,4 +419,5 @@ end
 
 function cleanup()
   if redraw_metro then redraw_metro:stop() end
+  nb:stop_all()
 end

@@ -101,9 +101,12 @@ E1 picks a part, and the others dim for a moment so it's clear which one you're 
   tempting for crystals, but the 6-op FM banks are a real, distinct glassy sound. Reeds plays
   Rings with its internal exciter; most Rings models are strings, so they're drawn as reeds that
   vibrate when plucked. Appended after crystals so saved PSETs keep their voice.
-- **nb voices get their own slot later ("visitors")** rather than hiding behind crystals. nb voices
-  each define their own parameters, so the scene can only promise E2 → the voice's generic
-  `modulate`, E3 → note length.
+- **nb voices are visitors, a fourth voice module (October 2026).** nb voices each define their
+  own parameters, so the scene can only promise E2 → the voice's generic `modulate`, E3 → note
+  length; the voice itself is the variant (hold K2 + E2). They're drawn as creatures from outside
+  the jar (ants, beetles, moths), because their sound is outside it too: nb doesn't route audio,
+  so color and air can't process them. An earlier note assumed an insert on the main output
+  would carry them through; nb has no such thing, so they stay dry.
 
 ## Open questions
 

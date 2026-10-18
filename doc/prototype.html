@@ -344,7 +344,8 @@ const LAYERS = [
   { id: "voice", name: "voice", mods: [
     { id: "meadow",   name: "meadow",   ugen: "Plaits",   sees: "Every note blooms a flower, and each flora (Plaits engine) grows its own kind. Harmonics grow the grass, timbre adds petals.", macros: [["harmonics", .35], ["timbre", .5]] },
     { id: "crystals", name: "crystals", ugen: "Plaits 6-op", sees: "Glassy FM spires that glint when struck. Ratio grows them taller and sharper, index throws more sparks.", macros: [["ratio", .4], ["index", .45]] },
-    { id: "reeds",    name: "reeds",    ugen: "Rings",    sees: "A reed bed by the water. Each note plucks the nearest reed and it vibrates like a string. Structure grows the reeds taller and bends them, brightness lights their heads; sympathetic strings set the neighbors ringing too.", macros: [["structure", .4], ["brightness", .5]] }]},
+    { id: "reeds",    name: "reeds",    ugen: "Rings",    sees: "A reed bed by the water. Each note plucks the nearest reed and it vibrates like a string. Structure grows the reeds taller and bends them, brightness lights their heads; sympathetic strings set the neighbors ringing too.", macros: [["structure", .4], ["brightness", .5]] },
+    { id: "visitors", name: "visitors", ugen: "nb",       sees: "Voices from outside the terrarium (nb mods, MIDI, Just Friends) arrive as creatures: ants, beetles or moths, depending on the voice. Each note calls the nearest one over and it glows for as long as the note lasts. Their sound is their own, so color and air don't touch it. E2 is the voice's own modulate, E3 the note length.", macros: [["modulate", .5], ["length", .4]] }]},
   { id: "color", name: "color", mods: [
     { id: "pond", name: "pond", ugen: "Rings",   sees: "Each note rings out as ripples. Structure adds rings, damping shortens how long they spread.", macros: [["structure", .5], ["damping", .35]] },
     { id: "fog",  name: "fog",  ugen: "Ripples", sees: "A low filter is a foggy, dim scene. Clarity lifts the fog and opens the filter, shimmer waves it as resonance rises.", macros: [["clarity", .55], ["shimmer", .3]] }]},
@@ -359,6 +360,7 @@ const FLORA_SHAPE = ["bell", "spike", "petals", "tulip", "umbel", "umbel", "tuli
 const VARIANTS = {
   meadow: ["modal", "string", "additive", "wavetable", "string machine", "chords", "va filter", "phase dist", "wave terrain", "waveshaper", "fm", "grain"],
   crystals: ["dx bank 1", "dx bank 2", "dx bank 3"],
+  visitors: ["emplaitress 1", "doubledecker 1", "jf 1", "none"],   // stand-ins for whatever nb voices are installed
   reeds: ["modal", "sympathetic strings", "inharmonic string", "fm voice", "quantized strings", "string + reverb"],
   pond: ["modal", "sympathetic strings", "inharmonic string", "fm voice", "quantized strings", "string + reverb"],
   clouds: ["granular", "pitch shifter", "looping delay", "spectral"]
@@ -499,6 +501,14 @@ const REEDS = Array.from({ length: 22 }, (_, i) => ({
   x: 3 + i * 5.6 + (RR() - 0.5) * 3, h: 0.55 + RR() * 0.45, lean: (RR() - 0.5) * 2, kink: (RR() - 0.5) * 2,
   head: RR() < 0.75, ph: RR() * 6.283, f: 9 + RR() * 5, amp: 0
 }));
+// visitors: the same voice always brings the same creature
+const visitorKind = name => name === "none" ? null : ["ant", "beetle", "moth"][[...name].reduce((s, c) => s + c.charCodeAt(0), 0) % 3];
+let crowd = [], crowdVoice = null;
+const arrive = kind => Array.from({ length: 6 }, (_, i) => ({
+  x: -3 - (i + 1) * 4, target: null, glow: 0, hold: 0, ph: Math.random() * 6.283,
+  vx: 6 + Math.random() * 8, y: kind === "moth" ? 18 + Math.random() * 22 : GY - 1
+}));
+const visitorBeats = () => 0.1 * Math.pow(2, mv(1, 1) * 4.3);
 const R1 = rng(200);
 const flies = Array.from({ length: 30 }, () => ({
   x: R1() * W, y: 16 + R1() * (GY - 22), fx: 0.15 + R1() * 0.35, fy: 0.3 + R1() * 0.6, ph: R1() * 6.28, bf: 0.7 + R1() * 1.6, spark: 0
@@ -705,7 +715,11 @@ function drawPhrase(kind) {
 function trigger(x) {
   const v = cur(1), c = cur(2), s = cur(3);
   if (v.id === "meadow") { flowers.push({ x, t: 0, n: 3 + Math.round(mv(1, 1) * 5), shape: FLORA_SHAPE[v.vi] }); if (flowers.length > 14) flowers.shift(); }
-  else if (v.id === "reeds") {
+  else if (v.id === "visitors") {
+    let near = null;
+    for (const c of crowd) if (!near || Math.abs(c.x - x) < Math.abs(near.x - x)) near = c;
+    if (near) { near.target = x; near.glow = 1; near.hold = visitorBeats() * 0.5; }
+  } else if (v.id === "reeds") {
     let ni = 0; REEDS.forEach((rd, i) => { if (Math.abs(rd.x - x) < Math.abs(REEDS[ni].x - x)) ni = i; });
     REEDS[ni].amp = 1;
     const sym = v.vi === 1 ? 0.6 : 0.2;                  // sympathetic strings ring their neighbors
@@ -747,6 +761,17 @@ function step(dt) {
   bolts = age(bolts, FX.flash ? 0.7 : 0.32);
   flowers = age(flowers, 1.8);
   glints = age(glints, 1.0);
+  if (cur(1).id === "visitors") {
+    const m = cur(1), name = VARIANTS.visitors[m.vi];
+    if (name !== crowdVoice) { crowdVoice = name; const k = visitorKind(name); crowd = k ? arrive(k) : []; crowd.kind = k; }
+    const lively = 0.4 + mv(1, 0) * 1.2;
+    for (const c of crowd) {
+      if (c.target !== null) { const d = c.target - c.x; c.x += clamp(d, -40 * dt, 40 * dt); if (Math.abs(d) < 1) c.target = null; }
+      else { c.x += c.vx * lively * dt; if ((c.x > 124 && c.vx > 0) || (c.x < 3 && c.vx < 0)) c.vx = -c.vx; }
+      c.hold -= dt; if (c.hold <= 0) c.glow = Math.max(0, c.glow - dt * 3);
+      c.ph += dt * (6 + lively * 6);
+    }
+  }
   const ring = Math.exp(-dt * (1 + mv(0, 0) * 2.5));    // reeds ring shorter in fast weather
   for (const rd of REEDS) rd.amp *= ring;
   rings = age(rings, () => 0.4 + (1 - mv(2, 1)) * 2.4);
@@ -788,7 +813,7 @@ function draw() {
   // voice
   S.mul = dimE(1);
   const vo = cur(1).id;
-  if (vo === "meadow") drawMeadow(); else if (vo === "reeds") drawReeds(); else drawCrystals();
+  if (vo === "meadow") drawMeadow(); else if (vo === "reeds") drawReeds(); else if (vo === "visitors") drawVisitors(); else drawCrystals();
 
   // a strike lights the land for a moment; fog (drawn next) muffles it
   if (FX.flash && cur(0).id === "lightning") {
@@ -928,6 +953,21 @@ const SHAPES = {
     }
   }
 };
+function drawVisitors() {
+  for (const c of crowd) {
+    const l = 5 + c.glow * 10, dir = (c.target !== null ? c.target > c.x : c.vx > 0) ? 1 : -1;
+    if (crowd.kind === "ant") {
+      S.px(c.x, GY - 1, l); S.px(c.x - dir, GY - 1, l * 0.8); S.px(c.x + dir, GY - 2, l * 0.6);
+      if (Math.sin(c.ph) > 0) S.px(c.x, GY - 2, l * 0.3);
+    } else if (crowd.kind === "beetle") {
+      S.rect(c.x - 1, GY - 2, 3, 2, l); S.px(c.x + 2 * dir, GY - 2, l * 0.6);
+      if (Math.sin(c.ph) > 0) S.px(c.x - 2 * dir, GY - 1, l * 0.4);
+    } else {
+      const y = c.y + Math.sin(c.ph * 0.4) * 2, w = Math.sin(c.ph) > 0 ? -1 : 0;
+      S.px(c.x, y, l); S.px(c.x - 1, y + w, l * 0.6); S.px(c.x + 1, y + w, l * 0.6);
+    }
+  }
+}
 function drawReeds() {
   const st = mv(1, 0), br = mv(1, 1), len = 10 + st * 14;
   for (const rd of REEDS) {
@@ -1115,6 +1155,16 @@ function noteOn(x) {
   if (!A || A.ctx.state !== "running") return;
   const { ctx } = A, t = ctx.currentTime, f = scaleFreq(x), v = cur(1);
   const out = ctx.createGain(); out.gain.value = 0;
+  if (v.id === "visitors") {
+    // an nb voice plays outside the engine: straight to the output, no color or air
+    if (VARIANTS.visitors[v.vi] === "none") return;
+    const osc = ctx.createOscillator(), dur = Math.max(0.15, visitorBeats() * 0.5);
+    osc.type = ["triangle", "square", "sine"][v.vi % 3]; osc.frequency.value = f;
+    env(out, t, 0.18 * (0.6 + mv(1, 0) * 0.4), dur + 0.3);
+    osc.connect(out); out.connect(A.dry); osc.start(t); osc.stop(t + dur + 0.4);
+    setTimeout(() => out.disconnect(), (dur + 1) * 1000);
+    return;
+  }
   const nodes = [];
   let dur;
   if (v.id === "meadow") {

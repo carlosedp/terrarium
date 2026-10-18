@@ -35,10 +35,13 @@ Run it after every Lua change. It also asserts that params group counts match.
 - A module with a variant (an option param picked with hold K2 + E2) sets `variant` to that param's id.
 - A module that adds its own params must set `extra_count` (params group sizes are declared up front).
 - A new color or air module needs a matching `terrarium_<id>` SynthDef in the engine. A voice
-  module sets `voice` to the engine voice it plays (`plaits`, `rings`: `terrarium_voice_<kind>`).
+  module sets `voice` to the engine voice it plays (`plaits`, `rings`: `terrarium_voice_<kind>`;
+  `none` when it plays elsewhere, like visitors).
 - Add new modules and option entries at the end of their lists, so saved PSETs keep their choices.
 - **Read macros with `sc.m(i, k)`** (the value as it plays, climate included), never with
   `params:get` directly; `sc.base(i, k)` is the value as set. Each macro also has a `<id>_cv` param.
+- A voice module can define `play(sc, note, vel)` to play notes itself instead of the engine
+  (visitors does, through nb). `lib/nb` is a git submodule (sixolet/nb); don't edit it.
 - A brain module must define `wind(sc)` (the sky drifts with it); `flash()` is optional.
 
 ## Related repo

@@ -22,7 +22,7 @@ M.run(4); check("default scene (rain/meadow/pond/clouds)")
 local names = { "brain", "voice", "color", "air" }
 for layer = 1, 4 do
   turn(1, -4); turn(1, 1, layer - 1)
-  local count = #params:lookup(names[layer] .. "_kind").options
+  local count = #params:lookup_param(names[layer] .. "_kind").options
   for _ = 1, count do
     turn(2, 1, 60); turn(3, 1, 60); M.run(1.5)
     turn(2, -1, 60); turn(3, -1, 60); M.run(1.5)
@@ -42,18 +42,33 @@ for layer = 1, 4 do
   key(2, 1); turn(2, 1, 2); key(2, 0)
   assert(params:get(kind_id) == before, names[layer] .. ": hold K2 + E2 swapped the module")
   press(2)
-  assert(params:get(kind_id) ~= before or #params:lookup(kind_id).options == 1, names[layer] .. ": K2 tap did not swap")
-  press(2); if #params:lookup(kind_id).options == 3 then press(2) end -- back to the first module
+  assert(params:get(kind_id) ~= before or #params:lookup_param(kind_id).options == 1, names[layer] .. ": K2 tap did not swap")
+  for _ = 1, #params:lookup_param(kind_id).options - 1 do press(2) end -- back to the first module
 end
 check("hold K2 + E2 variants")
 
+-- visitors: hold K2 + E2 picks the nb voice; notes go to nb, not the engine
+turn(1, -4); turn(1, 1)
+params:set("voice_kind", 4)
+M.run(1.2) -- nb readies its selector after a second
+key(2, 1); turn(2, 1); key(2, 0)
+assert(params:string("visitors_voice") == "test voice", "visitors: hold K2 + E2 did not pick the nb voice")
+local engine_before, nb_before = M.engine_calls.note or 0, M.nb_notes
+press(3); press(3); M.run(3)
+turn(2, 1, 10); M.run(0.2)
+assert(M.nb_notes > nb_before, "visitors: no notes reached the nb voice")
+assert((M.engine_calls.note or 0) == engine_before, "visitors: notes also went to the engine")
+assert(M.nb_mods > 0, "visitors: E2 never reached the voice's modulate")
+check(("visitors via nb (%d notes)"):format(M.nb_notes - nb_before))
+params:set("voice_kind", 1)
+
 -- every meadow flora (Plaits engine) blooms its own flower
 turn(1, -4); turn(1, 1)
-for f = 1, #params:lookup("meadow_flora").options do
+for f = 1, #params:lookup_param("meadow_flora").options do
   params:set("meadow_flora", f)
   press(3); M.run(0.4)
 end
-check(("meadow: %d flora"):format(#params:lookup("meadow_flora").options))
+check(("meadow: %d flora"):format(#params:lookup_param("meadow_flora").options))
 
 -- settings while holding K1: every setting, both directions, plus seasons running
 hold1(function()
@@ -71,7 +86,7 @@ print(("    key drifted to %s %s"):format(params:string("t_root"), params:string
 
 -- climate: every attractor moves the macros around where they're set, never out of range
 params:set("t_drift", 3) -- fast
-for c = 2, #params:lookup("t_climate").options do
+for c = 2, #params:lookup_param("t_climate").options do
   params:set("t_climate", c)
   local lo, hi, sum, n = 1, 0, 0, 0
   for _ = 1, 150 do
