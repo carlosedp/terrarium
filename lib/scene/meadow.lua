@@ -13,7 +13,7 @@ local FLORA_SHAPE = { "bell", "spike", "petals", "tulip", "umbel", "umbel",
   "tulip", "star", "puff", "star", "star", "puff" }
 
 local meadow = {
-  id = "meadow", name = "meadow", about = "Plaits",
+  id = "meadow", name = "meadow", about = "Plaits", voice = "plaits",
   macros = {
     { id = "harmonics", name = "harmonics", default = 0.35 },
     { id = "timbre",    name = "timbre",    default = 0.5 },

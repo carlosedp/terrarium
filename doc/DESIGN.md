@@ -26,17 +26,18 @@ scripts inspired by real-world visuals, the patch _is_ a scene.
 
 ## Modules
 
-| Part  | Module    | mi-UGen        | In the scene                                                                       | Macros             |
-| ----- | --------- | -------------- | ---------------------------------------------------------------------------------- | ------------------ |
-| brain | rain      | — (clocked)    | drops fall on the norns clock and play where they land; puddles mark the phrase    | rate, change       |
-| brain | lightning | — (random)     | random strikes, sometimes doubled, light up the land; scorch marks hold the phrase | rate, change       |
-| voice | meadow    | Plaits         | each note blooms a flower in swaying grass                                         | harmonics, timbre  |
-| voice | crystals  | Plaits 6-op FM | glass spires glint and throw sparks                                                | ratio, index       |
-| color | pond      | Rings          | ripples spread from each note; the water mirrors the scene and ripples bend it     | structure, damping |
-| color | fog       | Ripples        | fog thickens as the filter closes; the whole scene dims (soil under the ground)    | clarity, shimmer   |
-| air   | clouds    | Clouds         | clouds made of grains drift                                                        | density, size      |
-| air   | fireflies | Beads          | each grain is a firefly with a trail                                               | density, glow      |
-| air   | mountains | MiVerb         | ridges grow with the room; notes echo off the far ridge                            | size, echo         |
+| Part  | Module    | mi-UGen        | In the scene                                                                       | Macros                |
+| ----- | --------- | -------------- | ---------------------------------------------------------------------------------- | --------------------- |
+| brain | rain      | — (clocked)    | drops fall on the norns clock and play where they land; puddles mark the phrase    | rate, change          |
+| brain | lightning | — (random)     | random strikes, sometimes doubled, light up the land; scorch marks hold the phrase | rate, change          |
+| voice | meadow    | Plaits         | each note blooms a flower in swaying grass; each Plaits engine grows its own kind  | harmonics, timbre     |
+| voice | crystals  | Plaits 6-op FM | glass spires glint and throw sparks                                                | ratio, index          |
+| voice | reeds     | Rings          | each note plucks a reed and it vibrates like a string                              | structure, brightness |
+| color | pond      | Rings          | ripples spread from each note; the water mirrors the scene and ripples bend it     | structure, damping    |
+| color | fog       | Ripples        | fog thickens as the filter closes; the whole scene dims (soil under the ground)    | clarity, shimmer      |
+| air   | clouds    | Clouds         | clouds made of grains drift                                                        | density, size         |
+| air   | fireflies | Beads          | each grain is a firefly with a trail                                               | density, glow         |
+| air   | mountains | MiVerb         | ridges grow with the room; notes echo off the far ridge                            | size, echo            |
 
 The glass is drawn over everything (`lib/glass.lua`): rounded jar corners and a glint, rain
 condensing on it (more beads at faster rates, some run down), and frost growing in from the
@@ -44,7 +45,7 @@ corners while the air is frozen. The weather's wind (rain's change, or a wilder 
 pushes the clouds and fireflies, so the sky and the grass move together.
 
 Hold K2 and turn E2 to pick the module's variant: the Plaits engine for the meadow (each grows
-its own flower), the DX bank for crystals, the Rings model for the pond, the mode for clouds. A K2
+its own flower), the DX bank for crystals, the Rings model for reeds and the pond, the mode for clouds. A K2
 tap still swaps the module (on release, so the hold can't swap it).
 
 K3 is a gesture per part: new phrase (brain), strike (voice, color), freeze (air).
@@ -96,6 +97,10 @@ E1 picks a part, and the others dim for a moment so it's clear which one you're 
   mode used to be PARAMS-only. Hold K2 + E2 reaches all of them the same way, keeps harmonics and
   timbre on E2/E3 for every engine, and leaves K3 free for its gesture. The meadow's flora list
   grew to twelve melodic Plaits engines.
+- **Crystals stays FM; Rings gets its own voice, reeds (October 2026).** Rings as a voice was
+  tempting for crystals, but the 6-op FM banks are a real, distinct glassy sound. Reeds plays
+  Rings with its internal exciter; most Rings models are strings, so they're drawn as reeds that
+  vibrate when plucked. Appended after crystals so saved PSETs keep their voice.
 - **nb voices get their own slot later ("visitors")** rather than hiding behind crystals. nb voices
   each define their own parameters, so the scene can only promise E2 → the voice's generic
   `modulate`, E3 → note length.

@@ -9,7 +9,7 @@ with the sound. The screen shows no numbers.
 | Part | In the scene | Modules |
 | --- | --- | --- |
 | **brain** | the weather: when notes happen and which ones | rain (clocked to the norns clock), lightning (random) |
-| **voice** | the ground: what plays | meadow (Plaits), crystals (Plaits 6-op FM) |
+| **voice** | the ground: what plays | meadow (Plaits), crystals (Plaits 6-op FM), reeds (Rings) |
 | **color** | light and water: what shapes it | pond (Rings), fog (Ripples) |
 | **air** | the sky: where it rings out | clouds (Clouds), fireflies (Beads), mountains (MiVerb) |
 
@@ -47,7 +47,7 @@ From the maiden REPL:
 | E1 | choose a part (the others dim for a moment) |
 | E2, E3 | that part's two macros |
 | K2 | swap the part's module |
-| hold K2 + E2 | pick the module's variant: Plaits engine (meadow), DX bank (crystals), Rings model (pond), Clouds mode |
+| hold K2 + E2 | pick the module's variant: Plaits engine (meadow), DX bank (crystals), Rings model (reeds, pond), Clouds mode |
 | K3 | gesture: new phrase (brain), strike (voice, color), freeze (air) |
 | hold K1 | peek at all parts; while held, E2 picks a setting and E3 changes it |
 

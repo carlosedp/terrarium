@@ -1,13 +1,14 @@
 // Engine_Terrarium: the sound of terrarium.
 //
-//   voices (2x MiPlaits) -> voiceBus -> color (MiRings | MiRipples) -> colorBus
+//   voice (2x MiPlaits | MiRings) -> voiceBus -> color (MiRings | MiRipples) -> colorBus
 //     -> air (MiClouds | MiBeads | MiVerb) -> out
 //
 // The Lua side owns every mapping from macros to parameters (see doc/SOUND.md);
 // this engine only exposes the slots and their raw parameters:
 //
 //   note(pitch, accent)            play a note on the next voice (and strum Rings)
-//   voice_set(key, value)          set a MiPlaits parameter on all voices
+//   voice_kind(name)               plaits | rings
+//   voice_set(key, value)          set a parameter on the voice synths
 //   color_kind(name)               pond | fog
 //   color_set(key, value)
 //   air_kind(name)                 clouds | fireflies | mountains
@@ -20,7 +21,7 @@
 
 Engine_Terrarium : CroneEngine {
 	var voiceGroup, colorGroup, airGroup, voiceBus, colorBus;
-	var voices, nextVoice = 0;
+	var voices, nextVoice = 0, voiceKind, ready = false;
 	var colorSynth, airSynth, colorKind, airKind;
 	var voiceParams, colorParams, airParams;
 
@@ -48,7 +49,8 @@ Engine_Terrarium : CroneEngine {
 			voiceGroup = Group.new(context.xg);
 			colorGroup = Group.after(voiceGroup);
 			airGroup = Group.after(colorGroup);
-			voices = Array.fill(2, { Synth(\terrarium_voice, [\out, voiceBus], voiceGroup) });
+			ready = true;
+			this.setVoice(\plaits);
 		};
 	}
 
@@ -56,11 +58,20 @@ Engine_Terrarium : CroneEngine {
 		// slot synths fade in and out, so swapping a module doesn't click
 		var fade = { |gate| EnvGen.kr(Env.asr(0.05, 1, 0.3), gate, doneAction: 2) };
 
-		SynthDef(\terrarium_voice, { |out, pitch = 60, t_trig = 0, engine = 12, harm = 0.5, timbre = 0.5,
-			morph = 0.5, decay = 0.5, lpg = 0.5, level = 0.8, pan = 0, amp = 0.35|
+		SynthDef(\terrarium_voice_plaits, { |out, gate = 1, pitch = 60, t_trig = 0, engine = 12, harm = 0.5,
+			timbre = 0.5, morph = 0.5, decay = 0.5, lpg = 0.5, level = 0.8, pan = 0, amp = 0.35|
 			var sig = plaits.ar(pitch, engine, harm.lag(0.05), timbre.lag(0.05), morph.lag(0.05),
 				t_trig, level, decay: decay, lpg_colour: lpg);
-			Out.ar(out, Pan2.ar(sig[0], pan, amp));
+			Out.ar(out, Pan2.ar(sig[0], pan, amp) * fade.(gate));
+		}).add;
+
+		// a Rings voice: the internal exciter strikes the resonator on each note;
+		// two voices of polyphony inside Rings, so notes ring over each other
+		SynthDef(\terrarium_voice_rings, { |out, gate = 1, pitch = 60, t_trig = 0, struct = 0.4, bright = 0.5,
+			damp = 0.6, pos = 0.3, model = 0, amp = 0.5|
+			var sig = rings.ar(0, t_trig, pitch, struct.lag(0.05), bright.lag(0.05), damp.lag(0.05), pos,
+				model, 2, 1);
+			Out.ar(out, sig * amp * fade.(gate));
 		}).add;
 
 		// color: the voice excites Rings; more structure, more resonator in the mix
@@ -110,6 +121,7 @@ Engine_Terrarium : CroneEngine {
 
 	addCommands {
 		this.addCommand(\note, "ff", { |msg| this.note(msg[1], msg[2]) });
+		this.addCommand(\voice_kind, "s", { |msg| this.setVoice(msg[1].asSymbol) });
 		this.addCommand(\voice_set, "sf", { |msg| this.voiceSet(msg[1].asSymbol, msg[2]) });
 		this.addCommand(\color_kind, "s", { |msg| this.setColor(msg[1].asSymbol) });
 		this.addCommand(\color_set, "sf", { |msg| this.colorSet(msg[1].asSymbol, msg[2]) });
@@ -119,22 +131,41 @@ Engine_Terrarium : CroneEngine {
 
 	note { |pitch, accent|
 		var v;
-		if (voices.isNil) { ^this };
+		if (ready.not) { ^this };
 		v = voices[nextVoice];
 		nextVoice = (nextVoice + 1) % voices.size;
 		v.set(\pitch, pitch, \level, 0.5 + (0.5 * accent), \pan, 0.3.rand2, \t_trig, 1);
 		if (colorKind == \pond) { colorSynth !? { colorSynth.set(\pitch, pitch, \t_trig, 1) } };
 	}
 
+	// two Plaits round robin, or one Rings (polyphonic inside); each kind keeps
+	// its own parameters, and the old voices fade out
+	setVoice { |kind|
+		var old = voices, name = ("terrarium_voice_" ++ kind).asSymbol;
+		if (ready.not or: { kind == voiceKind }) { ^this };
+		if (SynthDescLib.global.at(name).isNil) {
+			("terrarium: no voice '" ++ kind ++ "'").warn;
+			^this
+		};
+		voiceKind = kind;
+		if (voiceParams[kind].isNil) { voiceParams[kind] = IdentityDictionary.new };
+		voices = Array.fill(if (kind == \plaits) { 2 } { 1 }, {
+			Synth(name, [\out, voiceBus] ++ voiceParams[kind].asKeyValuePairs, voiceGroup)
+		});
+		nextVoice = 0;
+		old !? { old.do(_.set(\gate, 0)) };
+	}
+
 	voiceSet { |key, value|
-		voiceParams[key] = value;
+		if (voiceKind.isNil) { ^this };
+		voiceParams[voiceKind][key] = value;
 		voices !? { voices.do(_.set(key, value)) };
 	}
 
 	// a new slot synth starts with every parameter sent so far, then the old one fades out
 	setColor { |kind|
 		var old = colorSynth;
-		if (voices.isNil or: { kind == colorKind }) { ^this };
+		if (ready.not or: { kind == colorKind }) { ^this };
 		colorKind = kind;
 		colorSynth = Synth(("terrarium_" ++ kind).asSymbol,
 			[\in, voiceBus, \out, colorBus] ++ colorParams.asKeyValuePairs, colorGroup);
@@ -148,7 +179,7 @@ Engine_Terrarium : CroneEngine {
 
 	setAir { |kind|
 		var old = airSynth, name = ("terrarium_" ++ kind).asSymbol;
-		if (voices.isNil or: { kind == airKind }) { ^this };
+		if (ready.not or: { kind == airKind }) { ^this };
 		if (SynthDescLib.global.at(name).isNil) {
 			("terrarium: no synth for air '" ++ kind ++ "' (is MiBeads installed?)").warn;
 			^this

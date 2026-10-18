@@ -34,7 +34,9 @@ Run it after every Lua change. It also asserts that params group counts match.
 - **K1 is hold-only.** A quick K1 tap opens the norns system menu.
 - A module with a variant (an option param picked with hold K2 + E2) sets `variant` to that param's id.
 - A module that adds its own params must set `extra_count` (params group sizes are declared up front).
-- A new color or air module needs a matching `terrarium_<id>` SynthDef in the engine.
+- A new color or air module needs a matching `terrarium_<id>` SynthDef in the engine. A voice
+  module sets `voice` to the engine voice it plays (`plaits`, `rings`: `terrarium_voice_<kind>`).
+- Add new modules and option entries at the end of their lists, so saved PSETs keep their choices.
 - **Read macros with `sc.m(i, k)`** (the value as it plays, climate included), never with
   `params:get` directly; `sc.base(i, k)` is the value as set. Each macro also has a `<id>_cv` param.
 - A brain module must define `wind(sc)` (the sky drifts with it); `flash()` is optional.

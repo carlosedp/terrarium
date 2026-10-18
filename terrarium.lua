@@ -27,7 +27,7 @@ local GY = 54 -- the ground line
 -- color = light and water, air = sky
 local LAYERS = {
   { id = "brain", name = "brain", mods = { include("lib/scene/rain"), include("lib/scene/lightning") } },
-  { id = "voice", name = "voice", mods = { include("lib/scene/meadow"), include("lib/scene/crystals") } },
+  { id = "voice", name = "voice", mods = { include("lib/scene/meadow"), include("lib/scene/crystals"), include("lib/scene/reeds") } },
   { id = "color", name = "color", mods = { include("lib/scene/pond"), include("lib/scene/fog") } },
   { id = "air",   name = "air",   mods = { include("lib/scene/clouds"), include("lib/scene/fireflies"), include("lib/scene/mountains") } },
 }
@@ -124,7 +124,9 @@ end
 
 local function on_kind(i)
   local mod = sc.cur(i)
-  if i == 3 then engine.color_kind(mod.id) elseif i == 4 then engine.air_kind(mod.id) end
+  if i == 2 then engine.voice_kind(mod.voice)
+  elseif i == 3 then engine.color_kind(mod.id)
+  elseif i == 4 then engine.air_kind(mod.id) end
   sent[i] = {}
   dirty_sound = true
 end

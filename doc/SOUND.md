@@ -75,6 +75,22 @@ The glassy voice can be a real MI engine. No stand-in or nb voice needed.
 - Ratio scrolling through patches is coarse. If it feels jumpy, keep `harm` fixed per variety
   and map E2 to `morph` instead.
 
+### Reeds → `MiRings` as a voice (internal exciter)
+
+Each note strikes Rings' internal exciter (`intern_exciter` 1, `poly` 2 so notes ring over each
+other); no Plaits behind it. Most Rings models are strings, drawn as reeds that vibrate.
+
+| Macro | Parameter | Range |
+| --- | --- | --- |
+| E2 structure | `struct` | 0.15 → 0.9 |
+| E3 brightness | `bright` | 0.2 → 0.85 |
+
+- **Variant (hold K2 + E2):** `model`, the same six as the pond.
+- **Fixed:** `pos` 0.3.
+- **Coupled:** `damp` ← brain rate: fast rain rings shorter (0.75 at slow rate → 0.45 at fast).
+- **CPU:** reeds with the pond runs two Rings. Measure it; if it's too heavy, the pond could
+  switch to its own exciter when reeds is the voice, or that pairing could be blocked.
+
 ### A third voice slot for nb
 
 nb voices (Emplaitress, Doubledecker, monami.e, MIDI, Just Friends…) are better as their own

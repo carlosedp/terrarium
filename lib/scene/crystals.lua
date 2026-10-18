@@ -7,7 +7,7 @@ local BANKS = { "dx bank 1", "dx bank 2", "dx bank 3" }
 local BANK_ENGINE = { 18, 19, 20 }
 
 local crystals = {
-  id = "crystals", name = "crystals", about = "Plaits 6-op",
+  id = "crystals", name = "crystals", about = "Plaits 6-op", voice = "plaits",
   macros = {
     { id = "ratio", name = "ratio", default = 0.4 },
     { id = "index", name = "index", default = 0.45 },
