@@ -50,8 +50,8 @@ From the maiden REPL:
 | K3 | gesture: new phrase (brain), strike (voice, color), freeze (air) |
 | hold K1 | peek at all parts; while held, E2 picks a setting and E3 changes it |
 
-**Climate** (a setting, off by default) lets a chaotic attractor (Lorenz, Rössler, Thomas or Chua)
-slowly move the macros, the way CV moves a module's knobs: the macro you set is the center and
+**Climate** (a setting, off by default) lets a chaotic attractor slowly move the macros: fronts
+(Lorenz), gusts (Rössler), tides (Thomas) or squalls (Chua). It moves them, the way CV moves a module's knobs: the macro you set is the center and
 the climate pushes it around it. Each macro has a cv amount in PARAMS; the peek view shows
 where each macro is right now and the attractor's path.
 

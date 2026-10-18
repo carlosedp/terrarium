@@ -235,7 +235,7 @@ kbd { font-family: var(--font-mono); font-size: 0.85em; border: 1px solid var(--
         <label for="set-range">Range<select id="set-range"><option value="1">1 octave</option><option value="2">2 octaves</option><option value="3" selected>3 octaves</option></select></label>
         <label for="set-len">Length<select id="set-len"><option value="4">4 steps</option><option value="8" selected>8 steps</option><option value="12">12 steps</option><option value="16">16 steps</option></select></label>
         <label for="set-seasons">Seasons<select id="set-seasons"><option value="0" selected>off</option><option value="8">slow</option><option value="4">steady</option><option value="2">quick</option></select></label>
-        <label for="set-climate">Climate<select id="set-climate"><option value="0" selected>off</option><option value="1">lorenz</option><option value="2">rossler</option><option value="3">thomas</option><option value="4">chua</option></select></label>
+        <label for="set-climate">Climate<select id="set-climate"><option value="0" selected>off</option><option value="1">fronts (Lorenz)</option><option value="2">gusts (Rössler)</option><option value="3">tides (Thomas)</option><option value="4">squalls (Chua)</option></select></label>
         <label for="set-drift">Drift<select id="set-drift"><option value="0">slow</option><option value="1" selected>medium</option><option value="2">fast</option></select></label>
       </form>
       <fieldset class="ideas" id="ideas">
@@ -371,7 +371,9 @@ const ATTRACTORS = {
              f: (x, y, z) => { const m0 = -1.143, m1 = -0.714, g = m1 * x + 0.5 * (m0 - m1) * (Math.abs(x + 1) - Math.abs(x - 1));
                                return [15.6 * (y - x - g), x - y + z, -28 * y]; } }
 };
-const CLIMATES = ["off", "lorenz", "rossler", "thomas", "chua"], DRIFTS = ["slow", "medium", "fast"], LOOP_SEC = [40, 15, 5];
+// on screen the attractors go by how they move, as weather
+const CLIMATES = ["off", "fronts", "gusts", "tides", "squalls"], ATTRACTOR_OF = { fronts: "lorenz", gusts: "rossler", tides: "thomas", squalls: "chua" };
+const DRIFTS = ["slow", "medium", "fast"], LOOP_SEC = [40, 15, 5];
 const CV_SRC = [[2, 0], [0, 1], [1, 2], [2, 0]];                               // x 0, y 1, z 2
 const CV_DEFAULT = [[0, 0.3], [0.4, 0.3], [0.35, 0.25], [0.35, 0.3]];
 LAYERS.forEach((L, i) => L.mods.forEach(m => m.macros.forEach((mac, k) => { mac.cv = CV_DEFAULT[i][k]; })));
@@ -382,7 +384,7 @@ function rk4(f, p, h) {
   for (let i = 0; i < 3; i++) p[i] += h / 6 * (k1[i] + 2 * k2[i] + 2 * k3[i] + k4[i]);
 }
 function setClimate(i) {
-  climate.kind = i; climate.att = ATTRACTORS[CLIMATES[i]] || null;
+  climate.kind = i; climate.att = ATTRACTORS[ATTRACTOR_OF[CLIMATES[i]]] || null;
   climate.out = [0, 0, 0]; climate.trail = [];
   if (climate.att) { climate.p = [...climate.att.p0]; for (let n = 0; n < 600; n++) rk4(climate.att.f, climate.p, climate.att.h); }
 }

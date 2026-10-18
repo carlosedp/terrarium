@@ -8,7 +8,9 @@ local H = include('lib/helpers')
 
 local Climate = { kind = 1, out = { 0, 0, 0 }, trail = {} }
 
-Climate.NAMES = { "off", "lorenz", "rossler", "thomas", "chua" }
+-- on screen the attractors go by how they move, as weather
+Climate.NAMES = { "off", "fronts", "gusts", "tides", "squalls" }
+local ATTRACTOR_OF = { fronts = "lorenz", gusts = "rossler", tides = "thomas", squalls = "chua" }
 Climate.DRIFTS = { "slow", "medium", "fast" }
 local LOOP_SEC = { 40, 15, 5 } -- seconds per loop, roughly, for each drift
 
@@ -63,7 +65,7 @@ function Climate.on() return att ~= nil end
 -- pick an attractor by index into NAMES (1 = off)
 function Climate.set(i)
   Climate.kind = i
-  att = ATTRACTORS[Climate.NAMES[i]]
+  att = ATTRACTORS[ATTRACTOR_OF[Climate.NAMES[i]]]
   Climate.out = { 0, 0, 0 }
   Climate.trail = {}
   if att then

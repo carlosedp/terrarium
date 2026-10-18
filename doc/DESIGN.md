@@ -85,7 +85,8 @@ E1 picks a part, and the others dim for a moment so it's clear which one you're 
   Everything reads macros through `sc.m()`, so sound and scene both follow; `sc.base()` is the
   setting. A chaotic attractor instead of LFOs because its outputs are linked (the parts drift
   together, like weather) and never quite repeat. Four attractors with different characters,
-  one drift setting scaled per attractor so slow/medium/fast feel alike. Off by default, like
+  named on screen for how they move (fronts, gusts, tides, squalls; not "seasons", which is
+  taken), one drift setting scaled per attractor so slow/medium/fast feel alike. Off by default, like
   seasons. The params stay plain, so norns mods and MIDI still work on top.
 - **nb voices get their own slot later ("visitors")** rather than hiding behind crystals. nb voices
   each define their own parameters, so the scene can only promise E2 → the voice's generic

@@ -141,7 +141,7 @@ and fires `trig`.
 
 ## Climate (modulation)
 
-An optional chaotic attractor (setting **climate**: off, lorenz, rossler, thomas, chua) moves
+An optional chaotic attractor (setting **climate**: off, fronts, gusts, tides, squalls) moves
 the macros the way CV moves a eurorack module's knobs: the macro as set is the center, and the
 attractor adds `cv × 0.5 × output`, clamped to `0..1`. Each macro has its own `cv` amount in
 PARAMS (`-1..1`, an attenuverter). The **drift** setting sets the speed: about 40, 15 or 5 seconds
@@ -156,9 +156,14 @@ The three outputs are linked, so each part takes a different one and they move t
 | color | y | 0.35 | z | 0.25 |
 | air | z | 0.35 | x | 0.3 |
 
-Character: **lorenz** swings between two moods at irregular times; **rossler** circles smoothly
-and its z output idles then gusts (heard on brain rate/air density); **thomas** is slow, with x,
-y and z the same motion phase shifted; **chua** flips between two lobes, more abruptly.
+On screen they are named for how they move:
+
+| Name | Attractor | Moves like |
+| --- | --- | --- |
+| **fronts** | Lorenz | settles into one mood, then switches to another at unpredictable times (Lorenz found it simulating weather) |
+| **gusts** | Rössler | circles smoothly; its z output idles, then spikes |
+| **tides** | Thomas | slow and rolling; x, y and z are one motion offset in time |
+| **squalls** | Chua | flips abruptly between two lobes |
 
 Outputs are centered on each attractor's median and scaled by its 5th/95th percentiles
 (measured over a long run; the table is in `lib/climate.lua`). Played values are rounded to
