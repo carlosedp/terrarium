@@ -17,6 +17,7 @@ local cv = include("lib/canvas")
 local Brain = include("lib/brain")
 local installer = include("lib/installer")
 local glass = include("lib/glass")
+local Climate = include("lib/climate")
 
 local FPS = 15
 local GY = 54 -- the ground line
@@ -31,18 +32,34 @@ local LAYERS = {
 }
 local SLOT_SET = { nil, "voice_set", "color_set", "air_set" }
 
-local SETTINGS = { "t_root", "t_scale", "t_range", "t_length", "t_seasons" }
-local SETTING_NAMES = { "key", "scale", "range", "length", "seasons" }
+local SETTINGS = { "t_root", "t_scale", "t_range", "t_length", "t_seasons", "t_climate", "t_drift" }
+local SETTING_NAMES = { "key", "scale", "range", "length", "seasons", "climate", "drift" }
 local LENGTHS = { 4, 8, 12, 16 }
 local SEASONS = { 0, 8, 4, 2 } -- phrases between turns: off, slow, steady, quick
+
+-- climate: which attractor output (1 x, 2 y, 3 z) moves each macro, and how much
+-- by default (the per-macro cv param, -1..1; full cv swings a macro by +-0.5)
+local CV_SRC = { { 3, 1 }, { 1, 2 }, { 2, 3 }, { 3, 1 } }
+local CV_DEFAULT = { { 0, 0.3 }, { 0.4, 0.3 }, { 0.35, 0.25 }, { 0.35, 0.3 } }
 
 -- shared scene state handed to every module
 local sc = { t = 0, GY = GY, frozen = false, fly_t = 0, brain = Brain }
 function sc.cur(i) return LAYERS[i].mods[params:get(LAYERS[i].id .. "_kind")] end
 function sc.kind(i) return sc.cur(i).id end
-function sc.m(i, k)
+-- a macro as you set it
+function sc.base(i, k)
   local mod = sc.cur(i)
   return params:get(mod.id .. "_" .. mod.macros[k].id)
+end
+-- a macro as it plays: your setting is the center, the climate adds to it like
+-- CV. Rounded so a slow drift doesn't flood the engine with tiny changes.
+function sc.m(i, k)
+  local v = sc.base(i, k)
+  if not Climate.on() then return v end
+  local mod = sc.cur(i)
+  local cv = params:get(mod.id .. "_" .. mod.macros[k].id .. "_cv")
+  v = v + cv * 0.5 * Climate.out[CV_SRC[i][k]]
+  return H.clamp(math.floor(v * 200 + 0.5) / 200, 0, 1)
 end
 -- the weather's wind, shared with the sky (never blowing backwards)
 function sc.wind() return math.max(0, sc.cur(1).wind(sc)) end
@@ -139,21 +156,30 @@ local function add_params()
     Brain.season_every = SEASONS[v]
     Brain.phrases = 0
   end)
+  params:add_option("t_climate", "climate", Climate.NAMES, 1)
+  params:set_action("t_climate", function(v)
+    Climate.set(v)
+    dirty_sound = true
+  end)
+  params:add_option("t_drift", "drift", Climate.DRIFTS, 2)
 
   for i, L in ipairs(LAYERS) do
     local names, count = {}, 1
     for _, m in ipairs(L.mods) do
       names[#names + 1] = m.name
-      count = count + #m.macros + (m.extra_count or 0)
+      count = count + #m.macros * 2 + (m.extra_count or 0) -- each macro and its cv
     end
     params:add_group("terrarium_" .. L.id, L.name, count)
     params:add_option(L.id .. "_kind", L.name, names, 1)
     params:set_action(L.id .. "_kind", function() on_kind(i) end)
     for _, m in ipairs(L.mods) do
-      for _, mac in ipairs(m.macros) do
+      for k, mac in ipairs(m.macros) do
         local id = m.id .. "_" .. mac.id
         params:add_control(id, m.name .. " " .. mac.name, controlspec.new(0, 1, "lin", 0, mac.default, "", 0.02))
         params:set_action(id, changed)
+        params:add_control(id .. "_cv", m.name .. " " .. mac.name .. " cv",
+          controlspec.new(-1, 1, "lin", 0, CV_DEFAULT[i][k], "", 0.01))
+        params:set_action(id .. "_cv", changed)
       end
       if m.add_params then m:add_params(changed) end
     end
@@ -178,10 +204,15 @@ local function peek_canvas()
     for k = 1, #mod.macros do
       local bx = 76 + (k - 1) * 26
       cv.rect(bx, y, 22, 3, 2)
-      cv.rect(bx, y, math.max(1, H.round(sc.m(i, k) * 22)), 3, on and 13 or 6)
+      cv.rect(bx, y, math.max(1, H.round(sc.base(i, k) * 22)), 3, on and 13 or 6)
+      if Climate.on() then -- where the climate has pushed it right now
+        cv.rect(bx + math.min(21, H.round(sc.m(i, k) * 22)), y - 1, 1, 5, on and 15 or 9)
+      end
     end
   end
-  for j = 1, #SETTINGS do cv.rect(108 + (j - 1) * 4, 40, 2, 2, j == set_cursor and 13 or 3) end
+  for j = 1, #SETTINGS do cv.rect(100 + (j - 1) * 4, 40, 2, 2, j == set_cursor and 13 or 3) end
+  local n = #Climate.trail -- the attractor's recent path (x across, z up)
+  for j, q in ipairs(Climate.trail) do cv.px(82 + q[1] * 16, 45 - q[2] * 4, 1 + 12 * j / n) end
   for i = 1, Brain.length do
     cv.rect(2 + (i - 1) * 3, 46, 2, 3, Brain.reg[i] and (i == Brain.last_step and 15 or 7) or 2)
   end
@@ -265,6 +296,8 @@ local function tick()
   focus_t = math.max(0, focus_t - dt)
   toast_t = toast_t - dt
   if not installer.active then
+    Climate.update(dt, params:get("t_drift"))
+    if Climate.on() then dirty_sound = true end
     for i = 1, 4 do
       local mod = sc.cur(i)
       if mod.update then mod:update(dt, sc) end

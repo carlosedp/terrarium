@@ -2,7 +2,7 @@
 -- headless on a computer: screen, params, controlspec, clock, metro, engine,
 -- util, norns.system_cmd. Not a simulator; it records what the script does.
 
-local M = { now = 0, screen_calls = 0, engine_calls = {}, metros = {}, coroutines = {} }
+local M = { now = 0, screen_calls = 0, engine_calls = {}, sets = {}, metros = {}, coroutines = {} }
 
 -- ---------- include ----------
 local ROOT = (arg and arg[0] or ""):match("^(.*)/test/[^/]+$") or "."
@@ -23,6 +23,11 @@ engine = setmetatable({}, {
     return function(...)
       M.engine_calls[k] = (M.engine_calls[k] or 0) + 1
       M.last_engine = { k, ... }
+      local key, v = ...
+      if k:match("_set$") then -- latest value per slot parameter
+        M.sets[k] = M.sets[k] or {}
+        M.sets[k][key] = v
+      end
     end
   end,
   __newindex = function(t, k, v) if k == "name" then rawset(t, "_name", v) else rawset(t, k, v) end end,

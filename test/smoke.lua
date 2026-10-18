@@ -48,6 +48,27 @@ M.run(40)
 check("40 s with seasons quick")
 print(("    key drifted to %s %s"):format(params:string("t_root"), params:string("t_scale")))
 
+-- climate: every attractor moves the macros around where they're set, never out of range
+params:set("t_drift", 3) -- fast
+for c = 2, #params:lookup("t_climate").options do
+  params:set("t_climate", c)
+  local lo, hi, sum, n = 1, 0, 0, 0
+  for _ = 1, 150 do
+    M.run(0.1)
+    -- the voice slot is back on meadow here; its harm is lin(harmonics, 0.05, 0.95)
+    local v = params:get("meadow_harmonics")
+    local m = (M.sets.voice_set.harm - 0.05) / 0.9
+    lo, hi, sum, n = math.min(lo, m), math.max(hi, m), sum + (m - v), n + 1
+  end
+  hold1(function() end) -- peek view draws the attractor's path
+  check(("climate %s"):format(params:string("t_climate")))
+  assert(lo >= -1e-9 and hi <= 1 + 1e-9, "macro left 0..1")
+  assert(hi - lo > 0.05, "climate did not move the macro")
+  print(("    meadow harmonics swung %.2f..%.2f around %.2f, mean offset %+.2f"):format(
+    lo, hi, params:get("meadow_harmonics"), sum / n))
+end
+params:set("t_climate", 1)
+
 -- the installer path when mi-UGens are missing
 local loaded = M
 loaded.has_mi = false

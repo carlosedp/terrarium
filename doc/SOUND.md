@@ -139,12 +139,40 @@ and fires `trig`.
 - **Coupled:** `damp` ← fog clarity (foggy → darker tail: 0.75 → 0.35). Without fog: 0.5.
 - **K3:** `freeze`.
 
+## Climate (modulation)
+
+An optional chaotic attractor (setting **climate**: off, lorenz, rossler, thomas, chua) moves
+the macros the way CV moves a eurorack module's knobs: the macro as set is the center, and the
+attractor adds `cv × 0.5 × output`, clamped to `0..1`. Each macro has its own `cv` amount in
+PARAMS (`-1..1`, an attenuverter). The **drift** setting sets the speed: about 40, 15 or 5 seconds
+per loop of the attractor (slow, medium, fast), whichever attractor is picked.
+
+The three outputs are linked, so each part takes a different one and they move together:
+
+| Part | E2 macro ← | default cv | E3 macro ← | default cv |
+| --- | --- | --- | --- | --- |
+| brain | z | 0 (rate stays put) | x | 0.3 |
+| voice | x | 0.4 | y | 0.3 |
+| color | y | 0.35 | z | 0.25 |
+| air | z | 0.35 | x | 0.3 |
+
+Character: **lorenz** swings between two moods at irregular times; **rossler** circles smoothly
+and its z output idles then gusts (heard on brain rate/air density); **thomas** is slow, with x,
+y and z the same motion phase shifted; **chua** flips between two lobes, more abruptly.
+
+Outputs are centered on each attractor's median and scaled by its 5th/95th percentiles
+(measured over a long run; the table is in `lib/climate.lua`). Played values are rounded to
+1/200 so slow drift doesn't send the engine a stream of tiny changes.
+
 ## CPU budget (to measure on norns)
 
 Rough heaviness of each module, lightest first: MiVerb < Ripples < Plaits < Clouds ≈ Beads < Rings.
 Worst case is 2–3 Plaits + Rings + Beads. Measure that first and pick the Plaits polyphony from it.
 
 ## Open questions for tuning
+
+- Climate defaults: which macros should move out of the box, and how far. Brain rate is left at
+  0 so rain doesn't jump between clock divisions.
 
 1. Default Plaits engine for the meadow. Modal (12) is the safe pick, string machine (22) the lush one.
 2. Should the voice → Rings feed be audio (voice excites Rings) or trigger-only (Rings uses its

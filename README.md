@@ -50,7 +50,13 @@ From the maiden REPL:
 | K3 | gesture: new phrase (brain), strike (voice, color), freeze (air) |
 | hold K1 | peek at all parts; while held, E2 picks a setting and E3 changes it |
 
-A quick tap of K1 still opens the norns menu. Settings (key, scale, range, length, seasons),
+**Climate** (a setting, off by default) lets a chaotic attractor (Lorenz, Rössler, Thomas or Chua)
+slowly move the macros, the way CV moves a module's knobs: the macro you set is the center and
+the climate pushes it around it. Each macro has a cv amount in PARAMS; the peek view shows
+where each macro is right now and the attractor's path.
+
+A quick tap of K1 still opens the norns menu. Settings (key, scale, range, length, seasons,
+climate, drift),
 every macro, and each module's fixed options (Plaits engine, DX bank, Rings model, Clouds
 mode) are also in PARAMS, so they save with PSETs and can be MIDI-mapped.
 
@@ -62,6 +68,7 @@ lib/Engine_Terrarium.sc  engine: 2 Plaits voices -> color slot -> air slot -> ou
 lib/brain.lua            phrase, pitch mapping, seasons
 lib/canvas.lua           128x64 framebuffer, blitted to the screen as merged runs
 lib/glass.lua            the glass over the scene: rim, condensation, frost
+lib/climate.lua          chaotic attractors that modulate the macros
 lib/scene/*.lua          one file per module: its drawing, macros and sound mapping
 lib/installer.lua        mi-UGens check and installer
 doc/SOUND.md             macro -> mi-UGen parameter map (the tuning reference)

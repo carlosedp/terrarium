@@ -235,6 +235,8 @@ kbd { font-family: var(--font-mono); font-size: 0.85em; border: 1px solid var(--
         <label for="set-range">Range<select id="set-range"><option value="1">1 octave</option><option value="2">2 octaves</option><option value="3" selected>3 octaves</option></select></label>
         <label for="set-len">Length<select id="set-len"><option value="4">4 steps</option><option value="8" selected>8 steps</option><option value="12">12 steps</option><option value="16">16 steps</option></select></label>
         <label for="set-seasons">Seasons<select id="set-seasons"><option value="0" selected>off</option><option value="8">slow</option><option value="4">steady</option><option value="2">quick</option></select></label>
+        <label for="set-climate">Climate<select id="set-climate"><option value="0" selected>off</option><option value="1">lorenz</option><option value="2">rossler</option><option value="3">thomas</option><option value="4">chua</option></select></label>
+        <label for="set-drift">Drift<select id="set-drift"><option value="0">slow</option><option value="1" selected>medium</option><option value="2">fast</option></select></label>
       </form>
       <fieldset class="ideas" id="ideas">
         <legend class="settings-title">Scene details <span class="ugen">toggle to compare</span></legend>
@@ -353,7 +355,57 @@ const LAYERS = [
 for (const L of LAYERS) for (const m of L.mods) m.macros = m.macros.map(([n, v]) => ({ n, v }));
 const modIdx = [0, 0, 0, 0];
 const cur = i => LAYERS[i].mods[modIdx[i]];
-const mv = (i, k) => cur(i).macros[k].v;
+// ---------- climate: a chaotic attractor moving the macros like CV ----------
+// The macro you set is the center; each macro's cv amount (an attenuverter, -1..1)
+// scales how far the attractor pushes it (full cv: +-0.5). x, y, z are linked, so
+// the parts drift together. Outputs are centered on their median and scaled by
+// the 5th/95th percentiles from a long run (same numbers as lib/climate.lua).
+const ATTRACTORS = {
+  lorenz:  { h: 0.01, period: 2,   p0: [0.1, 0, 20], q: [[-13.3, 0.06, 13.35], [-15.92, -0.02, 15.99], [10.62, 22.33, 38.04]],
+             f: (x, y, z) => [10 * (y - x), x * (28 - z) - y, x * y - 8 / 3 * z] },
+  rossler: { h: 0.04, period: 5.9, p0: [1, 1, 0], q: [[-7.71, -0.38, 9.13], [-9.14, -0.78, 6.6], [0.01, 0.04, 5.55]],
+             f: (x, y, z) => [-y - z, x + 0.2 * y, 0.2 + z * (x - 5.7)] },
+  thomas:  { h: 0.08, period: 16,  p0: [0.1, 0, 0], q: [[-0.61, 2.15, 3.52], [-0.61, 2.15, 3.53], [-0.59, 2.17, 3.53]],
+             f: (x, y, z) => { const b = 0.208186; return [Math.sin(y) - b * x, Math.sin(z) - b * y, Math.sin(x) - b * z]; } },
+  chua:    { h: 0.01, period: 1.5, p0: [0.7, 0, 0], q: [[-1.97, 0.39, 2], [-0.29, 0, 0.28], [-2.92, -0.19, 2.8]],
+             f: (x, y, z) => { const m0 = -1.143, m1 = -0.714, g = m1 * x + 0.5 * (m0 - m1) * (Math.abs(x + 1) - Math.abs(x - 1));
+                               return [15.6 * (y - x - g), x - y + z, -28 * y]; } }
+};
+const CLIMATES = ["off", "lorenz", "rossler", "thomas", "chua"], DRIFTS = ["slow", "medium", "fast"], LOOP_SEC = [40, 15, 5];
+const CV_SRC = [[2, 0], [0, 1], [1, 2], [2, 0]];                               // x 0, y 1, z 2
+const CV_DEFAULT = [[0, 0.3], [0.4, 0.3], [0.35, 0.25], [0.35, 0.3]];
+LAYERS.forEach((L, i) => L.mods.forEach(m => m.macros.forEach((mac, k) => { mac.cv = CV_DEFAULT[i][k]; })));
+const climate = { kind: 0, drift: 1, att: null, p: [0, 0, 0], acc: 0, tacc: 0, out: [0, 0, 0], trail: [] };
+function rk4(f, p, h) {
+  const [x, y, z] = p, k1 = f(x, y, z), k2 = f(x + k1[0] * h / 2, y + k1[1] * h / 2, z + k1[2] * h / 2);
+  const k3 = f(x + k2[0] * h / 2, y + k2[1] * h / 2, z + k2[2] * h / 2), k4 = f(x + k3[0] * h, y + k3[1] * h, z + k3[2] * h);
+  for (let i = 0; i < 3; i++) p[i] += h / 6 * (k1[i] + 2 * k2[i] + 2 * k3[i] + k4[i]);
+}
+function setClimate(i) {
+  climate.kind = i; climate.att = ATTRACTORS[CLIMATES[i]] || null;
+  climate.out = [0, 0, 0]; climate.trail = [];
+  if (climate.att) { climate.p = [...climate.att.p0]; for (let n = 0; n < 600; n++) rk4(climate.att.f, climate.p, climate.att.h); }
+}
+function stepClimate(dt) {
+  const a = climate.att;
+  if (!a) return;
+  climate.acc += dt * a.period / LOOP_SEC[climate.drift];
+  let n = 0;
+  while (climate.acc >= a.h && n < 64) { rk4(a.f, climate.p, a.h); climate.acc -= a.h; n++; }
+  if (n === 64) climate.acc = 0;
+  climate.out = climate.p.map((v, k) => { const q = a.q[k]; return clamp((v - q[1]) / Math.max(q[2] - q[1], q[1] - q[0]), -1, 1); });
+  climate.tacc += n * a.h;
+  if (climate.tacc >= a.period / 32) {
+    climate.tacc = 0;
+    climate.trail.push([climate.out[0], climate.out[2]]);
+    if (climate.trail.length > 48) climate.trail.shift();
+  }
+}
+// a macro as it plays: the setting plus the climate's push
+const mv = (i, k) => {
+  const m = cur(i).macros[k];
+  return climate.att ? clamp(m.v + m.cv * 0.5 * climate.out[CV_SRC[i][k]], 0, 1) : m.v;
+};
 
 let sel = 0, focusT = 0, k1 = false, frozen = false, time = 0;
 let toast = { text: "", t: 0 };
@@ -654,6 +706,7 @@ function trigger(x) {
 }
 
 // ---------- simulation ----------
+let climateFrames = 0;
 function step(dt) {
   time += dt;
   if (!frozen) flyTime += dt;
@@ -678,6 +731,8 @@ function step(dt) {
   for (const cl of clouds) cl.spark = Math.max(0, cl.spark - dt * 1.6);
   for (const f of flies) f.spark = Math.max(0, f.spark - dt * 1.4);
   stepFX(dt);
+  stepClimate(dt);
+  if (climate.att && ++climateFrames % 3 === 0) applyParams();   // the sound follows the drift
 }
 
 // ---------- drawing, back to front ----------
@@ -907,13 +962,15 @@ function drawPeek() {
       const bx = 76 + k * 26;
       S.rect(bx, y + 1, 22, 3, 2);
       S.rect(bx, y + 1, Math.max(1, Math.round(m.v * 22)), 3, on ? 13 : 6);
+      if (climate.att) S.rect(bx + Math.min(21, Math.round(mv(i, k) * 22)), y, 1, 5, on ? 15 : 9);   // where the climate has it now
     });
   });
   // settings line: K1 + E2 picks one, K1 + E3 changes it
   const st = SETTINGS[setCursor];
   S.text(2, 39, st.name, 6);
   S.text(26, 39, st.show(), 13);
-  SETTINGS.forEach((_, i) => S.rect(108 + i * 4, 40, 2, 2, i === setCursor ? 13 : 3));
+  SETTINGS.forEach((_, i) => S.rect(100 + i * 4, 40, 2, 2, i === setCursor ? 13 : 3));
+  climate.trail.forEach(([x, z], j) => S.px(82 + x * 16, 45 - z * 4, 1 + 12 * (j + 1) / climate.trail.length));   // the attractor's path
   for (let i = 0; i < regLen; i++) S.rect(2 + i * 3, 46, 2, 3, reg[i] ? (i === lastStep ? 15 : 7) : 2);
   S.line(0, 51, W - 1, 51, 3);
 }
@@ -961,10 +1018,11 @@ function makeIR(seconds) {
 function applyParams() {
   if (!A) return;
   const t = A.ctx.currentTime, set = (p, v) => p.setTargetAtTime(v, t, 0.05);
-  const fogM = LAYERS[2].mods[1].macros;
-  set(A.fog.frequency, 250 * Math.pow(48, fogM[0].v));
-  set(A.fog.Q, 0.5 + fogM[1].v * 12);
-  const s = cur(3), m = s.macros, cl = A.cl;
+  // macros as they play (with the climate) for the current modules, as set otherwise
+  const fogM = LAYERS[2].mods[1].macros, fv = k => cur(2).id === "fog" ? mv(2, k) : fogM[k].v;
+  set(A.fog.frequency, 250 * Math.pow(48, fv(0)));
+  set(A.fog.Q, 0.5 + fv(1) * 12);
+  const s = cur(3), m = [0, 1].map(k => ({ v: mv(3, k) })), cl = A.cl;
   if (s.id === "clouds") {          // long smeared grains
     const d = 0.06 + m[1].v * 0.45;
     set(cl.dA.delayTime, d); set(cl.dB.delayTime, d * 1.47);
@@ -979,7 +1037,7 @@ function applyParams() {
     const fb = frozen ? 0.95 : 0.3 + m[0].v * 0.55; set(cl.fbA.gain, fb); set(cl.fbB.gain, fb);
   }
   set(cl.in.gain, frozen && s.id !== "mountains" ? 0 : 1);
-  const vm = LAYERS[3].mods[2].macros, irLen = frozen && s.id === "mountains" ? 9 : 0.6 + vm[0].v * 5;
+  const vm = s.id === "mountains" ? m : LAYERS[3].mods[2].macros, irLen = frozen && s.id === "mountains" ? 9 : 0.6 + vm[0].v * 5;
   set(A.vb.out.gain, 0.15 + vm[1].v * 0.95);
   if (s.id === "mountains" && Math.abs(irLen - A.irLen) > 0.05) {
     clearTimeout(A.irTimer);
@@ -1139,6 +1197,7 @@ setSeasons.addEventListener("change", () => { seasonEvery = +setSeasons.value; p
 function syncSettings() {
   setRoot.value = String(root); setScale.value = String(SCALES.indexOf(scale));
   setRange.value = String(octaves); setLen.value = String(regLen); setSeasons.value = String(seasonEvery);
+  setClim.value = String(climate.kind); setDrift.value = String(climate.drift);
 }
 
 // the same settings on the device, while K1 is held
@@ -1150,11 +1209,16 @@ const SETTINGS = [
   { name: "range",  show: () => octaves + (octaves > 1 ? " octaves" : " octave"), nudge: d => { octaves = clamp(octaves + d, 1, 3); } },
   { name: "length", show: () => regLen + " steps", nudge: d => { regLen = LENS[step1(LENS, LENS.indexOf(regLen), d)]; regPos %= regLen; } },
   { name: "season", show: () => SEASONS.find(s => s[0] === seasonEvery)[1], nudge: d => {
-      const i = step1(SEASONS, SEASONS.findIndex(s => s[0] === seasonEvery), d); seasonEvery = SEASONS[i][0]; phrases = 0; } }
+      const i = step1(SEASONS, SEASONS.findIndex(s => s[0] === seasonEvery), d); seasonEvery = SEASONS[i][0]; phrases = 0; } },
+  { name: "climate", show: () => CLIMATES[climate.kind], nudge: d => setClimate(step1(CLIMATES, climate.kind, d)) },
+  { name: "drift",   show: () => DRIFTS[climate.drift],  nudge: d => { climate.drift = step1(DRIFTS, climate.drift, d); } }
 ];
 let setCursor = 0;
 setRange.addEventListener("change", () => { octaves = +setRange.value; say(octaves + (octaves > 1 ? " octaves" : " octave")); });
 setLen.addEventListener("change", () => { regLen = +setLen.value; regPos %= regLen; say(regLen + " steps"); });
+const setClim = document.getElementById("set-climate"), setDrift = document.getElementById("set-drift");
+setClim.addEventListener("change", () => { setClimate(+setClim.value); say("climate " + CLIMATES[climate.kind]); });
+setDrift.addEventListener("change", () => { climate.drift = +setDrift.value; say("drift " + DRIFTS[climate.drift]); });
 document.getElementById("settings").addEventListener("submit", e => e.preventDefault());
 
 // ---------- field guide ----------

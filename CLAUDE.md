@@ -25,7 +25,7 @@ Run it after every Lua change. It also asserts that params group counts match.
   generating grains.
 - **norns runs Lua 5.3.** No `<const>`/`<close>` or other 5.4+ features (the dev machine has Lua 5.5).
 - **`include()` is `dofile`, not `require`:** every call returns a fresh copy. Stateful modules
-  (`lib/brain.lua`, `lib/canvas.lua`, `lib/glass.lua`) are included only in `terrarium.lua`; modules reach them
+  (`lib/brain.lua`, `lib/canvas.lua`, `lib/glass.lua`, `lib/climate.lua`) are included only in `terrarium.lua`; modules reach them
   through the `sc` table passed to every module function.
 - **Lua owns all macro-to-parameter mappings** (each module's `sound()` in `lib/scene/`); the
   engine only exposes raw parameters per slot. Keep `doc/SOUND.md` in sync when tuning.
@@ -34,6 +34,8 @@ Run it after every Lua change. It also asserts that params group counts match.
 - **K1 is hold-only.** A quick K1 tap opens the norns system menu.
 - A module that adds its own params must set `extra_count` (params group sizes are declared up front).
 - A new color or air module needs a matching `terrarium_<id>` SynthDef in the engine.
+- **Read macros with `sc.m(i, k)`** (the value as it plays, climate included), never with
+  `params:get` directly; `sc.base(i, k)` is the value as set. Each macro also has a `<id>_cv` param.
 - A brain module must define `wind(sc)` (the sky drifts with it); `flash()` is optional.
 
 ## Related repo
