@@ -17,6 +17,14 @@ Open http://localhost:8800/. Files are read fresh on every load: edit a `.lua` f
 Keys: A/S/D for K1/K2/K3; Y/H, U/J, I/K turn E1, E2, E3 up/down. Keys can be held (S + U is K2 + E2), and the
 encoders take the scroll wheel and dragging.
 
+## The device
+
+Two shells, under the screen: **shield** (the default: compact, K1 and E1 top right, K2 K3 E2 E3
+along the bottom) or **norns**, and the screen's color: **white** or **yellow** (the amber some
+shields have). They're remembered by the browser, and the URL can set them:
+`?shell=norns&screen=yellow`. On a phone the page is touch-first: drag the encoders up and down,
+hold keys with one finger while tapping another.
+
 ## Publish a static copy
 
 ```

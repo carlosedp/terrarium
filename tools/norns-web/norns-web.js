@@ -28,12 +28,20 @@ $("#show-engine").addEventListener("change", e => { showEngine = e.target.checke
 
 // ---------- screen ----------
 const cvs = $("#oled"), g2d = cvs.getContext("2d"), img = g2d.createImageData(W, H);
-const PAL = [];
-for (let l = 0; l < 16; l++) {
-  const v = l === 0 ? 0 : Math.pow(l / 15, 0.8);   // roughly how the OLED's levels look
-  PAL.push([Math.round(v * 248), Math.round(v * 245), Math.round(v * 236)]);
+// the OLED's color: white, or the amber-yellow some norns shields have
+const TINTS = { white: [248, 245, 236], yellow: [255, 196, 40] };
+let PAL = [], lastFrame = null;
+function setTint(name) {
+  const c = TINTS[name] || TINTS.white;
+  PAL = [];
+  for (let l = 0; l < 16; l++) {
+    const v = l === 0 ? 0 : Math.pow(l / 15, 0.8);   // roughly how the OLED's levels look
+    PAL.push(c.map(x => Math.round(v * x)));
+  }
+  if (lastFrame) blit(lastFrame);
 }
 function blit(frame) {
+  lastFrame = frame;
   const d = img.data;
   for (let i = 0; i < W * H; i++) {
     const p = PAL[frame.charCodeAt(i) - 65] || PAL[0], o = i * 4;
@@ -41,6 +49,22 @@ function blit(frame) {
   }
   g2d.putImageData(img, 0, 0);
 }
+
+// ---------- view: the shell (norns | shield) and the screen's color, remembered ----------
+const view = (() => { try { return JSON.parse(localStorage.getItem("norns-web:view")) || {}; } catch (e) { return {}; } })();
+const query = new URLSearchParams(location.search);
+view.shell = query.get("shell") || view.shell || "shield";
+view.screen = query.get("screen") || view.screen || "white";
+function applyView() {
+  $("#device").dataset.shell = view.shell;
+  $("#v-shell").value = view.shell;
+  $("#v-screen").value = view.screen;
+  setTint(view.screen);
+  try { localStorage.setItem("norns-web:view", JSON.stringify(view)); } catch (e) {}
+}
+$("#v-shell").addEventListener("change", e => { view.shell = e.target.value; applyView(); });
+$("#v-screen").addEventListener("change", e => { view.screen = e.target.value; applyView(); });
+applyView();
 
 // ---------- engine stand-ins ----------
 // A script's lib/Engine_<name>.js registers itself here; it gets every engine
@@ -278,6 +302,13 @@ function renderParams() {
       minus.addEventListener("click", e => step(-1, e)); plus.addEventListener("click", e => step(1, e));
       row.addEventListener("wheel", e => { e.preventDefault(); step(e.deltaY < 0 ? 1 : -1, e); }, { passive: false });
       if (p.kind === "text" || p.kind === "file") { minus.hidden = true; plus.hidden = true; }
+      if (p.kind === "trigger") { // a trigger is a button, not a value
+        const go = document.createElement("button"); go.type = "button"; go.className = "go"; go.textContent = "go";
+        go.addEventListener("click", () => step(1));
+        row.append(label, go);
+        (p.group && groupBody ? groupBody : paramsEl).appendChild(row);
+        continue;
+      }
       row.append(label, minus, val, plus);
       (p.group && groupBody ? groupBody : paramsEl).appendChild(row);
       valueEls.set(p.i, val);

@@ -76,23 +76,48 @@ h1 {
 .stage { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 32px; align-items: start; }
 @media (max-width: 860px) { .stage { grid-template-columns: minmax(0, 1fr); } }
 
-/* --- the device --- */
+/* --- the device: a norns or a shield (data-shell), the same parts arranged differently --- */
 .norns {
   background: linear-gradient(160deg, var(--alu-hi), var(--alu-lo));
   border: 1px solid var(--alu-edge);
-  border-radius: 18px;
-  padding: 18px 20px 22px;
   box-shadow: 0 1px 0 rgba(255,255,255,0.6) inset, 0 18px 40px -18px rgba(0,0,0,0.55);
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  grid-template-areas: "k1 e1" "screen controls";
-  gap: 14px 22px;
+  align-items: center;
   user-select: none;
   -webkit-user-select: none;
+  -webkit-touch-callout: none;
   touch-action: manipulation;
 }
-.k1slot { grid-area: k1; display: flex; align-items: center; gap: 10px; }
-.e1slot { grid-area: e1; display: flex; justify-content: flex-end; }
+.brand { grid-area: brand; }
+.c-k1 { grid-area: k1; } .c-e1 { grid-area: e1; }
+.c-k2 { grid-area: k2; } .c-k3 { grid-area: k3; } .c-e2 { grid-area: e2; } .c-e3 { grid-area: e3; }
+/* norns: K1 and the name on top, E1 top right; K2 K3 over E2 E3 beside the screen */
+.norns[data-shell="norns"] {
+  border-radius: 18px; padding: 18px 20px 22px; gap: 14px 18px;
+  grid-template-columns: auto minmax(0, 1fr) auto auto;
+  grid-template-areas: "k1 brand . e1" "screen screen k2 k3" "screen screen e2 e3";
+}
+.norns[data-shell="norns"] .c-e1 { justify-self: end; }
+/* shield: squarer; K1 and E1 top right, the screen in the middle, K2 K3 E2 E3 along the bottom */
+.norns[data-shell="shield"] {
+  max-width: 540px; border-radius: 12px; padding: 20px 22px 24px; gap: 16px 12px;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-areas: "brand brand k1 e1" "screen screen screen ." "k2 k3 e2 e3";
+  justify-items: center;
+}
+.norns[data-shell="shield"] .brand { justify-self: start; }
+.norns[data-shell="shield"] .screen { justify-self: stretch; }
+.norns[data-shell="shield"] .enc { width: 60px; height: 60px; }
+.norns[data-shell="shield"] .enc i { transform-origin: 50% 25px; }
+.norns[data-shell="shield"] .key { width: 32px; height: 32px; }
+@media (max-width: 560px) {
+  .norns[data-shell="norns"] { grid-template-columns: repeat(4, minmax(0, 1fr)); justify-items: center;
+    grid-template-areas: "k1 brand brand e1" "screen screen screen screen" "k2 k3 e2 e3"; }
+  .norns[data-shell="norns"] .screen { justify-self: stretch; }
+  .norns[data-shell="shield"] { padding: 16px 16px 20px; gap: 14px 8px; }
+  .norns[data-shell="shield"] .enc { width: 54px; height: 54px; }
+  .norns[data-shell="shield"] .enc i { transform-origin: 50% 22px; }
+}
 .screen {
   grid-area: screen;
   background: var(--oled);
@@ -108,13 +133,7 @@ h1 {
   image-rendering: pixelated;
   image-rendering: crisp-edges;
 }
-.controls { grid-area: controls; display: grid; grid-template-columns: auto auto; gap: 18px 16px; align-content: end; justify-items: center; }
 .brand { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.18em; color: #4f534f; text-transform: lowercase; }
-@media (max-width: 560px) {
-  .norns { grid-template-columns: minmax(0, 1fr); grid-template-areas: "k1" "screen" "e1" "controls"; }
-  .e1slot { justify-content: center; }
-  .controls { grid-template-columns: repeat(4, auto); justify-content: center; }
-}
 .key, .enc {
   border: 0;
   padding: 0;
@@ -123,7 +142,7 @@ h1 {
   -webkit-tap-highlight-color: transparent;
 }
 .key {
-  width: 30px; height: 30px; border-radius: 50%;
+  width: 30px; height: 30px; border-radius: 50%; touch-action: none;
   background: radial-gradient(circle at 35% 30%, var(--cap-hi), var(--cap) 70%);
   box-shadow: 0 2px 0 #111, 0 3px 6px rgba(0,0,0,0.35);
 }
@@ -188,6 +207,16 @@ kbd { font-family: var(--font-mono); font-size: 0.85em; border: 1px solid var(--
 .pset { display: flex; align-items: center; gap: 6px; font-family: var(--font-mono); font-size: var(--step--1); color: var(--muted); }
 .pset select { font: inherit; color: var(--ink); background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 2px 4px; }
 .btn.small { padding: 3px 10px; font-size: 12px; }
+.view { display: flex; gap: 10px; font-family: var(--font-mono); font-size: var(--step--1); color: var(--muted); }
+.view select { font: inherit; color: var(--ink); background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 2px 4px; }
+/* phones and tablets: no keyboard hints, a tighter page */
+@media (hover: none) and (pointer: coarse) { .keys { display: none; } }
+@media (max-width: 560px) {
+  body { padding-block: 16px 32px; }
+  .wrap { gap: 18px; }
+  .lede { display: none; } /* on a phone, the instrument comes first */
+}
+.param button.go { width: auto; padding: 0 10px; grid-column: 2 / 5; justify-self: start; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 </style>
 </head>
@@ -200,24 +229,22 @@ kbd { font-family: var(--font-mono); font-size: 0.85em; border: 1px solid var(--
 
   <div class="stage">
     <div class="bench">
-      <div class="norns" id="device">
-        <div class="k1slot">
-          <div class="ctl"><button class="key" data-k="1" aria-label="K1"></button><small>K1</small></div>
-          <span class="brand">norns</span>
-        </div>
-        <div class="e1slot">
-          <div class="ctl"><button class="enc" data-e="1" aria-label="E1"><i></i></button><small>E1</small></div>
-        </div>
+      <div class="norns" id="device" data-shell="shield">
+        <span class="brand">norns</span>
+        <div class="ctl c-k1"><button class="key" data-k="1" aria-label="K1"></button><small>K1</small></div>
+        <div class="ctl c-e1"><button class="enc" data-e="1" aria-label="E1"><i></i></button><small>E1</small></div>
         <div class="screen"><canvas id="oled" width="128" height="64" aria-label="norns screen"></canvas></div>
-        <div class="controls">
-          <div class="ctl"><button class="key" data-k="2" aria-label="K2"></button><small>K2</small></div>
-          <div class="ctl"><button class="key" data-k="3" aria-label="K3"></button><small>K3</small></div>
-          <div class="ctl"><button class="enc" data-e="2" aria-label="E2"><i></i></button><small>E2</small></div>
-          <div class="ctl"><button class="enc" data-e="3" aria-label="E3"><i></i></button><small>E3</small></div>
-        </div>
+        <div class="ctl c-k2"><button class="key" data-k="2" aria-label="K2"></button><small>K2</small></div>
+        <div class="ctl c-k3"><button class="key" data-k="3" aria-label="K3"></button><small>K3</small></div>
+        <div class="ctl c-e2"><button class="enc" data-e="2" aria-label="E2"><i></i></button><small>E2</small></div>
+        <div class="ctl c-e3"><button class="enc" data-e="3" aria-label="E3"><i></i></button><small>E3</small></div>
       </div>
       <div class="toolbar">
         <button class="btn" id="sound" aria-pressed="false">Start sound</button>
+        <div class="view">
+          <label>shell <select id="v-shell"><option value="shield">shield</option><option value="norns">norns</option></select></label>
+          <label>screen <select id="v-screen"><option value="white">white</option><option value="yellow">yellow</option></select></label>
+        </div>
         <div class="keys">
           <span><kbd>A</kbd> K1</span>
           <span><kbd>S</kbd> K2</span>
