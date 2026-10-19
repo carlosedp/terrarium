@@ -364,6 +364,7 @@ too.
 | **drift**          | how fast the climate moves                                                  |
 | **day**            | a day and night                                                             |
 | **breath**         | moments of calm                                                             |
+| **tape**           | a lo-fi layer over everything: wow, flutter, crackle, hiss                  |
 
 ### seasons
 
@@ -412,6 +413,15 @@ sky opens up and the drone comes forward. By day, the reverse.
 Music needs space. With breath on, the weather sometimes calms for a phrase or three: notes
 rest, their puddles dim, and then it breathes in again. The phrase isn't lost; the notes come
 back when the calm passes. _gentle_ calms now and then; _deep_ calms more often, and deeper.
+
+### tape
+
+Everything the jar plays passes through a worn tape on its way out: a slow wow and a fine
+flutter in the pitch, a little crackle and hiss, the top gently rolled off, a touch of warmth.
+It's the glue that makes the notes, the drone and the sky sound like one recording. _subtle_ (how
+terrarium starts) is just a hint; _worn_ has more character; _off_ leaves the sound clean. With
+the tape on, dust settles on the jar's glass, and now and then a speck pops with the crackle.
+(Visitors play outside the jar, so the tape doesn't touch them.)
 
 ---
 

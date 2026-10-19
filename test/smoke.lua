@@ -152,6 +152,14 @@ assert(most_duck > 0.2 and most_lift > 0.2, "drone didn't answer the notes")
 params:set("rain_change", 0.2); params:set("rain_rate", 0.45)
 check(("drone follows the weather (%d intervals; duck %.2f, lift %.2f)"):format(moves, most_duck, most_lift))
 
+-- tape: on by default (subtle), off frees it, worn turns it up
+local calls = M.engine_calls.tape_set or 0
+params:set("t_tape", 1); M.run(0.3)
+params:set("t_tape", 3); M.run(0.3)
+assert((M.engine_calls.tape_set or 0) > calls + 6, "tape settings didn't reach the engine")
+params:set("t_tape", 2)
+check("tape (off, worn, subtle)")
+
 -- tuning from maiden: tune() remaps a parameter live; levels reach the synths as vol
 params:set("air_kind", 1) -- clouds
 params:set("clouds_size", 1)

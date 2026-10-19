@@ -130,6 +130,11 @@ E1 picks a part, and the others dim for a moment so it's clear which one you're 
   (`map`) that `tune()` changes from maiden while it plays, printing the table to paste back. The
   same mechanism maps MI parameters no macro used to reach (Clouds reverb, Beads time). A levels
   group balances the slots.
+- **A tape over everything, for glue (October 2026).** Generative ambient often sounds like one
+  recording because everything shares a medium. A tape stage at the very end (wow, flutter,
+  crackle, hiss, rolled-off top, gentle drive) gives terrarium that: a setting, not an air
+  module, so it combines with clouds, fireflies or mountains. Subtle by default; its saturation
+  is gain-compensated so switching it doesn't change the level. Dust on the glass shows it.
 - **The drone answers the weather (October 2026).** A drone that only sat there turned into a
   drone you notice, then one that annoys. Now each note makes it give way a little (a sidechain,
   up to −6 dB) and lights it up for a moment (a strike much more than a drop), and it swells

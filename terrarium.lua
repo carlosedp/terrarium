@@ -56,8 +56,17 @@ end
 local LEVELS = { { "level_voice", "voice level", 2, 0 }, { "level_color", "color level", 3, 0 },
   { "level_air", "air level", 4, 0 }, { "level_drone", "drone level", 5, -12 } }
 
-local SETTINGS = { "t_root", "t_scale", "t_range", "t_length", "t_seasons", "t_climate", "t_drift", "t_day", "t_breath" }
-local SETTING_NAMES = { "key", "scale", "range", "length", "seasons", "climate", "drift", "day", "breath" }
+local SETTINGS = { "t_root", "t_scale", "t_range", "t_length", "t_seasons", "t_climate", "t_drift", "t_day", "t_breath", "t_tape" }
+local SETTING_NAMES = { "key", "scale", "range", "length", "seasons", "climate", "drift", "day", "breath", "tape" }
+
+-- tape: a lo-fi layer on the whole output, the glue between the notes, the drone and the sky
+-- (the engine's terrarium_tape; doc/SOUND.md). Each step's amounts, 0..1:
+local TAPE_NAMES = { "off", "subtle", "worn" }
+local TAPE = {
+  nil,
+  { wow = 0.3, flutter = 0.25, crackle = 0.25, hiss = 0.15, tone = 0.25, drive = 0.15 },
+  { wow = 0.7, flutter = 0.55, crackle = 0.6, hiss = 0.35, tone = 0.5, drive = 0.35 },
+}
 local LENGTHS = { 4, 8, 12, 16 }
 local SEASONS = { 0, 8, 4, 2 } -- phrases between turns: off, slow, steady, quick
 
@@ -238,6 +247,12 @@ local function add_params()
     dirty_sound = true
   end)
   params:add_option("t_drift", "drift", Climate.DRIFTS, 2)
+  params:add_option("t_tape", "tape", TAPE_NAMES, 2)
+  params:set_action("t_tape", function(v)
+    sc.tape = v
+    if TAPE[v] then for k, x in pairs(TAPE[v]) do engine.tape_set(k, x) end end
+    engine.tape_set("on", TAPE[v] and 1 or 0)
+  end)
   params:add_option("t_breath", "breath", Breath.NAMES, 1)
   params:set_action("t_breath", function(v) Breath.set(v) end)
   params:add_option("t_day", "day", Day.NAMES, 1)
@@ -391,7 +406,7 @@ local function peek_canvas()
       end
     end
   end
-  for j = 1, #SETTINGS do cv.rect(92 + (j - 1) * 4, 42, 2, 2, j == set_cursor and 13 or 3) end
+  for j = 1, #SETTINGS do cv.rect(88 + (j - 1) * 4, 42, 2, 2, j == set_cursor and 13 or 3) end
   if SETTINGS[set_cursor] == "t_climate" or SETTINGS[set_cursor] == "t_drift" then
     local n = #Climate.trail -- the attractor's recent path (x across, z up), next to its name
     for j, q in ipairs(Climate.trail) do cv.px(82 + q[1] * 16, 46 - q[2] * 3.5, 1 + 12 * j / n) end
@@ -506,7 +521,7 @@ function redraw()
   cv.mul = dim(3); sc.cur(3):draw(cv, sc)  -- color (light, water)
   if drone.in_front then cv.mul = dim(5); drone:draw(cv, sc) end      -- roots glow up through water and soil
   cv.mul = 1
-  glass.draw(cv)                           -- frost, condensation, the jar's rim
+  glass.draw(cv, sc)                       -- frost, condensation, tape dust, the jar's rim
   for i = 1, #LAYERS do
     cv.rect(102 + (i - 1) * 4, 1, 2, 2, i == sel and (focus_t > 0 and 13 or 5) or (focus_t > 0 and 3 or 1))
   end

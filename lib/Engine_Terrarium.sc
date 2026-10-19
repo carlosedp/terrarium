@@ -4,6 +4,7 @@
 //   voice (2x MiPlaits | MiRings) -> voiceBus -> color (MiRings | MiRipples) -> colorBus
 //     -> air (MiClouds | MiBeads | MiVerb) -> out
 //   drone (2x MiPlaits | MiElements) -> colorBus: under the weather, into the air
+//   tape: last, on the whole output (wow, flutter, crackle, hiss, tone, drive), when on
 //
 // The Lua side owns every mapping from macros to parameters (see doc/SOUND.md);
 // this engine only exposes the slots and their raw parameters:
@@ -17,6 +18,7 @@
 //   air_set(key, value)
 //   drone_kind(name)               aurora | roots | none (silent, no synth)
 //   drone_set(key, value)
+//   tape_set(key, value)           on (0/1), wow, flutter, crackle, hiss, tone, drive
 //
 // mi-UGens classes are looked up by name at runtime instead of being written as
 // class names. A norns without mi-UGens then still compiles its class library
@@ -24,7 +26,7 @@
 // stays silent, and the Lua side offers to install them.
 
 Engine_Terrarium : CroneEngine {
-	var voiceGroup, colorGroup, airGroup, voiceBus, colorBus;
+	var voiceGroup, colorGroup, airGroup, voiceBus, colorBus, tapeGroup, tapeSynth, tapeParams;
 	var voices, nextVoice = 0, voiceKind, ready = false;
 	var colorSynth, airSynth, colorKind, airKind, droneSynth, droneKind, droneGroup;
 	var voiceParams, colorParams, airParams, droneParams;
@@ -43,6 +45,7 @@ Engine_Terrarium : CroneEngine {
 		colorParams = IdentityDictionary.new;
 		airParams = IdentityDictionary.new;
 		droneParams = IdentityDictionary.new;
+		tapeParams = IdentityDictionary.new;
 		this.addCommands;
 
 		if ([plaits, rings, ripples, clouds, verb].any(_.isNil)) {
@@ -56,6 +59,7 @@ Engine_Terrarium : CroneEngine {
 			colorGroup = Group.after(voiceGroup);
 			droneGroup = Group.after(colorGroup);
 			airGroup = Group.after(droneGroup);
+			tapeGroup = Group.after(airGroup);
 			ready = true;
 			this.setVoice(\plaits);
 		};
@@ -153,6 +157,23 @@ Engine_Terrarium : CroneEngine {
 			}).add;
 		};
 
+		// tape: on the whole output, after the air. Wow (a slow wandering drift) and flutter
+		// (a fast fine wobble) modulate a short delay; sparse crackle and a soft hiss are mixed
+		// in; tone rolls off the top, drive warms it. It fades in and, released, fades back
+		// to the dry output before freeing itself. Plain SuperCollider UGens, no mi-UGens.
+		SynthDef(\terrarium_tape, { |bus, gate = 1, wow = 0, flutter = 0, crackle = 0, hiss = 0, tone = 0, drive = 0|
+			var env = EnvGen.kr(Env.asr(1, 1, 1), gate, doneAction: 2);
+			var dry = In.ar(bus, 2);
+			var mod = (LFNoise2.kr(0.5 + LFNoise1.kr(0.1).range(0, 0.4)) * wow.lag(1) * 0.003)
+				+ (SinOsc.kr(6.3 + LFNoise1.kr(0.4)) * flutter.lag(1) * 0.0003);
+			var wet = DelayC.ar(dry, 0.03, 0.01 + mod);
+			var pops = Decay2.ar(Dust.ar(crackle.lag(1) * [8, 10]), 0.0003, 0.004) * LPF.ar(WhiteNoise.ar([0.6, 0.6]), 7000);
+			var noise = HPF.ar(PinkNoise.ar([0.012, 0.012]) * hiss.lag(1), 2500);
+			wet = LPF.ar(wet, 19000 - (tone.lag(1) * 12000));
+			wet = (wet * (1 + (drive.lag(1) * 2))).tanh / (1 + (drive.lag(1) * 2)); // unity for quiet signals
+			ReplaceOut.ar(bus, (dry * (1 - env)) + ((wet + (pops * crackle.lag(1) * 0.5) + noise) * env));
+		}).add;
+
 		SynthDef(\terrarium_mountains, { |in, out, gate = 1, time = 0.7, drywet = 0.4, damp = 0.5, hp = 0.05,
 			freeze = 0, diff = 0.7, vol = 1|
 			var dry = In.ar(in, 2);
@@ -171,6 +192,7 @@ Engine_Terrarium : CroneEngine {
 		this.addCommand(\air_set, "sf", { |msg| this.airSet(msg[1].asSymbol, msg[2]) });
 		this.addCommand(\drone_kind, "s", { |msg| this.setDrone(msg[1].asSymbol) });
 		this.addCommand(\drone_set, "sf", { |msg| this.droneSet(msg[1].asSymbol, msg[2]) });
+		this.addCommand(\tape_set, "sf", { |msg| this.tapeSet(msg[1].asSymbol, msg[2]) });
 	}
 
 	note { |pitch, accent|
@@ -268,12 +290,31 @@ Engine_Terrarium : CroneEngine {
 		droneSynth !? { droneSynth.set(key, value) };
 	}
 
+	// on (1) starts the tape synth with the settings so far, off (0) fades it out
+	tapeSet { |key, value|
+		if (ready.not) { ^this };
+		if (key == \on) {
+			if (value > 0) {
+				if (tapeSynth.isNil) {
+					tapeSynth = Synth(\terrarium_tape, [\bus, context.out_b.index] ++ tapeParams.asKeyValuePairs, tapeGroup);
+				}
+			} {
+				tapeSynth !? { tapeSynth.set(\gate, 0) };
+				tapeSynth = nil;
+			};
+			^this
+		};
+		tapeParams[key] = value;
+		tapeSynth !? { tapeSynth.set(key, value) };
+	}
+
 	free {
 		voices !? { voices.do(_.free) };
 		colorSynth !? { colorSynth.free };
 		airSynth !? { airSynth.free };
 		droneSynth !? { droneSynth.free };
-		[voiceGroup, colorGroup, droneGroup, airGroup].do { |g| g !? { g.free } };
+		tapeSynth !? { tapeSynth.free };
+		[voiceGroup, colorGroup, droneGroup, airGroup, tapeGroup].do { |g| g !? { g.free } };
 		[voiceBus, colorBus].do { |b| b !? { b.free } };
 	}
 }
