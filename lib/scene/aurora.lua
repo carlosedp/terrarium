@@ -41,6 +41,8 @@ function aurora:sound(sc)
   s.pitch = sc.brain.drone_root()
   s.fifth = sc.brain.drone_interval() -- the upper voice, moved now and then by the weather
   s.hush = sc.hushed and 0 or 1
+  s.duck = H.round(sc.activity * 50) / 50 -- gives way to the weather's notes, swells in the gaps
+  s.lift = H.round(sc.lift * 50) / 50     -- brightens with each note, a strike most
   return s
 end
 
@@ -56,13 +58,14 @@ end
 
 function aurora:draw(cv, sc)
   if self.light < 0.02 then return end
-  local glow, motion, t = sc.m(5, 1), sc.m(5, 2), self.flow
+  local glow, motion, t = math.min(1, sc.m(5, 1) + sc.lift * 0.5), sc.m(5, 2), self.flow
+  local light = self.light * (1 - 0.35 * sc.activity) -- the curtains dim as the drone gives way
   local flare = math.max(0, 1 - (sc.t - sc.brain.season_t) / 3,  -- a season turning,
     0.5 * (1 - (sc.t - sc.brain.drone_t) / 2.5))                    -- softer: the upper voice moving
   for x = 0, 127 do
     -- the curtain's lower edge waves; light hangs from the top, brightest near the edge
     local edge = 7 + glow * 7 + math.sin(x * 0.07 + t) * (2 + motion * 4) + math.sin(x * 0.19 - t * 1.3) * 1.5
-    local strength = (0.5 + 0.5 * math.sin(x * 0.045 - t * 0.6)) * self.light
+    local strength = (0.5 + 0.5 * math.sin(x * 0.045 - t * 0.6)) * light
     if strength > 0.15 then
       for y = 1, math.floor(edge) do
         local fall = y / edge

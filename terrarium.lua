@@ -67,7 +67,8 @@ local CV_SRC = { { 3, 1 }, { 1, 2 }, { 2, 3 }, { 3, 1 }, { 2, 3 } }
 local CV_DEFAULT = { { 0, 0.3 }, { 0.4, 0.3 }, { 0.35, 0.25 }, { 0.35, 0.3 }, { 0.3, 0.35 } }
 
 -- shared scene state handed to every module
-local sc = { t = 0, GY = GY, frozen = false, fly_t = 0, brain = Brain, nb = nb, breath = Breath }
+local sc = { t = 0, GY = GY, frozen = false, fly_t = 0, brain = Brain, nb = nb, breath = Breath,
+  activity = 0, lift = 0 } -- how busy the weather is lately, and how much it lights up the drone
 function sc.cur(i) return LAYERS[i].mods[params:get(LAYERS[i].id .. "_kind")] end
 function sc.kind(i) return sc.cur(i).id end
 -- a macro as you set it
@@ -151,6 +152,10 @@ end
 local function play(ev, fresh)
   local voice, vel = sc.cur(2), fresh and 1 or 0.7
   if voice.play then voice:play(sc, Brain.pitch(ev.x), vel) else engine.note(Brain.pitch(ev.x), vel) end
+  -- the drone answers the weather: each note makes it give way a little (it swells back in
+  -- the gaps) and lights it up for a moment, a lightning strike much more than a raindrop
+  sc.activity = math.min(1, sc.activity + 0.3 * vel)
+  sc.lift = math.min(1, sc.lift + (sc.kind(1) == "lightning" and 0.7 or 0.25) * vel)
   for i = 2, #LAYERS do
     local mod = sc.cur(i)
     if mod.on_note then mod:on_note(ev.x, sc) end
@@ -540,6 +545,9 @@ local function tick()
       if mod.update then mod:update(dt, sc) end
     end
     glass.update(dt, sc)
+    sc.activity = sc.activity * math.exp(-dt / 1.8) -- the drone swells back over a couple of seconds
+    sc.lift = sc.lift * math.exp(-dt / 3)
+    if sc.kind(5) ~= "none" and (sc.activity > 0.01 or sc.lift > 0.01) then dirty_sound = true end
     if dirty_sound then send_sound() end
   end
   redraw()

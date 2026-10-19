@@ -114,15 +114,15 @@ function Brain.drone_root() return 48 + Brain.root end
 
 -- The drone's upper voice: an interval above its root. Like Marbles' slower outputs (the
 -- same randomness, fewer changes), the weather moves it now and then: at a phrase end it
--- may go to the consonant interval the phrase leans on. The chance follows change: at 0
--- the phrase loops and the drone keeps its fifth; it never moves more than once a phrase.
+-- may go to the consonant interval the phrase leans on. The chance grows with change (20%
+-- of phrase ends at 0, 80% at 1); it never moves more than once a phrase.
 Brain.drone_top, Brain.drone_t = 7, -9
 local CONSONANT = { 3, 4, 5, 7, 8, 9 } -- the thirds, the fourth, the fifth, the sixths
 
 local function in_key(iv) return ((Brain.pcs(Brain.root, Brain.scale) >> ((Brain.root + iv) % 12)) & 1) == 1 end
 
 function Brain.drone_follow(change, t)
-  if math.random() >= change * 0.6 then return end
+  if math.random() >= 0.2 + change * 0.6 then return end
   local count = {}
   for k = 1, Brain.length do
     local e = Brain.reg[k]

@@ -44,6 +44,8 @@ function roots:sound(sc)
   s.model = params:get("roots_model") - 1
   s.pitch = sc.brain.drone_root()
   s.hush = sc.hushed and 0 or 1
+  s.duck = H.round(sc.activity * 50) / 50 -- as aurora: gives way to the notes, lights up with them
+  s.lift = H.round(sc.lift * 50) / 50
   return s
 end
 
@@ -75,7 +77,7 @@ function roots:draw(cv, sc)
       for j = 2, n do
         local a, b = root.pts[j - 1], root.pts[j]
         local near = math.max(0, 1 - math.abs(j - pulse) / 1.5)
-        local l = (2 + near * 8) * self.light
+        local l = (2 + near * 8 + sc.lift * 4) * self.light
         local steps = math.max(1, math.ceil(math.max(math.abs(b[1] - a[1]), math.abs(b[2] - a[2]))))
         for s = 0, steps do -- lit, never darker: water and soil show around the roots
           cv.lit(a[1] + (b[1] - a[1]) * s / steps, GY + a[2] + (b[2] - a[2]) * s / steps, l)

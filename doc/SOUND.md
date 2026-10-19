@@ -274,10 +274,15 @@ pitch glides 4 s on key changes, but not in the first half second: the synth sta
 pitch arrives and must land on the key, not slide into it (roots does the same).
 
 - **Coupled:** `fifth` (the upper voice's interval) ← the weather, like Marbles' slower outputs:
-  at each phrase end, with a chance of `change × 0.6`, it moves to the consonant interval
+  at each phrase end, with a chance that grows with change, it moves to the consonant interval
   (3, 4, 5, 7, 8 or 9 semitones, in the key) that the phrase's notes use most; the fifth wins
   ties and is the fallback, also when a season leaves the chosen interval out of key.
-  `Brain.drone_follow` in `lib/brain.lua`.
+  `Brain.drone_follow` in `lib/brain.lua`. The chance is `0.2 + change × 0.6` per phrase end.
+- **Coupled:** `duck` and `lift` ← the weather's notes (aurora and roots). Each note adds
+  `0.3 × velocity` to an activity envelope (decays over ~1.8 s) and `0.25 × velocity` to a lift
+  envelope (0.7 for a lightning strike; decays over ~3 s). The drone's level is multiplied by
+  `1 − 0.5 × duck` (it gives way to the notes, up to −6 dB, and swells back in the gaps), and
+  lift brightens it (aurora: timbre +0.25 × lift; roots: brightness +0.3 × lift).
 
 | Macro     | Parameter                                | Range       |
 | --------- | ---------------------------------------- | ----------- |

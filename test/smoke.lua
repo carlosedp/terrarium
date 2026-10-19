@@ -137,14 +137,20 @@ local function tops(change, sec)
   for _ = 1, sec * 10 do M.run(0.1); seen[M.sets.drone_set.fifth] = true end
   return seen
 end
-local still = tops(0, 20)
-assert(still[7] and next(still, nil) == 7 and next(still, 7) == nil, "drone moved at change 0")
+-- at change 0 the phrase loops, so the drone settles: on the fifth, or what the phrase leans on
+local still, n_still = tops(0, 30), 0
+for _ in pairs(still) do n_still = n_still + 1 end
+assert(n_still <= 2, "drone kept moving with a looping phrase")
 local moving, moves = tops(0.9, 90), 0
 local ok_iv = { [3] = true, [4] = true, [5] = true, [7] = true, [8] = true, [9] = true }
 for iv in pairs(moving) do assert(ok_iv[iv], "drone moved to a dissonant interval: " .. iv); moves = moves + 1 end
 assert(moves > 1, "drone never followed the weather")
+-- and it gives way to the notes (duck) and lights up with them (lift), then settles in silence
+local most_duck, most_lift = 0, 0
+for _ = 1, 50 do M.run(0.1); most_duck = math.max(most_duck, M.sets.drone_set.duck or 0); most_lift = math.max(most_lift, M.sets.drone_set.lift or 0) end
+assert(most_duck > 0.2 and most_lift > 0.2, "drone didn't answer the notes")
 params:set("rain_change", 0.2); params:set("rain_rate", 0.45)
-check(("drone follows the weather (%d intervals)"):format(moves))
+check(("drone follows the weather (%d intervals; duck %.2f, lift %.2f)"):format(moves, most_duck, most_lift))
 
 -- tuning from maiden: tune() remaps a parameter live; levels reach the synths as vol
 params:set("air_kind", 1) -- clouds
