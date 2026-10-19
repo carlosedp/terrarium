@@ -623,8 +623,6 @@ end
 
 -- ---------- lifecycle ----------
 
-local start -- the landscape (below), once the mi-UGens are there
-
 function init()
   installer.check()
   redraw_metro = metro.init(tick, 1 / FPS)
@@ -633,29 +631,12 @@ function init()
     redraw_metro:start()
     return
   end
-  if not (installer.has_beads and installer.has_elements) then -- an older build: offer the update first
-    installer.offer_update(start)
-    redraw_metro:start()
-    return
-  end
-  start()
-end
-
-start = function()
-  -- older mi-UGens builds may lack Beads or Elements: leave out the modules that need them
-  local function drop(i, id)
-    local mods = {}
-    for _, m in ipairs(LAYERS[i].mods) do if m.id ~= id then mods[#mods + 1] = m end end
-    LAYERS[i].mods = mods
-  end
-  if not installer.has_beads then drop(4, "fireflies") end
-  if not installer.has_elements then drop(5, "roots") end
   nb:init()
   add_params()
   params:bang()
   Brain.new_phrase(sc.t)
   clock.run(brain_loop)
-  redraw_metro:start() -- (already running after the update offer: starting again is harmless)
+  redraw_metro:start()
   say(Brain.key_name())
 end
 

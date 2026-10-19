@@ -292,7 +292,7 @@ open and it sounds continuously. Each voice drifts on its own slow LFO (0.05 / 0
 
 - **Variant (hold K2 + E2):** `model`: modal, string (default), strings.
 - **Fixed:** `bright` 0.4, `damp` 0.7, `contour` 0.8 (sustaining), `strength` 0.6, `amp` 0.3.
-- Needs MiElements; without it the drone part only offers aurora.
+- Needs MiElements, part of the mi-UGens set terrarium installs (it requires the whole set).
 
 ## CPU budget (to measure on norns)
 

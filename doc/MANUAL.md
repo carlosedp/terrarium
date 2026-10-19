@@ -438,13 +438,11 @@ and watch the creatures come in. Try it with the drone hushed.
 
 ## If something seems wrong
 
-**It shows "terrarium needs mi-UGens".** The sound modules aren't installed yet. Press K3 (with
+**It shows "terrarium needs mi-UGens".** The sound modules aren't installed yet, or an older set
+without some of them is (Beads and Elements came later). Press K3 (with
 Wi-Fi), then **SYSTEM > RESTART**. If you copied a `mi-UGens-norns*.tar.gz` into `dust/` yourself,
 press K2 instead.
 
-**It says "mi-UGens without Beads" (or Elements).** Your norns has an older build of the
-mi-UGens. Press K3 to update to terrarium's (with Wi-Fi), then **SYSTEM > RESTART**. Or press K2
-to carry on without them: everything works except fireflies (Beads) or roots (Elements).
 
 **Visitors: nothing arrives.** Hold K2 and turn E2 on the visitors to pick a voice. If the only
 choice is "none", install an nb voice mod (and enable it in **SYSTEM > MODS**), or connect a MIDI
