@@ -12,7 +12,7 @@ local URL = "https://github.com/" .. REPO .. "/releases/latest/download/mi-UGens
 local EXT = "/home/we/.local/share/SuperCollider/Extensions"
 local LOCAL_GLOB = "/home/we/dust/mi-UGens-norns*.tar.gz"
 
-local installer = { ok = false, has_beads = false, active = false, busy = false, lines = {} }
+local installer = { ok = false, has_beads = false, has_elements = false, active = false, busy = false, lines = {} }
 
 local function has(class)
   return util.os_capture("find " .. EXT .. " -name " .. class .. ".sc 2>/dev/null | head -1") ~= ""
@@ -21,6 +21,7 @@ end
 function installer.check()
   installer.ok = has("MiPlaits") and has("MiRings") and has("MiRipples") and has("MiClouds") and has("MiVerb")
   installer.has_beads = has("MiBeads")
+  installer.has_elements = has("MiElements")
   installer.lines = { "terrarium needs mi-UGens", "", "K3: download + install", "K2: install from dust/" }
 end
 

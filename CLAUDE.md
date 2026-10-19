@@ -1,8 +1,8 @@
 # terrarium
 
-A norns script: a landscape scene where four parts (brain = weather, voice = ground,
-color = light/water, air = sky) are swappable modules driving Mutable Instruments
-mi-UGens. Two macros per part, no numbers on screen. See README.md for the user view and
+A norns script: a landscape scene where five parts (brain = weather, voice = ground,
+color = light/water, air = sky, drone = the bed under it all) are swappable modules driving
+Mutable Instruments mi-UGens. Two macros per part, no numbers on screen. See README.md for the user view and
 doc/DESIGN.md for why things are the way they are.
 
 **Status:** v0.1, never run on a norns (the user's norns hadn't arrived when it was written).
@@ -41,7 +41,7 @@ https://claude.ai/artifact/SBCpfHzewFWLQyez8d2hfZ with `norns-web.js`, `norns.lu
 - **K1 is hold-only.** A quick K1 tap opens the norns system menu.
 - A module with a variant (an option param picked with hold K2 + E2) sets `variant` to that param's id.
 - A module that adds its own params must set `extra_count` (params group sizes are declared up front).
-- A new color or air module needs a matching `terrarium_<id>` SynthDef in the engine. A voice
+- A new color, air or drone module needs a matching `terrarium_<id>` SynthDef in the engine. A voice
   module sets `voice` to the engine voice it plays (`plaits`, `rings`: `terrarium_voice_<kind>`;
   `none` when it plays elsewhere, like visitors).
 - Add new modules and option entries at the end of their lists, so saved PSETs keep their choices.

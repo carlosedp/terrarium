@@ -12,8 +12,9 @@ modules with great-sounding macro controls, mainly generative (Marbles-like), bu
 Mutable Instruments mi-UGens. What makes it a norns instrument is the screen: like the
 scripts inspired by real-world visuals, the patch _is_ a scene.
 
-- **The patch is a landscape.** Four parts, each one piece of the scene and one stage of the sound:
-  brain (weather) → voice (ground) → color (light and water) → air (sky).
+- **The patch is a landscape.** Five parts, each one piece of the scene and one stage of the sound:
+  brain (weather) → voice (ground) → color (light and water) → air (sky), with the drone (a bed
+  under it all, aurora or roots) playing into the air.
 - **Fixed signal path, swappable modules.** Free patching on a 128×64 screen with 3 encoders
   would be miserable, so the routing is pre-wired, like a semi-modular synth. You swap what sits
   in each slot.
@@ -40,6 +41,8 @@ scripts inspired by real-world visuals, the patch _is_ a scene.
 | air   | clouds    | Clouds         | clouds made of grains drift                                                        | density, size         |
 | air   | fireflies | Beads          | each grain is a firefly with a trail                                               | density, glow         |
 | air   | mountains | MiVerb         | ridges grow with the room; notes echo off the far ridge                            | size, echo            |
+| drone | aurora    | 2x Plaits      | curtains of light across the top of the sky; they flare when a season turns        | glow, motion          |
+| drone | roots     | Elements       | roots under the ground with light flowing down them                                | breath, depth         |
 
 The glass is drawn over everything (`lib/glass.lua`): rounded jar corners and a glint, rain
 condensing on it (more beads at faster rates, some run down), and frost growing in from the
@@ -50,7 +53,7 @@ Hold K2 and turn E2 to pick the module's variant: the Plaits engine for the mead
 its own flower), the DX bank for crystals, the Rings model for reeds and the pond, the mode for clouds. A K2
 tap still swaps the module (on release, so the hold can't swap it).
 
-K3 is a gesture per part: new phrase (brain), strike (voice, color), freeze (air).
+K3 is a gesture per part: new phrase (brain), strike (voice, color), freeze (air), hush/rise (drone).
 E1 picks a part, and the others dim for a moment so it's clear which one you're steering.
 
 ## Decisions and why
@@ -103,6 +106,12 @@ E1 picks a part, and the others dim for a moment so it's clear which one you're 
   tempting for crystals, but the 6-op FM banks are a real, distinct glassy sound. Reeds plays
   Rings with its internal exciter; most Rings models are strings, so they're drawn as reeds that
   vibrate when plucked. Appended after crystals so saved PSETs keep their voice.
+- **A drone as a fifth part (October 2026).** Everything else is struck (flowers, plucks, strikes),
+  so between notes the piece could fall apart. A sustained bed on the root and fifth holds it
+  together, follows the key and glides when a season turns. It got its own part rather than a
+  setting so it has modules, macros and a variant like everything else. It plays into the air
+  (shared space) but skips color: Rings fed a constant drone would ring all the time. Aurora
+  draws behind the sky; roots draws after the water so the pond doesn't hide it.
 - **Mappings are data, tuned live (October 2026).** Tuning by ear means many small changes, and
   reloading the script for each is slow. Each module's macro -> parameter mapping is now a table
   (`map`) that `tune()` changes from maiden while it plays, printing the table to paste back. The

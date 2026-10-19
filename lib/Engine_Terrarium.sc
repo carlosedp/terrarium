@@ -2,6 +2,7 @@
 //
 //   voice (2x MiPlaits | MiRings) -> voiceBus -> color (MiRings | MiRipples) -> colorBus
 //     -> air (MiClouds | MiBeads | MiVerb) -> out
+//   drone (2x MiPlaits | MiElements) -> colorBus: under the weather, into the air
 //
 // The Lua side owns every mapping from macros to parameters (see doc/SOUND.md);
 // this engine only exposes the slots and their raw parameters:
@@ -13,6 +14,8 @@
 //   color_set(key, value)
 //   air_kind(name)                 clouds | fireflies | mountains
 //   air_set(key, value)
+//   drone_kind(name)               aurora | roots
+//   drone_set(key, value)
 //
 // mi-UGens classes are looked up by name at runtime instead of being written as
 // class names. A norns without mi-UGens then still compiles its class library
@@ -22,8 +25,8 @@
 Engine_Terrarium : CroneEngine {
 	var voiceGroup, colorGroup, airGroup, voiceBus, colorBus;
 	var voices, nextVoice = 0, voiceKind, ready = false;
-	var colorSynth, airSynth, colorKind, airKind;
-	var voiceParams, colorParams, airParams;
+	var colorSynth, airSynth, colorKind, airKind, droneSynth, droneKind, droneGroup;
+	var voiceParams, colorParams, airParams, droneParams;
 
 	*new { arg context, doneCallback;
 		^super.new(context, doneCallback);
@@ -33,28 +36,31 @@ Engine_Terrarium : CroneEngine {
 		var s = context.server;
 		var plaits = \MiPlaits.asClass, rings = \MiRings.asClass, ripples = \MiRipples.asClass;
 		var clouds = \MiClouds.asClass, beads = \MiBeads.asClass, verb = \MiVerb.asClass;
+		var elements = \MiElements.asClass;
 
 		voiceParams = IdentityDictionary.new;
 		colorParams = IdentityDictionary.new;
 		airParams = IdentityDictionary.new;
+		droneParams = IdentityDictionary.new;
 		this.addCommands;
 
 		if ([plaits, rings, ripples, clouds, verb].any(_.isNil)) {
 			"terrarium: mi-UGens not found, the engine stays silent".warn;
 		} {
-			this.buildDefs(plaits, rings, ripples, clouds, beads, verb);
+			this.buildDefs(plaits, rings, ripples, clouds, beads, verb, elements);
 			s.sync;
 			voiceBus = Bus.audio(s, 2);
 			colorBus = Bus.audio(s, 2);
 			voiceGroup = Group.new(context.xg);
 			colorGroup = Group.after(voiceGroup);
-			airGroup = Group.after(colorGroup);
+			droneGroup = Group.after(colorGroup);
+			airGroup = Group.after(droneGroup);
 			ready = true;
 			this.setVoice(\plaits);
 		};
 	}
 
-	buildDefs { |plaits, rings, ripples, clouds, beads, verb|
+	buildDefs { |plaits, rings, ripples, clouds, beads, verb, elements|
 		// slot synths fade in and out, so swapping a module doesn't click
 		var fade = { |gate| EnvGen.kr(Env.asr(0.05, 1, 0.3), gate, doneAction: 2) };
 
@@ -113,6 +119,31 @@ Engine_Terrarium : CroneEngine {
 			}).add;
 		};
 
+		// drone: a constant (scalar) trigger and level leave Plaits unpatched, so its
+		// LPG stays open and it sounds continuously. Root and fifth, each drifting on
+		// its own slow LFO; hush glides the drone out and back over a few seconds.
+		SynthDef(\terrarium_aurora, { |out, gate = 1, pitch = 36, fifth = 7, engine = 22, harm = 0.45,
+			timbre = 0.4, morph = 0.5, wobble = 0.1, amp = 0.25, hush = 1, vol = 1|
+			var lfo = LFTri.kr([0.05, 0.063]) * wobble;
+			var root = plaits.ar(pitch.lag(4), engine, harm.lag(0.2), (timbre + lfo[0]).clip(0, 1),
+				(morph + lfo[1]).clip(0, 1), 0, 0);
+			var top = plaits.ar((pitch + fifth).lag(4), engine, harm.lag(0.2), (timbre + lfo[1]).clip(0, 1),
+				(morph - lfo[0]).clip(0, 1), 0, 0);
+			var sig = Pan2.ar(root[0], -0.4) + Pan2.ar(top[0], 0.4);
+			Out.ar(out, sig * amp * hush.lag(3) * vol.lag(0.1) * fade.(gate));
+		}).add;
+
+		// Elements with its gate held open: bowed and blown for as long as it runs
+		elements !? {
+			SynthDef(\terrarium_roots, { |out, gate = 1, pitch = 36, bow = 0.6, blow = 0.2, flow = 0.5, geom = 0.3,
+				bright = 0.4, damp = 0.7, space = 0.5, model = 1, contour = 0.8, strength = 0.6, amp = 0.3,
+				hush = 1, vol = 1|
+				var sig = elements.ar(0, 0, 1, pitch.lag(4), strength, contour, bow.lag(0.2), blow.lag(0.2), 0,
+					flow.lag(0.2), 0.5, 0.5, 0.5, 0.5, geom.lag(0.2), bright.lag(0.2), damp, 0.2, space.lag(0.2), model);
+				Out.ar(out, sig * amp * hush.lag(3) * vol.lag(0.1) * fade.(gate));
+			}).add;
+		};
+
 		SynthDef(\terrarium_mountains, { |in, out, gate = 1, time = 0.7, drywet = 0.4, damp = 0.5, hp = 0.05,
 			freeze = 0, diff = 0.7, vol = 1|
 			var dry = In.ar(in, 2);
@@ -129,6 +160,8 @@ Engine_Terrarium : CroneEngine {
 		this.addCommand(\color_set, "sf", { |msg| this.colorSet(msg[1].asSymbol, msg[2]) });
 		this.addCommand(\air_kind, "s", { |msg| this.setAir(msg[1].asSymbol) });
 		this.addCommand(\air_set, "sf", { |msg| this.airSet(msg[1].asSymbol, msg[2]) });
+		this.addCommand(\drone_kind, "s", { |msg| this.setDrone(msg[1].asSymbol) });
+		this.addCommand(\drone_set, "sf", { |msg| this.droneSet(msg[1].asSymbol, msg[2]) });
 	}
 
 	note { |pitch, accent|
@@ -202,11 +235,30 @@ Engine_Terrarium : CroneEngine {
 		airSynth !? { airSynth.set(key, value) };
 	}
 
+	// the drone plays into colorBus: the air slot (and the output) carry it
+	setDrone { |kind|
+		var old = droneSynth, name = ("terrarium_" ++ kind).asSymbol;
+		if (ready.not or: { kind == droneKind }) { ^this };
+		if (SynthDescLib.global.at(name).isNil) {
+			("terrarium: no synth for drone '" ++ kind ++ "' (is MiElements installed?)").warn;
+			^this
+		};
+		droneKind = kind;
+		droneSynth = Synth(name, [\out, colorBus] ++ droneParams.asKeyValuePairs, droneGroup);
+		old !? { old.set(\gate, 0) };
+	}
+
+	droneSet { |key, value|
+		droneParams[key] = value;
+		droneSynth !? { droneSynth.set(key, value) };
+	}
+
 	free {
 		voices !? { voices.do(_.free) };
 		colorSynth !? { colorSynth.free };
 		airSynth !? { airSynth.free };
-		[voiceGroup, colorGroup, airGroup].do { |g| g !? { g.free } };
+		droneSynth !? { droneSynth.free };
+		[voiceGroup, colorGroup, droneGroup, airGroup].do { |g| g !? { g.free } };
 		[voiceBus, colorBus].do { |b| b !? { b.free } };
 	}
 }

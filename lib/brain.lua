@@ -108,6 +108,9 @@ end
 -- notes that change between two sets: a swap (B to Bb) is 1, adding two notes is 2
 function Brain.diff(a, b) return math.max(bits(a & ~b), bits(b & ~a)) end
 
+-- the drone's note: the key's root, low (C2 + root)
+function Brain.drone_root() return 36 + Brain.root end
+
 -- place on the land -> MIDI note
 function Brain.pitch(x)
   local span = 12 * Brain.octaves

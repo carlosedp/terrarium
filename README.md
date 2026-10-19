@@ -2,7 +2,7 @@
 
 A small world of Mutable Instruments for [monome norns](https://monome.org/docs/norns/).
 
-The patch is a landscape. Four parts each draw one piece of the scene and play one part of
+The patch is a landscape. Five parts each draw one piece of the scene and play one part of
 the sound. Swap a module and that piece of the scene changes; turn a macro and the scene moves
 with the sound. The screen shows no numbers.
 
@@ -12,6 +12,7 @@ with the sound. The screen shows no numbers.
 | **voice** | the ground: what plays | meadow (Plaits), crystals (Plaits 6-op FM), reeds (Rings), visitors (any [nb](https://github.com/sixolet/nb) voice) |
 | **color** | light and water: what shapes it | pond (Rings), fog (Ripples) |
 | **air** | the sky: where it rings out | clouds (Clouds), fireflies (Beads), mountains (MiVerb) |
+| **drone** | the bed under it all, on the key's root and fifth | aurora (Plaits), roots (Elements) |
 
 The whole scene sits behind the terrarium's glass. Rain beads up on it, and freezing the air
 frosts it over.
@@ -51,7 +52,7 @@ use `git clone --recurse-submodules`.
 | E2, E3 | that part's two macros (their names show for a moment while you turn) |
 | K2 | swap the part's module |
 | hold K2 + E2 | pick the module's variant: Plaits engine (meadow), DX bank (crystals), Rings model (reeds, pond), nb voice (visitors), Clouds mode |
-| K3 | gesture: new phrase (brain), strike (voice, color), freeze (air) |
+| K3 | gesture: new phrase (brain), strike (voice, color), freeze (air), hush / rise (drone) |
 | hold K1 | peek at all parts; while held, E2 picks a setting and E3 changes it |
 
 **Climate** (a setting, off by default) lets a chaotic attractor slowly move the macros: fronts

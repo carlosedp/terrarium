@@ -24,23 +24,25 @@ local nb = include("lib/nb/lib/nb")
 local FPS = 15
 local GY = 54 -- the ground line
 
--- the four parts of the scene, back to front: brain = weather, voice = ground,
--- color = light and water, air = sky
+-- the five parts of the scene: brain = weather, voice = ground, color = light and
+-- water, air = sky, drone = the bed under it all (aurora in the sky, roots in the earth)
 local LAYERS = {
   { id = "brain", name = "brain", mods = { include("lib/scene/rain"), include("lib/scene/lightning") } },
   { id = "voice", name = "voice", mods = { include("lib/scene/meadow"), include("lib/scene/crystals"), include("lib/scene/reeds"),
     include("lib/scene/visitors") } },
   { id = "color", name = "color", mods = { include("lib/scene/pond"), include("lib/scene/fog") } },
   { id = "air",   name = "air",   mods = { include("lib/scene/clouds"), include("lib/scene/fireflies"), include("lib/scene/mountains") } },
+  { id = "drone", name = "drone", mods = { include("lib/scene/aurora"), include("lib/scene/roots") } },
 }
-local SLOT_SET = { nil, "voice_set", "color_set", "air_set" }
+local SLOT_SET = { nil, "voice_set", "color_set", "air_set", "drone_set" }
 local PART = {}
 for i, L in ipairs(LAYERS) do
   PART[L.id] = i
   for _, m in ipairs(L.mods) do m.part = i end
 end
 -- each sounding slot's level in PARAMS (dB), sent to its synth as vol
-local LEVELS = { { "level_voice", "voice level", 2 }, { "level_color", "color level", 3 }, { "level_air", "air level", 4 } }
+local LEVELS = { { "level_voice", "voice level", 2, 0 }, { "level_color", "color level", 3, 0 },
+  { "level_air", "air level", 4, 0 }, { "level_drone", "drone level", 5, -6 } }
 
 local SETTINGS = { "t_root", "t_scale", "t_range", "t_length", "t_seasons", "t_climate", "t_drift" }
 local SETTING_NAMES = { "key", "scale", "range", "length", "seasons", "climate", "drift" }
@@ -49,8 +51,8 @@ local SEASONS = { 0, 8, 4, 2 } -- phrases between turns: off, slow, steady, quic
 
 -- climate: which attractor output (1 x, 2 y, 3 z) moves each macro, and how much
 -- by default (the per-macro cv param, -1..1; full cv swings a macro by +-0.5)
-local CV_SRC = { { 3, 1 }, { 1, 2 }, { 2, 3 }, { 3, 1 } }
-local CV_DEFAULT = { { 0, 0.3 }, { 0.4, 0.3 }, { 0.35, 0.25 }, { 0.35, 0.3 } }
+local CV_SRC = { { 3, 1 }, { 1, 2 }, { 2, 3 }, { 3, 1 }, { 2, 3 } }
+local CV_DEFAULT = { { 0, 0.3 }, { 0.4, 0.3 }, { 0.35, 0.25 }, { 0.35, 0.3 }, { 0.3, 0.35 } }
 
 -- shared scene state handed to every module
 local sc = { t = 0, GY = GY, frozen = false, fly_t = 0, brain = Brain, nb = nb }
@@ -115,7 +117,7 @@ local function focus() focus_t = 2.5 end
 local function db_amp(db) return db <= -59.5 and 0 or 10 ^ (db / 20) end
 
 local function send_sound()
-  for i = 2, 4 do
+  for i = 2, #LAYERS do
     local fn = engine[SLOT_SET[i]]
     local s = sc.cur(i):sound(sc)
     for _, l in ipairs(LEVELS) do if l[3] == i then s.vol = db_amp(params:get(l[1])) end end
@@ -132,7 +134,7 @@ end
 local function play(ev, fresh)
   local voice, vel = sc.cur(2), fresh and 1 or 0.7
   if voice.play then voice:play(sc, Brain.pitch(ev.x), vel) else engine.note(Brain.pitch(ev.x), vel) end
-  for i = 2, 4 do
+  for i = 2, #LAYERS do
     local mod = sc.cur(i)
     if mod.on_note then mod:on_note(ev.x, sc) end
   end
@@ -164,7 +166,8 @@ local function on_kind(i)
   local mod = sc.cur(i)
   if i == 2 then engine.voice_kind(mod.voice)
   elseif i == 3 then engine.color_kind(mod.id)
-  elseif i == 4 then engine.air_kind(mod.id) end
+  elseif i == 4 then engine.air_kind(mod.id)
+  elseif i == 5 then engine.drone_kind(mod.id) end
   sent[i] = {}
   dirty_sound = true
 end
@@ -177,13 +180,14 @@ local function add_params()
   params:add_separator("terrarium", "terrarium")
   params:add_group("terrarium_levels", "levels", #LEVELS)
   for _, l in ipairs(LEVELS) do
-    params:add_control(l[1], l[2], controlspec.new(-60, 6, "lin", 0, 0, "dB", 0.01))
+    params:add_control(l[1], l[2], controlspec.new(-60, 6, "lin", 0, l[4], "dB", 0.01))
     params:set_action(l[1], changed)
   end
   params:add_group("terrarium_settings", "settings", #SETTINGS)
   params:add_option("t_root", "key", Brain.NOTES, Brain.root + 1)
   params:set_action("t_root", function(v)
     Brain.root = v - 1
+    dirty_sound = true -- the drone follows the key
     if not seasoning then Brain.set_home() end
   end)
   params:add_option("t_scale", "scale", Brain.scale_names(), Brain.scale)
@@ -303,7 +307,7 @@ end
 local function peek_canvas()
   cv.clear_rect(0, 0, 128, 52)
   for i, L in ipairs(LAYERS) do
-    local y, on, mod = 3 + (i - 1) * 9, i == sel, sc.cur(i)
+    local y, on, mod = 3 + (i - 1) * 8, i == sel, sc.cur(i)
     for k = 1, #mod.macros do
       local bx = 76 + (k - 1) * 26
       cv.rect(bx, y, 22, 3, 2)
@@ -313,20 +317,20 @@ local function peek_canvas()
       end
     end
   end
-  for j = 1, #SETTINGS do cv.rect(100 + (j - 1) * 4, 40, 2, 2, j == set_cursor and 13 or 3) end
+  for j = 1, #SETTINGS do cv.rect(100 + (j - 1) * 4, 42, 2, 2, j == set_cursor and 13 or 3) end
   if SETTINGS[set_cursor] == "t_climate" or SETTINGS[set_cursor] == "t_drift" then
     local n = #Climate.trail -- the attractor's recent path (x across, z up), next to its name
     for j, q in ipairs(Climate.trail) do cv.px(82 + q[1] * 16, 46 - q[2] * 3.5, 1 + 12 * j / n) end
   end
   for i = 1, Brain.length do
-    cv.rect(2 + (i - 1) * 3, 46, 2, 3, Brain.reg[i] and (i == Brain.last_step and 15 or 7) or 2)
+    cv.rect(2 + (i - 1) * 3, 48, 2, 2, Brain.reg[i] and (i == Brain.last_step and 15 or 7) or 2)
   end
   cv.line(0, 51, 127, 51, 3)
 end
 
 local function peek_text()
   for i, L in ipairs(LAYERS) do
-    local y, on = 2 + (i - 1) * 9, i == sel
+    local y, on = 2 + (i - 1) * 8, i == sel
     screen.level(on and 15 or 6)
     screen.move(2, y + 5)
     screen.text(L.name)
@@ -338,10 +342,10 @@ local function peek_text()
   local col = 0
   for _, name in ipairs(SETTING_NAMES) do col = math.max(col, screen.text_extents(name) or 28) end
   screen.level(6)
-  screen.move(2, 44)
+  screen.move(2, 46)
   screen.text(SETTING_NAMES[set_cursor])
   screen.level(13)
-  screen.move(2 + col + 5, 44)
+  screen.move(2 + col + 5, 46)
   screen.text(params:string(SETTINGS[set_cursor]))
 end
 
@@ -404,6 +408,8 @@ function redraw()
   local ease = math.min(1, focus_t * 4)
   local function dim(i) return (focus_t > 0 and i ~= sel) and (1 - 0.65 * ease) or 1 end
 
+  local drone = sc.cur(5)
+  if not drone.in_front then cv.mul = dim(5); drone:draw(cv, sc) end -- drone, furthest back (aurora)
   cv.mul = dim(4); sc.cur(4):draw(cv, sc)  -- air (sky)
   cv.mul = dim(1); sc.cur(1):draw(cv, sc)  -- brain (weather)
   cv.mul = 1
@@ -423,10 +429,11 @@ function redraw()
     if f > 0 then cv.add(f) end
   end
   cv.mul = dim(3); sc.cur(3):draw(cv, sc)  -- color (light, water)
+  if drone.in_front then cv.mul = dim(5); drone:draw(cv, sc) end      -- roots glow up through water and soil
   cv.mul = 1
   glass.draw(cv)                           -- frost, condensation, the jar's rim
-  for i = 1, 4 do
-    cv.rect(106 + (i - 1) * 4, 1, 2, 2, i == sel and (focus_t > 0 and 13 or 5) or (focus_t > 0 and 3 or 1))
+  for i = 1, #LAYERS do
+    cv.rect(102 + (i - 1) * 4, 1, 2, 2, i == sel and (focus_t > 0 and 13 or 5) or (focus_t > 0 and 3 or 1))
   end
   screen.font_face(1)
   screen.font_size(8)
@@ -456,7 +463,7 @@ local function tick()
   if not installer.active then
     Climate.update(dt, params:get("t_drift"))
     if Climate.on() then dirty_sound = true end
-    for i = 1, 4 do
+    for i = 1, #LAYERS do
       local mod = sc.cur(i)
       if mod.update then mod:update(dt, sc) end
     end
@@ -488,7 +495,7 @@ function enc(n, d)
     return
   end
   if n == 1 then
-    sel = H.clamp(sel + d, 1, 4)
+    sel = H.clamp(sel + d, 1, #LAYERS)
     touched({ part = sel })
   else
     local mod = sc.cur(sel)
@@ -530,6 +537,10 @@ function key(n, z)
       sc.frozen = not sc.frozen
       dirty_sound = true
       say(sc.frozen and "freeze" or "thaw")
+    elseif sel == 5 then -- the drone fades out, or rises again
+      sc.hushed = not sc.hushed
+      dirty_sound = true
+      say(sc.hushed and "hush" or "rise")
     else
       play({ x = 4 + math.random() * 119 }, true) -- strike
     end
@@ -547,11 +558,14 @@ function init()
     redraw_metro:start()
     return
   end
-  if not installer.has_beads then -- older mi-UGens builds have no Beads
+  -- older mi-UGens builds may lack Beads or Elements: leave out the modules that need them
+  local function drop(i, id)
     local mods = {}
-    for _, m in ipairs(LAYERS[4].mods) do if m.id ~= "fireflies" then mods[#mods + 1] = m end end
-    LAYERS[4].mods = mods
+    for _, m in ipairs(LAYERS[i].mods) do if m.id ~= id then mods[#mods + 1] = m end end
+    LAYERS[i].mods = mods
   end
+  if not installer.has_beads then drop(4, "fireflies") end
+  if not installer.has_elements then drop(5, "roots") end
   nb:init()
   add_params()
   params:bang()

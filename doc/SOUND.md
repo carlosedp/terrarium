@@ -239,10 +239,48 @@ Outputs are centered on each attractor's median and scaled by its 5th/95th perce
 (measured over a long run; the table is in `lib/climate.lua`). Played values are rounded to
 1/200 so slow drift doesn't send the engine a stream of tiny changes.
 
+## Drone
+
+A sustained bed on the key's root (C2 + root) and fifth, gliding (4 s) when the key or a season
+turns. It plays into the air slot's input, so it shares the sky's space but skips color.
+K3 hushes it and lets it rise (`hush`, glided over ~3 s). Its level is PARAMS > levels > drone
+(-6 dB by default).
+
+### Aurora → 2x `MiPlaits` (root and fifth, no trigger)
+
+With a constant (scalar) trigger and level, MiPlaits counts them as unpatched: its LPG stays
+open and it sounds continuously. Each voice drifts on its own slow LFO (0.05 / 0.063 Hz).
+
+| Macro | Parameter | Range |
+| --- | --- | --- |
+| E2 glow | `harm` | 0.3 → 0.6 |
+| E2 glow | `timbre` | 0.15 → 0.75 |
+| E3 motion | `morph` | 0.35 → 0.65 |
+| E3 motion | `wobble` (LFO depth on timbre and morph) | 0.02 → 0.3 |
+
+- **Variant (hold K2 + E2):** `engine`: string machine 22 (default), chords 6, wavetable 5,
+  additive 4, va filter 16, wave terrain 21, phase dist 17.
+- **Fixed:** `amp` 0.25.
+
+### Roots → `MiElements` (gate held open)
+
+| Macro | Parameter | Range |
+| --- | --- | --- |
+| E2 breath | `bow` (bow level) | 0.8 → 0.15 |
+| E2 breath | `blow` (blow level) | 0.1 → 0.75 |
+| E2 breath | `flow` | 0.3 → 0.7 |
+| E3 depth | `geom` | 0.15 → 0.6 |
+| E3 depth | `space` | 0.3 → 0.85 |
+
+- **Variant (hold K2 + E2):** `model`: modal, string (default), strings.
+- **Fixed:** `bright` 0.4, `damp` 0.7, `contour` 0.8 (sustaining), `strength` 0.6, `amp` 0.3.
+- Needs MiElements; without it the drone part only offers aurora.
+
 ## CPU budget (to measure on norns)
 
 Rough heaviness of each module, lightest first: MiVerb < Ripples < Plaits < Clouds ≈ Beads < Rings.
-Worst case is 2–3 Plaits + Rings + Beads. Measure that first and pick the Plaits polyphony from it.
+Worst case is 2–3 Plaits + Rings + Beads, plus the drone: 2 more Plaits (aurora) or Elements
+(roots, as heavy as Rings). Measure that first and pick the Plaits polyphony from it.
 
 ## Open questions for tuning
 

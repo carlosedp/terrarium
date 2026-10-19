@@ -19,9 +19,9 @@ local function check(label) print(("ok  %-34s notes so far: %d"):format(label, M
 M.run(4); check("default scene (rain/meadow/pond/clouds)")
 
 -- every module in every slot, with macros pushed both ways and each gesture
-local names = { "brain", "voice", "color", "air" }
-for layer = 1, 4 do
-  turn(1, -4); turn(1, 1, layer - 1)
+local names = { "brain", "voice", "color", "air", "drone" }
+for layer = 1, #names do
+  turn(1, -5); turn(1, 1, layer - 1)
   local count = #params:lookup_param(names[layer] .. "_kind").options
   for _ = 1, count do
     turn(2, 1, 60); turn(3, 1, 60); M.run(1.5)
@@ -35,8 +35,8 @@ for layer = 1, 4 do
 end
 
 -- hold K2 + E2 picks the variant and doesn't swap the module; a K2 tap still swaps
-for layer = 1, 4 do
-  turn(1, -4); turn(1, 1, layer - 1)
+for layer = 1, #names do
+  turn(1, -5); turn(1, 1, layer - 1)
   local kind_id = names[layer] .. "_kind"
   local before = params:get(kind_id)
   key(2, 1); turn(2, 1, 2); key(2, 0)
@@ -48,7 +48,7 @@ end
 check("hold K2 + E2 variants")
 
 -- visitors: hold K2 + E2 picks the nb voice; notes go to nb, not the engine
-turn(1, -4); turn(1, 1)
+turn(1, -5); turn(1, 1)
 params:set("voice_kind", 4)
 M.run(1.2) -- nb readies its selector after a second
 key(2, 1); turn(2, 1); key(2, 0)
@@ -61,6 +61,21 @@ assert((M.engine_calls.note or 0) == engine_before, "visitors: notes also went t
 assert(M.nb_mods > 0, "visitors: E2 never reached the voice's modulate")
 check(("visitors via nb (%d notes)"):format(M.nb_notes - nb_before))
 params:set("voice_kind", 1)
+
+-- the drone: root of the key (and it follows it), K3 hushes and lets it rise
+turn(1, -5); turn(1, 4)
+for k = 1, #params:lookup_param("drone_kind").options do
+  params:set("drone_kind", k); M.run(0.3)
+  assert(M.sets.drone_set.pitch == 36 + params:get("t_root") - 1, "drone: not on the key's root")
+end
+params:set("t_root", 8); M.run(0.2)
+assert(M.sets.drone_set.pitch == 36 + 7, "drone: didn't follow a new key")
+press(3); M.run(0.2)
+assert(M.sets.drone_set.hush == 0, "drone: K3 didn't hush it")
+press(3); M.run(0.2)
+assert(M.sets.drone_set.hush == 1, "drone: K3 didn't let it rise")
+params:set("t_root", 3); params:set("drone_kind", 1)
+check("drone (root, key, hush)")
 
 -- tuning from maiden: tune() remaps a parameter live; levels reach the synths as vol
 params:set("air_kind", 1) -- clouds
@@ -80,7 +95,7 @@ params:set("level_air", 0)
 check("tune() and levels")
 
 -- every meadow flora (Plaits engine) blooms its own flower
-turn(1, -4); turn(1, 1)
+turn(1, -5); turn(1, 1)
 for f = 1, #params:lookup_param("meadow_flora").options do
   params:set("meadow_flora", f)
   press(3); M.run(0.4)
