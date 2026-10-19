@@ -246,15 +246,28 @@ function spin(n, d) {
   const el = document.querySelector(`.enc[data-e="${n}"] i`);
   if (el) el.style.transform = `rotate(${angles[n]}deg)`;
 }
+// the wheel: a mouse notch is one step; a trackpad's stream of small deltas adds up,
+// WHEEL_PX per step, so a swipe doesn't fling the value across its range
+const WHEEL_PX = 60, DRAG_PX = 14;
+function wheelSteps(fn) {
+  let acc = 0, last = 0;
+  return e => {
+    e.preventDefault();
+    if (e.timeStamp - last > 300) acc = 0; // a new gesture starts fresh
+    last = e.timeStamp;
+    acc -= e.deltaY * (e.deltaMode === 1 ? 20 : e.deltaMode === 2 ? 400 : 1);
+    if (Math.abs(acc) >= WHEEL_PX) { const s = Math.sign(acc); fn(s, e); acc = 0; } // at most one per event
+  };
+}
 document.querySelectorAll(".enc").forEach(el => {
   const n = +el.dataset.e;
-  el.addEventListener("wheel", e => { e.preventDefault(); enc(n, e.deltaY < 0 ? 1 : -1); }, { passive: false });
+  el.addEventListener("wheel", wheelSteps(s => enc(n, s)), { passive: false });
   let lastY = null, accY = 0;
   el.addEventListener("pointerdown", e => { lastY = e.clientY; accY = 0; el.setPointerCapture(e.pointerId); });
   el.addEventListener("pointermove", e => {
     if (lastY === null) return;
     accY += lastY - e.clientY; lastY = e.clientY;
-    while (Math.abs(accY) >= 6) { const s = Math.sign(accY); enc(n, s); accY -= s * 6; }
+    while (Math.abs(accY) >= DRAG_PX) { const s = Math.sign(accY); enc(n, s); accY -= s * DRAG_PX; }
   });
   const end = () => { lastY = null; };
   el.addEventListener("pointerup", end); el.addEventListener("pointercancel", end);
@@ -351,7 +364,7 @@ function renderParams() {
       const plus = document.createElement("button"); plus.type = "button"; plus.textContent = "+"; plus.setAttribute("aria-label", `increase ${p.name}`);
       const step = (d, e) => { paramDelta(p.i, d * (e && e.shiftKey ? 10 : 1)); renderParams(); };
       minus.addEventListener("click", e => step(-1, e)); plus.addEventListener("click", e => step(1, e));
-      row.addEventListener("wheel", e => { e.preventDefault(); step(e.deltaY < 0 ? 1 : -1, e); }, { passive: false });
+      row.addEventListener("wheel", wheelSteps(step), { passive: false });
       if (p.kind === "text" || p.kind === "file") { minus.hidden = true; plus.hidden = true; }
       if (p.kind === "trigger") { // a trigger is a button, not a value
         const go = document.createElement("button"); go.type = "button"; go.className = "go"; go.textContent = "go";
