@@ -4,6 +4,8 @@
 --
 -- K3 downloads the latest release of norns-mi-UGens and installs it.
 -- K2 installs a mi-UGens-norns*.tar.gz you copied into dust/ yourself.
+-- If the core modules are there but Beads or Elements isn't (an older build), it
+-- offers the update instead: K3 updates, K2 carries on without fireflies or roots.
 -- Both run the install.sh that ships inside the tarball, which also moves
 -- older mi-UGens installs aside so SuperCollider doesn't find duplicate classes.
 
@@ -12,7 +14,8 @@ local URL = "https://github.com/" .. REPO .. "/releases/latest/download/mi-UGens
 local EXT = "/home/we/.local/share/SuperCollider/Extensions"
 local LOCAL_GLOB = "/home/we/dust/mi-UGens-norns*.tar.gz"
 
-local installer = { ok = false, has_beads = false, has_elements = false, active = false, busy = false, lines = {} }
+local installer = { ok = false, has_beads = false, has_elements = false, active = false, busy = false, lines = {},
+  offer = false, on_skip = nil }
 
 local function has(class)
   return util.os_capture("find " .. EXT .. " -name " .. class .. ".sc 2>/dev/null | head -1") ~= ""
@@ -23,6 +26,15 @@ function installer.check()
   installer.has_beads = has("MiBeads")
   installer.has_elements = has("MiElements")
   installer.lines = { "terrarium needs mi-UGens", "", "K3: download + install", "K2: install from dust/" }
+end
+
+-- the core is there, but an older build without Beads or Elements: offer the update once
+function installer.offer_update(on_skip)
+  local missing = {}
+  if not installer.has_beads then missing[#missing + 1] = "Beads" end
+  if not installer.has_elements then missing[#missing + 1] = "Elements" end
+  installer.active, installer.offer, installer.on_skip = true, true, on_skip
+  installer.lines = { "mi-UGens without " .. table.concat(missing, ", "), "", "K3: update (needs wifi)", "K2: carry on without" }
 end
 
 local function install(src, url)
@@ -51,6 +63,11 @@ end
 
 function installer.key(n, z)
   if z == 0 or installer.busy then return end
+  if installer.offer and n == 2 then -- carry on with what's installed
+    installer.active, installer.offer = false, false
+    if installer.on_skip then installer.on_skip() end
+    return
+  end
   if n == 3 then
     installer.lines = { "downloading...", REPO }
     install(nil, URL)

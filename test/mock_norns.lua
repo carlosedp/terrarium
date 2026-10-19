@@ -62,6 +62,12 @@ end
 function P:add_text(id, name, default) add({ id = id, kind = "text", value = default or "" }) end
 function P:add_trigger(id, name) add({ id = id, kind = "trigger", value = 0 }) end
 function P:add_binary(id, name) add({ id = id, kind = "binary", value = 0 }) end
+-- a fresh script launch: no params, clocks or metros from the last one (for tests that
+-- load the script again)
+function M.relaunch()
+  P.list, P.by_id, P.lookup, P.groups, P._group = {}, {}, {}, nil, nil
+  M.coroutines, M.metros = {}, {}
+end
 function P:hide(id) end
 function P:show(id) end
 function P:add_group(id, name, n)

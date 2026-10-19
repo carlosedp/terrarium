@@ -188,6 +188,19 @@ for c = 2, #params:lookup_param("t_climate").options do
 end
 params:set("t_climate", 1)
 
+-- an older mi-UGens build without Beads or Elements: offer the update; K2 carries on without
+local loaded_old = M
+loaded_old.has_beads = false
+M.relaunch()
+dofile(M.ROOT .. "/terrarium.lua")
+init()
+M.run(0.3)
+key(2, 1); key(2, 0); M.run(0.5)
+local voices = params:lookup_param("air_kind").options
+for _, name in ipairs(voices) do assert(name ~= "fireflies", "fireflies offered without Beads") end
+check("older mi-UGens: update offered, K2 carries on")
+loaded_old.has_beads = true
+
 -- the installer path when mi-UGens are missing
 local loaded = M
 loaded.has_mi = false
