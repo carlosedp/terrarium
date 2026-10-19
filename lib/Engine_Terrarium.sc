@@ -123,23 +123,29 @@ Engine_Terrarium : CroneEngine {
 		// drone: a constant (scalar) trigger and level leave Plaits unpatched, so its
 		// LPG stays open and it sounds continuously. Root and fifth, each drifting on
 		// its own slow LFO; hush glides the drone out and back over a few seconds.
-		SynthDef(\terrarium_aurora, { |out, gate = 1, pitch = 36, fifth = 7, engine = 22, harm = 0.45,
+		// The pitch glides (4 s) when the key turns, but not in the first half second: the
+		// synth starts before its pitch arrives, and must land on it, not slide into it.
+		// Each voice also swells on its own slow cycle, so the bed breathes.
+		SynthDef(\terrarium_aurora, { |out, gate = 1, pitch = 48, fifth = 7, engine = 22, harm = 0.45,
 			timbre = 0.4, morph = 0.5, wobble = 0.1, amp = 0.25, hush = 1, vol = 1|
+			var glide = EnvGen.kr(Env([0, 0, 4], [0.5, 0]));
 			var lfo = LFTri.kr([0.05, 0.063]) * wobble;
-			var root = plaits.ar(pitch.lag(4), engine, harm.lag(0.2), (timbre + lfo[0]).clip(0, 1),
+			var swell = 1 + (LFTri.kr([0.071, 0.053], [0, 2]) * 0.15);
+			var root = plaits.ar(Lag.kr(pitch, glide), engine, harm.lag(0.2), (timbre + lfo[0]).clip(0, 1),
 				(morph + lfo[1]).clip(0, 1), 0, 0);
-			var top = plaits.ar((pitch + fifth).lag(4), engine, harm.lag(0.2), (timbre + lfo[1]).clip(0, 1),
+			var top = plaits.ar(Lag.kr(pitch + fifth, glide), engine, harm.lag(0.2), (timbre + lfo[1]).clip(0, 1),
 				(morph - lfo[0]).clip(0, 1), 0, 0);
-			var sig = Pan2.ar(root[0], -0.4) + Pan2.ar(top[0], 0.4);
+			var sig = Pan2.ar(root[0] * swell[0], -0.4) + Pan2.ar(top[0] * swell[1] * 0.8, 0.4);
 			Out.ar(out, sig * amp * hush.lag(3) * vol.lag(0.1) * fade.(gate));
 		}).add;
 
 		// Elements with its gate held open: bowed and blown for as long as it runs
 		elements !? {
-			SynthDef(\terrarium_roots, { |out, gate = 1, pitch = 36, bow = 0.6, blow = 0.2, flow = 0.5, geom = 0.3,
+			SynthDef(\terrarium_roots, { |out, gate = 1, pitch = 48, bow = 0.6, blow = 0.2, flow = 0.5, geom = 0.3,
 				bright = 0.4, damp = 0.7, space = 0.5, model = 1, contour = 0.8, strength = 0.6, amp = 0.3,
 				hush = 1, vol = 1|
-				var sig = elements.ar(0, 0, 1, pitch.lag(4), strength, contour, bow.lag(0.2), blow.lag(0.2), 0,
+				var glide = EnvGen.kr(Env([0, 0, 4], [0.5, 0])); // lands on its pitch, then glides (as aurora)
+				var sig = elements.ar(0, 0, 1, Lag.kr(pitch, glide), strength, contour, bow.lag(0.2), blow.lag(0.2), 0,
 					flow.lag(0.2), 0.5, 0.5, 0.5, 0.5, geom.lag(0.2), bright.lag(0.2), damp, 0.2, space.lag(0.2), model);
 				Out.ar(out, sig * amp * hush.lag(3) * vol.lag(0.1) * fade.(gate));
 			}).add;

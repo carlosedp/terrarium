@@ -51,12 +51,12 @@ the code.
 
 ## Brain (no audio)
 
-| Macro     | Drives                                                                                                   | Notes                      |
-| --------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
+| Macro     | Drives                                                                                                                                                                                    | Notes                                   |
+| --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
 | E2 rate   | event rate: rain from a drop every 4 beats to 4 per beat, a drop a beat in the middle (clocked; 0.5→8 Hz at 120 BPM), lightning 0.3→6 Hz average (random, with occasional double strikes) | stepped (rain), exponential (lightning) |
-| E3 change | chance per step that the phrase mutates: `change²`                                                       | 0 = loop forever           |
-| K3        | new phrase                                                                                               |                            |
-| Settings  | key, scale, range (1–3 octaves), length (4–16), seasons                                                  | also in PARAMS; grid later |
+| E3 change | chance per step that the phrase mutates: `change²`                                                                                                                                        | 0 = loop forever                        |
+| K3        | new phrase                                                                                                                                                                                |                                         |
+| Settings  | key, scale, range (1–3 octaves), length (4–16), seasons                                                                                                                                   | also in PARAMS; grid later              |
 
 Each note sends `pitch` (MIDI note) and a velocity-like `accent` (0..1, from the brain: e.g.
 lightning double strikes and new notes accent higher).
@@ -263,12 +263,15 @@ A sustained bed on the key's root (C3 + root) and fifth, gliding (4 s) when the 
 turns. (It started an octave lower, at C2: that sat below small speakers and nearly vanished.) It plays into the air slot's input, so it shares the sky's space but skips color.
 K3 hushes it and lets it rise (`hush`, glided over ~3 s). The **none** module turns it off for
 good: the engine frees the drone synth, so it costs no CPU. Its level is PARAMS > levels > drone
-(-10 dB by default).
+(-12 dB by default).
 
 ### Aurora → 2x `MiPlaits` (root and fifth, no trigger)
 
 With a constant (scalar) trigger and level, MiPlaits counts them as unpatched: its LPG stays
-open and it sounds continuously. Each voice drifts on its own slow LFO (0.05 / 0.063 Hz).
+open and it sounds continuously. Each voice drifts on its own slow LFO (0.05 / 0.063 Hz) and
+swells ±15% on another (0.071 / 0.053 Hz); the fifth sits a little under the root (0.8). The
+pitch glides 4 s on key changes, but not in the first half second: the synth starts before its
+pitch arrives and must land on the key, not slide into it (roots does the same).
 
 | Macro     | Parameter                                | Range       |
 | --------- | ---------------------------------------- | ----------- |
