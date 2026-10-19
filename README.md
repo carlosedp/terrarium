@@ -48,7 +48,7 @@ use `git clone --recurse-submodules`.
 | Control | Does |
 | --- | --- |
 | E1 | choose a part (the others dim for a moment) |
-| E2, E3 | that part's two macros |
+| E2, E3 | that part's two macros (their names show for a moment while you turn) |
 | K2 | swap the part's module |
 | hold K2 + E2 | pick the module's variant: Plaits engine (meadow), DX bank (crystals), Rings model (reeds, pond), nb voice (visitors), Clouds mode |
 | K3 | gesture: new phrase (brain), strike (voice, color), freeze (air) |

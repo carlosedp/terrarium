@@ -17,8 +17,9 @@ scripts inspired by real-world visuals, the patch _is_ a scene.
 - **Fixed signal path, swappable modules.** Free patching on a 128×64 screen with 3 encoders
   would be miserable, so the routing is pre-wired, like a semi-modular synth. You swap what sits
   in each slot.
-- **No parameters on screen.** Turning a macro changes the scene; the scene _is_ the readout.
-  Holding K1 shows a peek view for when you're lost. Everything is also in PARAMS for presets and MIDI.
+- **No parameters on screen, except names on touch.** Turning a macro changes the scene; the scene
+  _is_ the readout. Touching an encoder briefly names what it moved, then fades. Holding K1 shows a
+  peek view for when you're lost. Everything is also in PARAMS for presets and MIDI.
 - **Every note is a place.** Where an event lands across the screen sets its pitch, so a melody is
   something you can see.
 - **Macros, not parameters.** Each module has two macros (E2, E3) that move several mi-UGen
@@ -102,6 +103,12 @@ E1 picks a part, and the others dim for a moment so it's clear which one you're 
   tempting for crystals, but the 6-op FM banks are a real, distinct glassy sound. Reeds plays
   Rings with its internal exciter; most Rings models are strings, so they're drawn as reeds that
   vibrate when plucked. Appended after crystals so saved PSETs keep their voice.
+- **Names on touch (October 2026).** The scene shows _how much_ a macro moved but not _what_ it
+  is, and the norns has no labels by its knobs, so a first-time player was guessing (the peek view
+  answered, but only if you knew to hold K1). Now E2/E3 show the macro's name and a bar (with the
+  climate's tick) on their side of the bottom strip, where the encoders are; E1 shows the part,
+  its module and both macro names. No numbers, and it fades after about a second, so nothing
+  rests on screen.
 - **The browser runs the real Lua (October 2026).** The prototype was a JavaScript copy of the
   script, and every scene change had to be written twice; the copy drifted twice in one session.
   `tools/norns-web` runs the actual Lua in the browser instead (wasmoon, Lua compiled to

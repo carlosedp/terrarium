@@ -76,7 +76,12 @@ local sent = { {}, {}, {}, {} } -- last values sent to the engine, per slot
 local seasoning = false
 local redraw_metro
 
-local function say(text) toast, toast_t = text, 1.8 end
+-- names on touch: what an encoder just moved, shown for a moment, never resting on screen
+local hud, hud_t = nil, 0 -- { part = i } after E1, { part = i, k = macro } after E2/E3
+local HUD_SEC, HUD_BAR = 1.2, 20
+
+local function say(text) toast, toast_t, hud_t = text, 1.8, 0 end
+local function touched(t) hud, hud_t, toast_t = t, HUD_SEC, 0 end
 local function focus() focus_t = 2.5 end
 
 -- ---------- sound ----------
@@ -253,6 +258,52 @@ local function peek_text()
   screen.text(params:string(SETTINGS[set_cursor]))
 end
 
+-- E2's macro on the left of the bottom strip, E3's on the right (where the
+-- encoders are): its name and a bar, plus a tick where the climate has it now.
+-- After E1, the part and module at the top left and both macro names at the
+-- bottom (names only: two names and two bars don't fit 128 pixels).
+-- The canvas part clears room and draws the bars; the text goes on after the blit.
+local function text_w(s) return screen.text_extents(s) or #s * 5 end
+
+local function hud_canvas()
+  local fade = math.min(1, hud_t / 0.4)
+  local mod, labels = sc.cur(hud.part), {}
+  for k = 1, #mod.macros do
+    if not hud.k or hud.k == k then
+      local name = mod.macros[k].name
+      local w = text_w(name)
+      local bar = hud.k and HUD_BAR + 4 or 0
+      local x = k == 1 and 2 or 126 - bar - w
+      cv.clear_rect(x - 2, 55, w + bar + 4, 9)
+      if hud.k then
+        local bx = x + w + 4
+        cv.rect(bx, 58, HUD_BAR, 2, 2)
+        cv.rect(bx, 58, math.max(1, H.round(sc.base(hud.part, k) * HUD_BAR)), 2, 10 * fade)
+        if Climate.on() then
+          cv.rect(bx + math.min(HUD_BAR - 1, H.round(sc.m(hud.part, k) * HUD_BAR)), 57, 1, 4, 15 * fade)
+        end
+      end
+      labels[#labels + 1] = { x = x, y = 62, text = name, level = (hud.k and 13 or 10) * fade }
+    end
+  end
+  if not hud.k then -- which part and module E1 landed on
+    local part = LAYERS[hud.part].name
+    local w = text_w(part) + 4 + text_w(mod.name)
+    cv.clear_rect(0, 0, w + 6, 9)
+    labels[#labels + 1] = { x = 2, y = 7, text = part, level = 15 * fade }
+    labels[#labels + 1] = { x = 2 + text_w(part) + 4, y = 7, text = mod.name, level = 8 * fade }
+  end
+  return labels
+end
+
+local function hud_text(labels)
+  for _, l in ipairs(labels) do
+    screen.level(math.max(1, math.floor(l.level)))
+    screen.move(l.x, l.y)
+    screen.text(l.text)
+  end
+end
+
 function redraw()
   screen.clear()
   screen.aa(0)
@@ -290,13 +341,16 @@ function redraw()
   for i = 1, 4 do
     cv.rect(106 + (i - 1) * 4, 1, 2, 2, i == sel and (focus_t > 0 and 13 or 5) or (focus_t > 0 and 3 or 1))
   end
+  screen.font_face(1)
+  screen.font_size(8)
+  local labels = (not k1 and hud_t > 0) and hud_canvas() or nil
   if k1 then peek_canvas() end
   cv.blit()
 
-  screen.font_face(1)
-  screen.font_size(8)
   if k1 then
     peek_text()
+  elseif labels then
+    hud_text(labels)
   elseif toast_t > 0 then
     screen.level(math.floor(14 * math.min(1, toast_t / 0.6)))
     screen.move(2, 62)
@@ -311,6 +365,7 @@ local function tick()
   if not sc.frozen then sc.fly_t = sc.fly_t + dt end
   focus_t = math.max(0, focus_t - dt)
   toast_t = toast_t - dt
+  hud_t = hud_t - dt
   if not installer.active then
     Climate.update(dt, params:get("t_drift"))
     if Climate.on() then dirty_sound = true end
@@ -347,9 +402,11 @@ function enc(n, d)
   end
   if n == 1 then
     sel = H.clamp(sel + d, 1, 4)
+    touched({ part = sel })
   else
     local mod = sc.cur(sel)
     params:delta(mod.id .. "_" .. mod.macros[n - 1].id, d)
+    touched({ part = sel, k = n - 1 })
   end
   focus()
 end
