@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>norns-web</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&family=Silkscreen&display=swap">
+<style>
+/* Layout: an instrument on a bench. The device is the hero; PARAMS and the log sit beside it and stack under it on phones. */
+:root {
+  --paper: #e9ebe6;
+  --ink: #1b1f1c;
+  --muted: #5a625c;
+  --rule: #cdd2cb;
+  --accent: #9a6b16;
+  --accent-soft: #f1e3c4;
+  /* hardware: the same object in both themes */
+  --alu-hi: #d6d8d4;
+  --alu-lo: #a8aca7;
+  --alu-edge: #7d817c;
+  --cap: #262827;
+  --cap-hi: #4a4d4b;
+  --oled: #030303;
+  --font-display: "Silkscreen", "JetBrains Mono", ui-monospace, monospace;
+  --font-body: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+  --step--1: 0.8125rem;
+  --step-0: 1rem;
+  --step-1: 1.25rem;
+  --step-2: 1.75rem;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --paper: #121513;
+    --ink: #e3e6e1;
+    --muted: #9aa29b;
+    --rule: #2a302c;
+    --accent: #e0b25a;
+    --accent-soft: #3a2f1a;
+    color-scheme: dark;
+  }
+}
+:root[data-theme="dark"] {
+  --paper: #121513;
+  --ink: #e3e6e1;
+  --muted: #9aa29b;
+  --rule: #2a302c;
+  --accent: #e0b25a;
+  --accent-soft: #3a2f1a;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: var(--step-0);
+  line-height: 1.5;
+  padding-left: max(16px, env(safe-area-inset-left, 0px));
+  padding-right: max(16px, env(safe-area-inset-right, 0px));
+  padding-block: 28px 48px;
+}
+.wrap { max-width: 1120px; margin: 0 auto; display: grid; gap: 28px; }
+header { display: grid; gap: 6px; }
+h1 {
+  font-family: var(--font-display);
+  font-weight: 400;
+  font-size: var(--step-2);
+  letter-spacing: 0.04em;
+  margin: 0;
+  text-wrap: balance;
+}
+.lede { margin: 0; max-width: 62ch; color: var(--muted); }
+.stage { display: grid; grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 32px; align-items: start; }
+@media (max-width: 860px) { .stage { grid-template-columns: minmax(0, 1fr); } }
+
+/* --- the device --- */
+.norns {
+  background: linear-gradient(160deg, var(--alu-hi), var(--alu-lo));
+  border: 1px solid var(--alu-edge);
+  border-radius: 18px;
+  padding: 18px 20px 22px;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.6) inset, 0 18px 40px -18px rgba(0,0,0,0.55);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "k1 e1" "screen controls";
+  gap: 14px 22px;
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: manipulation;
+}
+.k1slot { grid-area: k1; display: flex; align-items: center; gap: 10px; }
+.e1slot { grid-area: e1; display: flex; justify-content: flex-end; }
+.screen {
+  grid-area: screen;
+  background: var(--oled);
+  border-radius: 6px;
+  padding: 10px;
+  box-shadow: 0 0 0 3px #1a1b1a, 0 0 0 4px var(--alu-edge);
+}
+.screen canvas {
+  display: block;
+  width: 100%;
+  aspect-ratio: 2 / 1;
+  max-width: 100%;
+  image-rendering: pixelated;
+  image-rendering: crisp-edges;
+}
+.controls { grid-area: controls; display: grid; grid-template-columns: auto auto; gap: 18px 16px; align-content: end; justify-items: center; }
+.brand { font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.18em; color: #4f534f; text-transform: lowercase; }
+@media (max-width: 560px) {
+  .norns { grid-template-columns: minmax(0, 1fr); grid-template-areas: "k1" "screen" "e1" "controls"; }
+  .e1slot { justify-content: center; }
+  .controls { grid-template-columns: repeat(4, auto); justify-content: center; }
+}
+.key, .enc {
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  position: relative;
+  -webkit-tap-highlight-color: transparent;
+}
+.key {
+  width: 30px; height: 30px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, var(--cap-hi), var(--cap) 70%);
+  box-shadow: 0 2px 0 #111, 0 3px 6px rgba(0,0,0,0.35);
+}
+.key.down { transform: translateY(2px); box-shadow: 0 0 0 #111, 0 1px 2px rgba(0,0,0,0.35); }
+.enc {
+  width: 48px; height: 48px; border-radius: 50%;
+  background: conic-gradient(from 0deg, #333634, #1d1f1e, #333634, #1d1f1e, #333634);
+  box-shadow: 0 0 0 3px #3b3e3c, 0 4px 10px rgba(0,0,0,0.4);
+  touch-action: none;
+}
+.enc i {
+  position: absolute; left: 50%; top: 5px; width: 3px; height: 11px; margin-left: -1.5px;
+  background: #cfd2ce; border-radius: 2px;
+  transform-origin: 50% 19px;
+}
+.key:focus-visible, .enc:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+.ctl { display: grid; justify-items: center; gap: 6px; }
+.ctl small { font-family: var(--font-mono); font-size: 10px; color: #4a4e4a; letter-spacing: 0.08em; }
+
+.bench { display: grid; gap: 14px; }
+.toolbar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px 16px; }
+.btn {
+  font: 600 var(--step--1) var(--font-mono);
+  color: var(--ink);
+  background: transparent;
+  border: 1.5px solid var(--ink);
+  border-radius: 999px;
+  padding: 8px 16px;
+  cursor: pointer;
+}
+.btn[aria-pressed="true"] { background: var(--ink); color: var(--paper); }
+.btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.keys { font-family: var(--font-mono); font-size: var(--step--1); color: var(--muted); display: flex; flex-wrap: wrap; gap: 4px 14px; }
+kbd { font-family: var(--font-mono); font-size: 0.85em; border: 1px solid var(--rule); border-bottom-width: 2px; border-radius: 4px; padding: 0 5px; color: var(--ink); }
+
+/* --- PARAMS and log --- */
+.side { display: grid; gap: 18px; min-width: 0; }
+.side h2 { font-family: var(--font-display); font-weight: 400; font-size: var(--step-1); margin: 0; letter-spacing: 0.04em; }
+.panel { border: 1px solid var(--rule); border-radius: 10px; padding: 10px 12px; min-width: 0; }
+#params { display: grid; gap: 2px; max-height: 60vh; overflow: auto; font-family: var(--font-mono); font-size: var(--step--1); }
+#params .sep { margin: 10px 0 2px; color: var(--muted); letter-spacing: 0.1em; text-transform: uppercase; font-weight: 600; }
+#params .sep:first-child { margin-top: 0; }
+#params details { border-top: 1px solid var(--rule); }
+#params summary { cursor: pointer; padding: 4px 0; font-weight: 600; }
+#params details .param { padding-left: 12px; }
+.param { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(5.5rem, auto) auto; align-items: center; gap: 6px; padding: 1px 0; }
+.param .pname { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted); }
+.param .pval { text-align: center; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 11rem; }
+.param button { font: inherit; width: 22px; height: 22px; padding: 0; border: 1px solid var(--rule); border-radius: 5px; background: transparent; color: var(--ink); cursor: pointer; }
+.param button:hover { border-color: var(--ink); }
+.param button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+#log { height: 9.5rem; overflow: auto; font-family: var(--font-mono); font-size: 12px; line-height: 1.45; color: var(--muted); white-space: pre-wrap; overflow-wrap: anywhere; }
+#log .error { color: #b3261e; }
+#log .engine { color: var(--accent); }
+.logbar { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
+.logbar label { font-family: var(--font-mono); font-size: var(--step--1); color: var(--muted); display: flex; gap: 6px; align-items: center; }
+.notes { font-size: var(--step--1); color: var(--muted); margin: 0; max-width: 62ch; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1 id="script-name">norns-web</h1>
+    <p class="lede">The script's real Lua, running in the browser against a stand-in for norns: the screen, encoders, keys, clocks and PARAMS are emulated, and the SuperCollider engine is replaced by rough Web Audio stand-ins. Good for checking behavior and the scene; the sound is only a sketch of the real engine.</p>
+  </header>
+
+  <div class="stage">
+    <div class="bench">
+      <div class="norns" id="device">
+        <div class="k1slot">
+          <div class="ctl"><button class="key" data-k="1" aria-label="K1"></button><small>K1</small></div>
+          <span class="brand">norns</span>
+        </div>
+        <div class="e1slot">
+          <div class="ctl"><button class="enc" data-e="1" aria-label="E1"><i></i></button><small>E1</small></div>
+        </div>
+        <div class="screen"><canvas id="oled" width="128" height="64" aria-label="norns screen"></canvas></div>
+        <div class="controls">
+          <div class="ctl"><button class="key" data-k="2" aria-label="K2"></button><small>K2</small></div>
+          <div class="ctl"><button class="key" data-k="3" aria-label="K3"></button><small>K3</small></div>
+          <div class="ctl"><button class="enc" data-e="2" aria-label="E2"><i></i></button><small>E2</small></div>
+          <div class="ctl"><button class="enc" data-e="3" aria-label="E3"><i></i></button><small>E3</small></div>
+        </div>
+      </div>
+      <div class="toolbar">
+        <button class="btn" id="sound" aria-pressed="false">Start sound</button>
+        <div class="keys">
+          <span><kbd>Q</kbd><kbd>W</kbd> E1</span>
+          <span><kbd>A</kbd><kbd>S</kbd> E2</span>
+          <span><kbd>Z</kbd><kbd>X</kbd> E3</span>
+          <span><kbd>J</kbd> K1</span>
+          <span><kbd>K</kbd> K2</span>
+          <span><kbd>L</kbd> K3</span>
+        </div>
+      </div>
+      <div class="keys">Keys can be held: hold <kbd>K</kbd> and press <kbd>S</kbd> for K2 + E2. Encoders also take the scroll wheel and dragging up and down.</div>
+    </div>
+
+    <section class="side" aria-label="PARAMS and log">
+      <h2>PARAMS</h2>
+      <div class="panel" id="params" aria-live="off"></div>
+      <div class="logbar"><h2>Log</h2><label><input type="checkbox" id="show-engine"> engine commands</label></div>
+      <div class="panel" id="log" role="log"></div>
+      <p class="notes">Scroll on a param or use − and +; hold Shift for bigger steps.</p>
+    </section>
+  </div>
+</div>
+<script>window.NORNS_WEB_WASMOON = "vendor/wasmoon/"; /* the build can point this at a CDN */</script>
+<script src="vendor/wasmoon/index.js"></script>
+<script src="norns-web.js"></script>
+</body>
+</html>

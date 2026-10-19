@@ -1,0 +1,1 @@
+wasmoon 1.16.0 (https://github.com/ceifa/wasmoon, MIT): dist/index.js and dist/glue.wasm from npm, unmodified. Lua 5.4 compiled to WebAssembly.
