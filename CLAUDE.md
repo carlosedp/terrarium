@@ -11,10 +11,16 @@ The Lua side passes a headless smoke test; `lib/Engine_Terrarium.sc` has never b
 ## Commands
 
 ```
-lua test/smoke.lua    # headless run against test/mock_norns.lua: all modules, gestures, settings, installer
+lua test/smoke.lua                    # headless run against test/mock_norns.lua: all modules, gestures, settings, installer
+node tools/norns-web/serve.mjs        # the real script in a browser at http://localhost:8800/
+node tools/norns-web/build.mjs --cdn  # static copy in tools/norns-web/dist/, to publish
 ```
 
-Run it after every Lua change. It also asserts that params group counts match.
+Run the smoke test after every Lua change. It also asserts that params group counts match.
+
+To update the published page: build with `--cdn`, then publish `tools/norns-web/dist/index.html` to
+https://claude.ai/artifact/SBCpfHzewFWLQyez8d2hfZ with `norns-web.js`, `norns.lua`, `files.json` and
+`script/lib/Engine_Terrarium.js` as files.
 
 ## Rules that are easy to break
 
@@ -42,6 +48,10 @@ Run it after every Lua change. It also asserts that params group counts match.
   `params:get` directly; `sc.base(i, k)` is the value as set. Each macro also has a `<id>_cv` param.
 - A voice module can define `play(sc, note, vel)` to play notes itself instead of the engine
   (visitors does, through nb). `lib/nb` is a git submodule (sixolet/nb); don't edit it.
+- **Engine command changes go in three places:** `lib/Engine_Terrarium.sc`, the Lua that sends
+  them, and `lib/Engine_Terrarium.js` (the browser stand-in), or norns-web logs them as unknown.
+- `tools/norns-web` must stay generic: nothing terrarium-specific in it. The browser runs Lua 5.4,
+  so it won't catch 5.4-only code that would fail on norns (5.3).
 - A brain module must define `wind(sc)` (the sky drifts with it); `flash()` is optional.
 
 ## Related repo
@@ -62,4 +72,4 @@ form for Windows paths. `gh`, `podman`, `lua`/`luac` are available.
 
 - `doc/DESIGN.md`: decisions and their reasons (read before changing behavior)
 - `doc/SOUND.md`: macro -> mi-UGen parameter map, ranges, couplings, open tuning questions
-- `doc/prototype.html`: the browser sketch (also published at https://claude.ai/artifact/SBCpfHzewFWLQyez8d2hfZ)
+- `tools/norns-web/README.md`: running the script in a browser (generic, not terrarium-specific)

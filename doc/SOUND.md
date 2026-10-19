@@ -2,7 +2,7 @@
 
 How each macro on the screen drives the real mi-UGens. This is the starting point for
 tuning: ranges and curves are first guesses, to be adjusted by ear on the real engines.
-The web prototype only uses Web Audio stand-ins.
+In the browser (norns-web), `lib/Engine_Terrarium.js` plays rough Web Audio stand-ins.
 
 Conventions:
 
@@ -132,7 +132,7 @@ and fires `trig`.
 | E3 shimmer | `reson` | 0.05 → 0.85 (keep below self-oscillation) |
 | E3 shimmer | `drive` | 1.0 → 1.6 |
 
-- Scene brightness on screen follows `cf` (already in the prototype).
+- Scene brightness on screen follows `cf`.
 - **K3:** strike.
 
 ## Air

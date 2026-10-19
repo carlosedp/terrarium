@@ -1,8 +1,9 @@
 # terrarium: design notes
 
 What terrarium is meant to be, and the decisions behind it. Written after the first design
-round (October 2026), which happened in a browser prototype ([prototype.html](prototype.html))
-before any norns code existed.
+round (October 2026), which happened in a browser prototype before any norns code existed. That
+prototype was a hand-written JavaScript twin of the script; it's gone (see git history), replaced
+by norns-web, which runs the real Lua in the browser.
 
 ## The idea
 
@@ -101,6 +102,11 @@ E1 picks a part, and the others dim for a moment so it's clear which one you're 
   tempting for crystals, but the 6-op FM banks are a real, distinct glassy sound. Reeds plays
   Rings with its internal exciter; most Rings models are strings, so they're drawn as reeds that
   vibrate when plucked. Appended after crystals so saved PSETs keep their voice.
+- **The browser runs the real Lua (October 2026).** The prototype was a JavaScript copy of the
+  script, and every scene change had to be written twice; the copy drifted twice in one session.
+  `tools/norns-web` runs the actual Lua in the browser instead (wasmoon, Lua compiled to
+  WebAssembly, a third of native speed; a pure-JS Lua was 28× slower). It's generic, so other
+  scripts can use it. The prototype's "scene details" toggles were dropped: the details stay on.
 - **nb voices are visitors, a fourth voice module (October 2026).** nb voices each define their
   own parameters, so the scene can only promise E2 → the voice's generic `modulate`, E3 → note
   length; the voice itself is the variant (hold K2 + E2). They're drawn as creatures from outside

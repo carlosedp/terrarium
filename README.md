@@ -77,7 +77,8 @@ lib/nb/                  the nb library (git submodule), for visitors
 lib/scene/*.lua          one file per module: its drawing, macros and sound mapping
 lib/installer.lua        mi-UGens check and installer
 doc/SOUND.md             macro -> mi-UGen parameter map (the tuning reference)
-doc/prototype.html       the browser sketch the interaction was designed in
+lib/Engine_Terrarium.js  Web Audio stand-in for the engine, for norns-web (norns ignores it)
+tools/norns-web/         runs the script's real Lua in a browser
 test/                    mocked norns runtime and a smoke test
 ```
 
@@ -101,8 +102,15 @@ It loads the script against `test/mock_norns.lua`, plays every module, gesture a
 exercises the installer path, and prints screen calls per frame. It checks the Lua logic only:
 no sound, no real screen.
 
-Open `doc/prototype.html` in a browser for the interactive sketch (Web Audio stand-ins, not
-the MI engines).
+To see and play the real script in a browser, run [norns-web](tools/norns-web/README.md):
+
+```
+node tools/norns-web/serve.mjs     # then open http://localhost:8800/
+```
+
+It runs this Lua as is (screen, controls, clocks, PARAMS), with rough Web Audio stand-ins for the
+engine (`lib/Engine_Terrarium.js`), not the MI engines. A published copy is at
+https://claude.ai/artifact/SBCpfHzewFWLQyez8d2hfZ.
 
 ## To do on hardware
 
