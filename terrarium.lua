@@ -334,7 +334,7 @@ scramble = function()
     if mod.variant then params:set(mod.variant, math.random(#params:lookup_param(mod.variant).options)) end
     for _, mac in ipairs(mod.macros) do params:set(mod.id .. "_" .. mac.id, 0.15 + math.random() * 0.7) end
   end
-  for _, id in ipairs({ "t_root", "t_scale", "t_length", "t_seasons", "t_climate", "t_drift", "t_breath" }) do
+  for _, id in ipairs({ "t_root", "t_scale", "t_length", "t_seasons", "t_climate", "t_drift", "t_breath", "t_patina" }) do
     params:set(id, math.random(#params:lookup_param(id).options))
   end
   params:set("t_range", math.random(1, 3))
