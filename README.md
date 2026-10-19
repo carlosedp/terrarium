@@ -2,6 +2,8 @@
 
 A small world of Mutable Instruments for [monome norns](https://monome.org/docs/norns/).
 
+**[Read the manual](doc/MANUAL.md)** for how to play it.
+
 The patch is a landscape. Five parts each draw one piece of the scene and play one part of
 the sound. Swap a module and that piece of the scene changes; turn a macro and the scene moves
 with the sound. The screen shows no numbers.

@@ -5,10 +5,10 @@ NORNS ?= we@norns.local
 DEST  ?= /home/we/dust/code/terrarium
 
 .DEFAULT_GOAL := help
-.PHONY: help web norns-web stop test build clean submodules deploy
+.PHONY: help web norns-web stop test build clean submodules deploy manual-images
 
 help: ## list the targets
-	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{ printf "  make %-11s %s\n", $$1, $$2 }'
+	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{ printf "  make %-14s %s\n", $$1, $$2 }'
 
 # "[s]erve.mjs" can't match pkill's own shell, which "serve.mjs" would (and kill it)
 web: stop ## run the script in the browser (http://localhost:8800/, or PORT=...)
@@ -34,5 +34,10 @@ submodules: ## fetch lib/nb after a clone without --recurse-submodules
 # copies the script to the norns over ssh (NORNS=we@<ip> if norns.local doesn't resolve);
 # then load it from the norns menu or maiden
 deploy: test ## copy the script to the norns (needs ssh access)
-	rsync -av --delete --exclude '.*' --exclude tools --exclude test --exclude '*.js' \
+	rsync -av --delete --exclude '.*' --exclude tools --exclude test --exclude doc --exclude '*.js' \
 		--exclude Makefile ./ $(NORNS):$(DEST)/
+
+manual-images: ## re-render the manual's scene pictures (doc/img) from the Lua
+	@mkdir -p tools/manual/pgm
+	lua tools/manual/shots.lua . tools/manual/pgm > /dev/null
+	python3 tools/manual/topng.py tools/manual/pgm doc/img
