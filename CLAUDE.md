@@ -41,6 +41,8 @@ https://claude.ai/artifact/SBCpfHzewFWLQyez8d2hfZ with `norns-web.js`, `norns.lu
 - **Draw through `lib/canvas.lua`** (framebuffer, later layers can erase/dim earlier ones), then
   `cv.blit()`; native `screen.text` overlays go after the blit.
 - **K1 is hold-only.** A quick K1 tap opens the norns system menu.
+- `lib/scene/none.lua` is an empty module (no macros, silent, draws nothing); enc() skips
+  macros a module doesn't have.
 - A module with a variant (an option param picked with hold K2 + E2) sets `variant` to that param's id.
 - A module that adds its own params must set `extra_count` (params group sizes are declared up front).
 - A new color, air or drone module needs a matching `terrarium_<id>` SynthDef in the engine. A voice

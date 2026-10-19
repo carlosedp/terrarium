@@ -123,7 +123,8 @@ E1 picks a part, and the others dim for a moment so it's clear which one you're 
   together, follows the key and glides when a season turns. It got its own part rather than a
   setting so it has modules, macros and a variant like everything else. It plays into the air
   (shared space) but skips color: Rings fed a constant drone would ring all the time. Aurora
-  draws behind the sky; roots draws after the water so the pond doesn't hide it.
+  draws behind the sky; roots draws after the water so the pond doesn't hide it. A third module,
+  none, is for anyone who doesn't want a drone (`lib/scene/none.lua`, reusable for any part).
 - **Mappings are data, tuned live (October 2026).** Tuning by ear means many small changes, and
   reloading the script for each is slow. Each module's macro -> parameter mapping is now a table
   (`map`) that `tune()` changes from maiden while it plays, printing the table to paste back. The

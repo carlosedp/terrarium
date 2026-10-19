@@ -34,7 +34,7 @@ local LAYERS = {
     include("lib/scene/visitors") } },
   { id = "color", name = "color", mods = { include("lib/scene/pond"), include("lib/scene/fog") } },
   { id = "air",   name = "air",   mods = { include("lib/scene/clouds"), include("lib/scene/fireflies"), include("lib/scene/mountains") } },
-  { id = "drone", name = "drone", mods = { include("lib/scene/aurora"), include("lib/scene/roots") } },
+  { id = "drone", name = "drone", mods = { include("lib/scene/aurora"), include("lib/scene/roots"), include("lib/scene/none") } },
 }
 local SLOT_SET = { nil, "voice_set", "color_set", "air_set", "drone_set" }
 local PART = {}
@@ -518,6 +518,10 @@ function enc(n, d)
     touched({ part = sel })
   else
     local mod = sc.cur(sel)
+    if not mod.macros[n - 1] then -- an empty module ("none") has nothing to turn
+      say(LAYERS[sel].name .. ": " .. mod.name)
+      return
+    end
     params:delta(mod.id .. "_" .. mod.macros[n - 1].id, d)
     touched({ part = sel, k = n - 1 })
   end

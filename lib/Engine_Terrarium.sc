@@ -14,7 +14,7 @@
 //   color_set(key, value)
 //   air_kind(name)                 clouds | fireflies | mountains
 //   air_set(key, value)
-//   drone_kind(name)               aurora | roots
+//   drone_kind(name)               aurora | roots | none (silent, no synth)
 //   drone_set(key, value)
 //
 // mi-UGens classes are looked up by name at runtime instead of being written as
@@ -239,6 +239,12 @@ Engine_Terrarium : CroneEngine {
 	setDrone { |kind|
 		var old = droneSynth, name = ("terrarium_" ++ kind).asSymbol;
 		if (ready.not or: { kind == droneKind }) { ^this };
+		if (kind == \none) { // no drone: fade the old one out, run nothing
+			droneKind = kind;
+			droneSynth = nil;
+			old !? { old.set(\gate, 0) };
+			^this
+		};
 		if (SynthDescLib.global.at(name).isNil) {
 			("terrarium: no synth for drone '" ++ kind ++ "' (is MiElements installed?)").warn;
 			^this

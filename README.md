@@ -12,7 +12,7 @@ with the sound. The screen shows no numbers.
 | **voice** | the ground: what plays | meadow (Plaits), crystals (Plaits 6-op FM), reeds (Rings), visitors (any [nb](https://github.com/sixolet/nb) voice) |
 | **color** | light and water: what shapes it | pond (Rings), fog (Ripples) |
 | **air** | the sky: where it rings out | clouds (Clouds), fireflies (Beads), mountains (MiVerb) |
-| **drone** | the bed under it all, on the key's root and fifth | aurora (Plaits), roots (Elements) |
+| **drone** | the bed under it all, on the key's root and fifth | aurora (Plaits), roots (Elements), none |
 
 The whole scene sits behind the terrarium's glass. Rain beads up on it, and freezing the air
 frosts it over.

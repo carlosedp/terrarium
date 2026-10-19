@@ -64,18 +64,22 @@ params:set("voice_kind", 1)
 
 -- the drone: root of the key (and it follows it), K3 hushes and lets it rise
 turn(1, -5); turn(1, 4)
-for k = 1, #params:lookup_param("drone_kind").options do
+for k = 1, #params:lookup_param("drone_kind").options - 1 do -- every drone but none
   params:set("drone_kind", k); M.run(0.3)
   assert(M.sets.drone_set.pitch == 48 + params:get("t_root") - 1, "drone: not on the key's root")
 end
+params:set("drone_kind", 1)
 params:set("t_root", 8); M.run(0.2)
 assert(M.sets.drone_set.pitch == 48 + 7, "drone: didn't follow a new key")
 press(3); M.run(0.2)
 assert(M.sets.drone_set.hush == 0, "drone: K3 didn't hush it")
 press(3); M.run(0.2)
 assert(M.sets.drone_set.hush == 1, "drone: K3 didn't let it rise")
+params:set("drone_kind", #params:lookup_param("drone_kind").options) -- none
+turn(2, 1, 5); turn(3, -1, 5); press(3); press(3); M.run(0.5)                 -- nothing to turn, no errors
+assert(params:string("drone_kind") == "none", "drone: none isn't the last module")
 params:set("t_root", 3); params:set("drone_kind", 1)
-check("drone (root, key, hush)")
+check("drone (root, key, hush, none)")
 
 -- the day: it starts at noon, where the voice's second macro sits higher; off puts it back
 params:set("voice_kind", 1); params:set("meadow_timbre", 0.5)

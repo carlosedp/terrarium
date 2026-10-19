@@ -260,7 +260,8 @@ The depths are in `lib/daylight.lua` (`DEPTH`).
 
 A sustained bed on the key's root (C3 + root) and fifth, gliding (4 s) when the key or a season
 turns. (It started an octave lower, at C2: that sat below small speakers and nearly vanished.) It plays into the air slot's input, so it shares the sky's space but skips color.
-K3 hushes it and lets it rise (`hush`, glided over ~3 s). Its level is PARAMS > levels > drone
+K3 hushes it and lets it rise (`hush`, glided over ~3 s). The **none** module turns it off for
+good: the engine frees the drone synth, so it costs no CPU. Its level is PARAMS > levels > drone
 (-6 dB by default).
 
 ### Aurora → 2x `MiPlaits` (root and fifth, no trigger)
