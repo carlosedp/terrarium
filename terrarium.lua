@@ -11,6 +11,12 @@
 -- hold K1 + K3: a new terrarium
 --
 -- needs mi-UGens
+--
+-- by Voltage Foundry Modular
+-- vfmod.com
+
+-- Copyright (C) 2026 Voltage Foundry Modular. Free software under the GNU GPL v3.0
+-- (see LICENSE); the terrarium name, manual and images are all rights reserved.
 
 engine.name = "Terrarium"
 
@@ -286,8 +292,9 @@ end
 
 -- ---------- a new terrarium ----------
 -- hold K1 + K3 (or PARAMS > randomize the jar): every part gets a random module,
--- variety and knobs, kept away from the extremes. Never visitors (they need an
--- outside voice) or none (silence); the key and the slow settings stay as they are.
+-- variety and knobs, kept away from the extremes, and the settings change too: key,
+-- scale, range, length, seasons, climate, drift, breath. Never visitors (they need
+-- an outside voice) or none (silence), and never the day: it's about time, not texture.
 scramble = function()
   for i, L in ipairs(LAYERS) do
     local choices = {}
@@ -299,8 +306,12 @@ scramble = function()
     if mod.variant then params:set(mod.variant, math.random(#params:lookup_param(mod.variant).options)) end
     for _, mac in ipairs(mod.macros) do params:set(mod.id .. "_" .. mac.id, 0.15 + math.random() * 0.7) end
   end
+  for _, id in ipairs({ "t_root", "t_scale", "t_length", "t_seasons", "t_climate", "t_drift", "t_breath" }) do
+    params:set(id, math.random(#params:lookup_param(id).options))
+  end
+  params:set("t_range", math.random(1, 3))
   Brain.season_t = sc.t -- the light sweeps along the ground, like a season turning
-  say("a new terrarium")
+  say("new: " .. Brain.key_name())
 end
 
 -- ---------- tuning from maiden ----------

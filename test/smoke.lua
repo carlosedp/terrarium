@@ -111,14 +111,20 @@ params:set("drone_hush", 1); M.run(0.2)
 assert(M.sets.drone_set.hush == 1, "the hush param didn't let the drone rise")
 check("freeze and hush as params")
 
--- hold K1 + K3: a new terrarium, never visitors or none; K1 alone still peeks
-local root_before = params:get("t_root")
+-- hold K1 + K3: a new terrarium, settings too, but never visitors, none or the day
+params:set("t_day", 3)
+local keys = {}
 for _ = 1, 25 do
   key(1, 1); key(3, 1); key(3, 0); key(1, 0); M.run(0.3)
   assert(params:string("voice_kind") ~= "visitors" and params:string("drone_kind") ~= "none", "scramble picked visitors or none")
+  assert(params:get("t_day") == 3, "scramble changed the day")
+  keys[params:get("t_root")] = true
 end
-assert(params:get("t_root") == root_before, "scramble changed the key")
+local n_keys = 0; for _ in pairs(keys) do n_keys = n_keys + 1 end
+assert(n_keys > 3, "scramble didn't change the key")
 params:set("t_randomize", 1); M.run(0.3)
+-- back to a still jar for the tests below
+params:set("t_day", 1); params:set("t_climate", 1); params:set("t_breath", 1); params:set("t_seasons", 1)
 params:set("voice_kind", 1); params:set("drone_kind", 1)
 check("K1 + K3: a new terrarium")
 

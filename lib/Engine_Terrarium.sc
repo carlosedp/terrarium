@@ -1,4 +1,5 @@
 // Engine_Terrarium: the sound of terrarium.
+// Copyright (C) 2026 Voltage Foundry Modular (vfmod.com). GPL-3.0, see LICENSE.
 //
 //   voice (2x MiPlaits | MiRings) -> voiceBus -> color (MiRings | MiRipples) -> colorBus
 //     -> air (MiClouds | MiBeads | MiVerb) -> out

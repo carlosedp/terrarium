@@ -99,7 +99,7 @@ try {
     cover.append(h1, sub, hero);
     const made = document.createElement("p");
     made.className = "made";
-    made.textContent = "player's manual";
+    made.innerHTML = "player's manual<br><br>Voltage Foundry Modular · vfmod.com<br>© 2026";
     cover.append(made);
     // a card per module: an h4, its first picture beside its text (up to the next heading);
     // any further pictures (the flowers, condensation, frost) go below the card
@@ -127,7 +127,7 @@ try {
     path: out, format: "A4", printBackground: true, preferCSSPageSize: true,
     displayHeaderFooter: true, headerTemplate: "<span></span>",
     footerTemplate: `<div style="width:100%;font:8px 'JetBrains Mono',monospace;color:#8a8f8a;padding:0 17mm;display:flex;justify-content:space-between">
-      <span>terrarium</span><span class="pageNumber"></span></div>`,
+      <span>terrarium · Voltage Foundry Modular</span><span class="pageNumber"></span></div>`,
   });
   console.log(`${path.relative(process.cwd(), out)} (${Math.round(fs.statSync(out).size / 1024)} KB)`);
 } finally {

@@ -56,7 +56,7 @@ use `git clone --recurse-submodules`.
 | hold K2 + E2 | pick the module's variant: Plaits engine (meadow), DX bank (crystals), Rings model (reeds, pond), nb voice (visitors), Clouds mode |
 | K3 | gesture: new phrase (brain), strike (voice, color), freeze (air), hush / rise (drone) |
 | hold K1 | peek at all parts; while held, E2 picks a setting and E3 changes it |
-| hold K1 + K3 | a new terrarium: random modules, varieties and knobs (also PARAMS > randomize the jar) |
+| hold K1 + K3 | a new terrarium: random modules, varieties, knobs and settings, all but the day (also PARAMS > randomize the jar) |
 
 **Climate** (a setting, off by default) lets a chaotic attractor slowly move the macros: fronts
 (Lorenz), gusts (Rössler), tides (Thomas) or squalls (Chua). It moves them, the way CV moves a module's knobs: the macro you set is the center and
@@ -145,8 +145,19 @@ REPL, printing the result to paste back; PARAMS > levels balances the slots. See
 - [ ] visitors with real nb voices (Emplaitress, MIDI, Just Friends); they play dry, outside color and air
 - [ ] grid: phrase editing, key/scale picker
 
-## License
+## License and copyright
 
-GPL-3.0, see [LICENSE](LICENSE). The DSP is Émilie Gillet's
-[Mutable Instruments code](https://github.com/pichenettes/eurorack), via Volker Böhm's
-[mi-UGens](https://github.com/v7b1/mi-UGens).
+terrarium is made by [Voltage Foundry Modular](https://vfmod.com). © 2026 Voltage Foundry Modular.
+
+- **The code** is free software under the GNU GPL v3.0 (see [LICENSE](LICENSE)): you can use,
+  study, share and change it under its terms.
+- **The terrarium name, the manual and its images** are © 2026 Voltage Foundry Modular, all rights
+  reserved.
+- **Built on others' work:** the sound is Émilie Gillet's
+  [Mutable Instruments code](https://github.com/pichenettes/eurorack), via Volker Böhm's
+  [mi-UGens](https://github.com/v7b1/mi-UGens) (installed separately, not part of this repository).
+  [nb](https://github.com/sixolet/nb) by sixolet is a git submodule;
+  [wasmoon](https://github.com/ceifa/wasmoon) (MIT) is vendored in `tools/norns-web`.
+- Mutable Instruments, monome, norns and all other product names are trademarks of their
+  respective owners, used only to identify what terrarium works with. No affiliation with or
+  endorsement by them is implied.

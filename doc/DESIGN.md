@@ -131,9 +131,11 @@ E1 picks a part, and the others dim for a moment so it's clear which one you're 
   same mechanism maps MI parameters no macro used to reach (Clouds reverb, Beads time). A levels
   group balances the slots.
 - **A new terrarium on K1 + K3 (October 2026).** For exploring: every part gets a random module,
-  variety and knobs (kept between 0.15 and 0.85). Never visitors, which need an outside voice, or
-  none, which is silence; the key and the slow settings stay, so it's a new landscape in the same
-  place. The light sweeps along the ground as it changes.
+  variety and knobs (kept between 0.15 and 0.85), and the settings change too: key, scale, range,
+  length, seasons, climate, drift, breath. Never visitors, which need an outside voice, or none,
+  which is silence, and never the day: it's about time (clock ties it to your night), not
+  texture, so a random jump would read as a glitch. The light sweeps along the ground and the new
+  key shows.
 - **Names on touch (October 2026).** The scene shows _how much_ a macro moved but not _what_ it
   is, and the norns has no labels by its knobs, so a first-time player was guessing (the peek view
   answered, but only if you knew to hold K1). Now E2/E3 show the macro's name and a bar (with the

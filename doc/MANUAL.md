@@ -39,6 +39,7 @@ and Elements breathes under the ground. Émilie Gillet's instruments, alive insi
 - [A few places to start](#a-few-places-to-start)
 - [If something seems wrong](#if-something-seems-wrong)
 - [Appendix: how it works](#appendix-how-it-works)
+- [Credits](#credits)
 
 ---
 
@@ -154,10 +155,11 @@ A quick _tap_ of K1 opens the norns menu, as usual. Terrarium only uses K1 while
 ### A new terrarium (hold K1 + K3)
 
 Hold **K1** and press **K3**, and the jar fills with something new: every part gets a random
-module, variety and knob settings, and a light sweeps along the ground as it changes. The key
-and your slow settings stay as they are, so it's a new landscape in the same place. Press again
-until something catches your ear, then shape it from there. (It never picks visitors or an empty
-drone. It's also in **PARAMS > randomize the jar**.)
+module, variety and knob settings, the settings change too (key, scale, range, length, seasons,
+climate, drift and breath), and a light sweeps along the ground as the new key appears. Press
+again until something catches your ear, then shape it from there. (It never picks visitors or an
+empty drone, and leaves the day alone: that one is about your time, not the music. It's also in
+**PARAMS > randomize the jar**.)
 
 ---
 
@@ -530,3 +532,19 @@ terrarium can run in a web browser for development: `make web` in the repository
 <http://localhost:8800/>. It's the same Lua code with rough sound stand-ins, not the Mutable
 Instruments modules. In the browser, visitors come with one simple built-in voice ("web synth").
 See [tools/norns-web](../tools/norns-web/README.md).
+
+---
+
+## Credits
+
+terrarium is made by **[Voltage Foundry Modular](https://vfmod.com)**: Eurorack modules, mostly,
+and adventures into anything else that makes sound.
+
+Its sound is built on Émilie Gillet's Mutable Instruments modules, brought to SuperCollider by
+Volker Böhm's mi-UGens, and runs on monome's norns. Visitors arrive through sixolet's nb.
+Thank you all.
+
+© 2026 Voltage Foundry Modular. The terrarium name, this manual and its images are all rights
+reserved. The code is free software under the GNU GPL v3.0. Mutable Instruments, monome, norns
+and all other product names are trademarks of their respective owners, used only to identify
+what terrarium works with; no affiliation or endorsement is implied.
