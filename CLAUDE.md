@@ -10,6 +10,8 @@ The Lua side passes a headless smoke test; `lib/Engine_Terrarium.sc` has never b
 
 ## Commands
 
+`make` lists these too (`make test`, `make web`, `make build`, `make deploy`).
+
 ```
 lua test/smoke.lua                    # headless run against test/mock_norns.lua: all modules, gestures, settings, installer
 node tools/norns-web/serve.mjs        # the real script in a browser at http://localhost:8800/

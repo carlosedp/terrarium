@@ -100,6 +100,9 @@ color or air module also needs a `terrarium_<id>` SynthDef in the engine.
 
 ## Development
 
+`make` lists the common tasks: `make web` (the script in a browser), `make test`, `make deploy`
+(copy to a norns over ssh; `NORNS=we@<ip>` if `norns.local` doesn't resolve).
+
 Run the smoke test on a computer (Lua 5.3+):
 
 ```
