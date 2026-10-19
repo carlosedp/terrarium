@@ -54,7 +54,7 @@ for i, L in ipairs(LAYERS) do
 end
 -- each sounding slot's level in PARAMS (dB), sent to its synth as vol
 local LEVELS = { { "level_voice", "voice level", 2, 0 }, { "level_color", "color level", 3, 0 },
-  { "level_air", "air level", 4, 0 }, { "level_drone", "drone level", 5, -6 } }
+  { "level_air", "air level", 4, 0 }, { "level_drone", "drone level", 5, -10 } }
 
 local SETTINGS = { "t_root", "t_scale", "t_range", "t_length", "t_seasons", "t_climate", "t_drift", "t_day", "t_breath" }
 local SETTING_NAMES = { "key", "scale", "range", "length", "seasons", "climate", "drift", "day", "breath" }

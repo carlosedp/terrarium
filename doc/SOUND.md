@@ -9,7 +9,7 @@ Conventions:
 - Every macro is `0..1` on the encoder. A mapping like `harm 0.05→0.95` is the parameter's
   value at macro 0 and macro 1, linear unless a curve is given.
 - **Fixed** values are per-module defaults.
-- **Coupled** values come from *another* slot. That's where the "it just sounds good" comes from,
+- **Coupled** values come from _another_ slot. That's where the "it just sounds good" comes from,
   so keep the list short and deliberate.
 - Signal flow: `brain → voice → color → air → out`. Visitors (nb voices) play outside it, dry.
 
@@ -51,12 +51,12 @@ the code.
 
 ## Brain (no audio)
 
-| Macro | Drives | Notes |
-| --- | --- | --- |
-| E2 rate | event rate: rain 0.5→6 Hz (clocked), lightning 0.3→6 Hz average (random, with occasional double strikes) | exponential |
-| E3 change | chance per step that the phrase mutates: `change²` | 0 = loop forever |
-| K3 | new phrase | |
-| Settings | key, scale, range (1–3 octaves), length (4–16), seasons | also in PARAMS; grid later |
+| Macro     | Drives                                                                                                   | Notes                      |
+| --------- | -------------------------------------------------------------------------------------------------------- | -------------------------- |
+| E2 rate   | event rate: rain from a drop every 4 beats to 4 per beat, a drop a beat in the middle (clocked; 0.5→8 Hz at 120 BPM), lightning 0.3→6 Hz average (random, with occasional double strikes) | stepped (rain), exponential (lightning) |
+| E3 change | chance per step that the phrase mutates: `change²`                                                       | 0 = loop forever           |
+| K3        | new phrase                                                                                               |                            |
+| Settings  | key, scale, range (1–3 octaves), length (4–16), seasons                                                  | also in PARAMS; grid later |
 
 Each note sends `pitch` (MIDI note) and a velocity-like `accent` (0..1, from the brain: e.g.
 lightning double strikes and new notes accent higher).
@@ -65,32 +65,33 @@ lightning double strikes and new notes accent higher).
 
 ### Meadow → `MiPlaits`
 
-| Macro | Parameter | Range |
-| --- | --- | --- |
-| E2 harmonics | `harm` | 0.05 → 0.95 |
-| E3 timbre | `timbre` | 0.1 → 0.9 |
-| E3 timbre | `morph` | 0.35 → 0.65 (follows timbre, narrower) |
+| Macro        | Parameter | Range                                  |
+| ------------ | --------- | -------------------------------------- |
+| E2 harmonics | `harm`    | 0.05 → 0.95                            |
+| E3 timbre    | `timbre`  | 0.1 → 0.9                              |
+| E3 timbre    | `morph`   | 0.35 → 0.65 (follows timbre, narrower) |
 
 - **Variant (hold K2 + E2):** `engine` from the "flora" list of melodic Plaits engines, each drawn
   as its own flower. Default **12 modal**. Numbers are MiPlaits' (0–15 classic, 16–23 newer):
 
-  | Flora | Engine | Flower |
-  | --- | --- | --- |
-  | modal | 12 | bell |
-  | string | 11 | seed spike |
-  | additive | 4 | petals |
-  | wavetable | 5 | tulip |
-  | string machine | 22 | umbel |
-  | chords | 6 | umbel |
-  | va filter | 16 | tulip |
-  | phase dist | 17 | star |
-  | wave terrain | 21 | dandelion |
-  | waveshaper | 1 | star |
-  | fm | 2 | star |
-  | grain | 3 | dandelion |
+  | Flora          | Engine | Flower     |
+  | -------------- | ------ | ---------- |
+  | modal          | 12     | bell       |
+  | string         | 11     | seed spike |
+  | additive       | 4      | petals     |
+  | wavetable      | 5      | tulip      |
+  | string machine | 22     | umbel      |
+  | chords         | 6      | umbel      |
+  | va filter      | 16     | tulip      |
+  | phase dist     | 17     | star       |
+  | wave terrain   | 21     | dandelion  |
+  | waveshaper     | 1      | star       |
+  | fm             | 2      | star       |
+  | grain          | 3      | dandelion  |
 
   New entries go at the end so saved PSETs keep their flora. Left out: speech, swarm, noise,
   particle, the drums and chiptune; the 6-op banks (18–20) belong to crystals.
+
 - **Fixed:** `lpg_colour` 0.5. Each note fires `trigger`, with `level` set from accent.
 - **Coupled:** `decay` ← brain rate: fast rain plays shorter notes (0.75 at slow rate → 0.4 at fast).
 - Polyphony: Plaits is mono per instance. Run 2–3 instances round-robin so notes ring over each other.
@@ -100,11 +101,11 @@ lightning double strikes and new notes accent higher).
 
 The glassy voice can be a real MI engine. No stand-in or nb voice needed.
 
-| Macro | Parameter | Range |
-| --- | --- | --- |
+| Macro    | Parameter                                       | Range                                     |
+| -------- | ----------------------------------------------- | ----------------------------------------- |
 | E2 ratio | `harm` (selects the 6-op patch within the bank) | 0 → 1, quantized to the bank's 32 patches |
-| E3 index | `timbre` (modulation amount) | 0.15 → 0.85 |
-| E3 index | `morph` (envelope stretch) | 0.3 → 0.7 |
+| E3 index | `timbre` (modulation amount)                    | 0.15 → 0.85                               |
+| E3 index | `morph` (envelope stretch)                      | 0.3 → 0.7                                 |
 
 - **Fixed:** `engine` 18, 19 or 20 (which DX bank), chosen in PARAMS. Tune by ear for the most "glass".
 - Ratio scrolling through patches is coarse. If it feels jumpy, keep `harm` fixed per variety
@@ -115,10 +116,10 @@ The glassy voice can be a real MI engine. No stand-in or nb voice needed.
 Each note strikes Rings' internal exciter (`intern_exciter` 1, `poly` 2 so notes ring over each
 other); no Plaits behind it. Most Rings models are strings, drawn as reeds that vibrate.
 
-| Macro | Parameter | Range |
-| --- | --- | --- |
-| E2 structure | `struct` | 0.15 → 0.9 |
-| E3 brightness | `bright` | 0.2 → 0.85 |
+| Macro         | Parameter | Range      |
+| ------------- | --------- | ---------- |
+| E2 structure  | `struct`  | 0.15 → 0.9 |
+| E3 brightness | `bright`  | 0.2 → 0.85 |
 
 - **Variant (hold K2 + E2):** `model`, the same six as the pond.
 - **Fixed:** `pos` 0.3.
@@ -131,10 +132,10 @@ other); no Plaits behind it. Most Rings models are strings, drawn as reeds that 
 nb voices (Emplaitress, Doubledecker, monami.e, MIDI, Just Friends…) play as **visitors**,
 drawn as creatures that come in from outside: ants, beetles or moths, fixed per voice.
 
-| Macro | Parameter | Range |
-| --- | --- | --- |
+| Macro       | Parameter                                              | Range                            |
+| ----------- | ------------------------------------------------------ | -------------------------------- |
 | E2 modulate | `player:modulate(v)` (each voice decides what it does) | 0 → 1, sent only when it changes |
-| E3 length | note length | 0.1 → 2 beats (exponential) |
+| E3 length   | note length                                            | 0.1 → 2 beats (exponential)      |
 
 - **Variant (hold K2 + E2):** the nb voice (`visitors_voice`, from `nb:add_param`). "none" is silent.
 - Each voice's own parameters are in PARAMS under "visitor voices" (`nb:add_player_params`).
@@ -148,10 +149,10 @@ drawn as creatures that come in from outside: ants, beetles or moths, fixed per 
 The voice's audio goes into Rings' `in` (the voice excites the resonator), and each note sets `pit`
 and fires `trig`.
 
-| Macro | Parameter | Range |
-| --- | --- | --- |
-| E2 structure | `struct` | 0.1 → 0.85 (above ~0.9 modal goes metallic and harsh) |
-| E3 damping | `damp` (inverted: more damping, shorter ring) | 0.92 → 0.35 |
+| Macro        | Parameter                                     | Range                                                 |
+| ------------ | --------------------------------------------- | ----------------------------------------------------- |
+| E2 structure | `struct`                                      | 0.1 → 0.85 (above ~0.9 modal goes metallic and harsh) |
+| E3 damping   | `damp` (inverted: more damping, shorter ring) | 0.92 → 0.35                                           |
 
 - **Fixed:** `model` 0 modal, in PARAMS as "pond kind" (1 sympathetic strings and 5 string+reverb are
   good alternates). `poly` 2. `pos` 0.3.
@@ -161,11 +162,11 @@ and fires `trig`.
 
 ### Fog → `MiRipples`
 
-| Macro | Parameter | Range |
-| --- | --- | --- |
-| E2 clarity | `cf` | 0.12 → 0.92, exponential feel (most of the action in the lower half) |
-| E3 shimmer | `reson` | 0.05 → 0.85 (keep below self-oscillation) |
-| E3 shimmer | `drive` | 1.0 → 1.6 |
+| Macro      | Parameter | Range                                                                |
+| ---------- | --------- | -------------------------------------------------------------------- |
+| E2 clarity | `cf`      | 0.12 → 0.92, exponential feel (most of the action in the lower half) |
+| E3 shimmer | `reson`   | 0.05 → 0.85 (keep below self-oscillation)                            |
+| E3 shimmer | `drive`   | 1.0 → 1.6                                                            |
 
 - Scene brightness on screen follows `cf`.
 - **K3:** strike.
@@ -174,12 +175,12 @@ and fires `trig`.
 
 ### Clouds → `MiClouds`
 
-| Macro | Parameter | Range |
-| --- | --- | --- |
-| E2 density | `dens` | 0.35 → 0.9 |
-| E2 density | `fb` | 0.05 → 0.4 |
-| E3 size | `size` | 0.1 → 0.85 |
-| E3 size | `tex` | 0.3 → 0.7 |
+| Macro      | Parameter | Range      |
+| ---------- | --------- | ---------- |
+| E2 density | `dens`    | 0.35 → 0.9 |
+| E2 density | `fb`      | 0.05 → 0.4 |
+| E3 size    | `size`    | 0.1 → 0.85 |
+| E3 size    | `tex`     | 0.3 → 0.7  |
 
 - **Variant (hold K2 + E2):** `mode`: granular (default), pitch shifter, looping delay, spectral.
   `drywet` 0.45, `spread` 0.7, `rvb` 0.3, `pos` drifts slowly (a 20 s LFO, 0.3 ↔ 0.7) so the clouds move.
@@ -188,12 +189,12 @@ and fires `trig`.
 
 ### Fireflies → `MiBeads`
 
-| Macro | Parameter | Range |
-| --- | --- | --- |
-| E2 density | `density` | 0.56 → 0.95 (the random-grain zone; 0.48–0.52 makes no grains) |
-| E2 density | `fb` | 0.05 → 0.35 |
-| E3 glow | `size` | 0.2 → 0.85 |
-| E3 glow | `time_rnd` | 0.1 → 0.5 (grains wander as trails grow) |
+| Macro      | Parameter  | Range                                                          |
+| ---------- | ---------- | -------------------------------------------------------------- |
+| E2 density | `density`  | 0.56 → 0.95 (the random-grain zone; 0.48–0.52 makes no grains) |
+| E2 density | `fb`       | 0.05 → 0.35                                                    |
+| E3 glow    | `size`     | 0.2 → 0.85                                                     |
+| E3 glow    | `time_rnd` | 0.1 → 0.5 (grains wander as trails grow)                       |
 
 - **Fixed:** `quality` 0 hi-fi (no resampling at 48 kHz, the cheapest setting on norns),
   `drywet` 0.5, `rvb` 0.35, `shape` 0.6, `pitch_rnd` 0.08, `seed_btn` 2. Never pass `seed`.
@@ -202,10 +203,10 @@ and fires `trig`.
 
 ### Mountains → `MiVerb`
 
-| Macro | Parameter | Range |
-| --- | --- | --- |
-| E2 size | `time` | 0.5 → 0.97 |
-| E3 echo | `drywet` | 0.12 → 0.65 |
+| Macro   | Parameter | Range       |
+| ------- | --------- | ----------- |
+| E2 size | `time`    | 0.5 → 0.97  |
+| E3 echo | `drywet`  | 0.12 → 0.65 |
 
 - **Fixed:** `diff` 0.7, `hp` 0.05.
 - **Coupled:** `damp` ← fog clarity (foggy → darker tail: 0.75 → 0.35). Without fog: 0.5.
@@ -221,21 +222,21 @@ per loop of the attractor (slow, medium, fast), whichever attractor is picked.
 
 The three outputs are linked, so each part takes a different one and they move together:
 
-| Part | E2 macro ← | default cv | E3 macro ← | default cv |
-| --- | --- | --- | --- | --- |
-| brain | z | 0 (rate stays put) | x | 0.3 |
-| voice | x | 0.4 | y | 0.3 |
-| color | y | 0.35 | z | 0.25 |
-| air | z | 0.35 | x | 0.3 |
+| Part  | E2 macro ← | default cv         | E3 macro ← | default cv |
+| ----- | ---------- | ------------------ | ---------- | ---------- |
+| brain | z          | 0 (rate stays put) | x          | 0.3        |
+| voice | x          | 0.4                | y          | 0.3        |
+| color | y          | 0.35               | z          | 0.25       |
+| air   | z          | 0.35               | x          | 0.3        |
 
 On screen they are named for how they move:
 
-| Name | Attractor | Moves like |
-| --- | --- | --- |
-| **fronts** | Lorenz | settles into one mood, then switches to another at unpredictable times (Lorenz found it simulating weather) |
-| **gusts** | Rössler | circles smoothly; its z output idles, then spikes |
-| **tides** | Thomas | slow and rolling; x, y and z are one motion offset in time |
-| **squalls** | Chua | flips abruptly between two lobes |
+| Name        | Attractor | Moves like                                                                                                  |
+| ----------- | --------- | ----------------------------------------------------------------------------------------------------------- |
+| **fronts**  | Lorenz    | settles into one mood, then switches to another at unpredictable times (Lorenz found it simulating weather) |
+| **gusts**   | Rössler   | circles smoothly; its z output idles, then spikes                                                           |
+| **tides**   | Thomas    | slow and rolling; x, y and z are one motion offset in time                                                  |
+| **squalls** | Chua      | flips abruptly between two lobes                                                                            |
 
 Outputs are centered on each attractor's median and scaled by its 5th/95th percentiles
 (measured over a long run; the table is in `lib/climate.lua`). Played values are rounded to
@@ -246,13 +247,13 @@ Outputs are centered on each attractor's median and scaled by its 5th/95th perce
 The **day** setting (off, 20 min, 1 hour, clock) adds to every macro, like the climate, by
 `depth × light`, where light is +1 at noon and -1 at midnight (dawn at 6:00 for "clock"):
 
-| Part | E2 macro | E3 macro | Meaning |
-| --- | --- | --- | --- |
-| brain | +0.12 | 0 | rain faster by day, slower at night |
-| voice | 0 | +0.12 | brighter by day |
-| color | +0.1 | 0 | clearer by day |
-| air | -0.12 | -0.1 | denser, bigger, longer at night |
-| drone | -0.12 | 0 | comes forward at night |
+| Part  | E2 macro | E3 macro | Meaning                             |
+| ----- | -------- | -------- | ----------------------------------- |
+| brain | +0.12    | 0        | rain faster by day, slower at night |
+| voice | 0        | +0.12    | brighter by day                     |
+| color | +0.1     | 0        | clearer by day                      |
+| air   | -0.12    | -0.1     | denser, bigger, longer at night     |
+| drone | -0.12    | 0        | comes forward at night              |
 
 The depths are in `lib/daylight.lua` (`DEPTH`).
 
@@ -262,19 +263,19 @@ A sustained bed on the key's root (C3 + root) and fifth, gliding (4 s) when the 
 turns. (It started an octave lower, at C2: that sat below small speakers and nearly vanished.) It plays into the air slot's input, so it shares the sky's space but skips color.
 K3 hushes it and lets it rise (`hush`, glided over ~3 s). The **none** module turns it off for
 good: the engine frees the drone synth, so it costs no CPU. Its level is PARAMS > levels > drone
-(-6 dB by default).
+(-10 dB by default).
 
 ### Aurora → 2x `MiPlaits` (root and fifth, no trigger)
 
 With a constant (scalar) trigger and level, MiPlaits counts them as unpatched: its LPG stays
 open and it sounds continuously. Each voice drifts on its own slow LFO (0.05 / 0.063 Hz).
 
-| Macro | Parameter | Range |
-| --- | --- | --- |
-| E2 glow | `harm` | 0.3 → 0.6 |
-| E2 glow | `timbre` | 0.15 → 0.75 |
-| E3 motion | `morph` | 0.35 → 0.65 |
-| E3 motion | `wobble` (LFO depth on timbre and morph) | 0.02 → 0.3 |
+| Macro     | Parameter                                | Range       |
+| --------- | ---------------------------------------- | ----------- |
+| E2 glow   | `harm`                                   | 0.3 → 0.6   |
+| E2 glow   | `timbre`                                 | 0.15 → 0.75 |
+| E3 motion | `morph`                                  | 0.35 → 0.65 |
+| E3 motion | `wobble` (LFO depth on timbre and morph) | 0.02 → 0.3  |
 
 - **Variant (hold K2 + E2):** `engine`: string machine 22 (default), chords 6, wavetable 5,
   additive 4, va filter 16, wave terrain 21, phase dist 17.
@@ -282,13 +283,13 @@ open and it sounds continuously. Each voice drifts on its own slow LFO (0.05 / 0
 
 ### Roots → `MiElements` (gate held open)
 
-| Macro | Parameter | Range |
-| --- | --- | --- |
-| E2 breath | `bow` (bow level) | 0.8 → 0.15 |
+| Macro     | Parameter           | Range      |
+| --------- | ------------------- | ---------- |
+| E2 breath | `bow` (bow level)   | 0.8 → 0.15 |
 | E2 breath | `blow` (blow level) | 0.1 → 0.75 |
-| E2 breath | `flow` | 0.3 → 0.7 |
-| E3 depth | `geom` | 0.15 → 0.6 |
-| E3 depth | `space` | 0.3 → 0.85 |
+| E2 breath | `flow`              | 0.3 → 0.7  |
+| E3 depth  | `geom`              | 0.15 → 0.6 |
+| E3 depth  | `space`             | 0.3 → 0.85 |
 
 - **Variant (hold K2 + E2):** `model`: modal, string (default), strings.
 - **Fixed:** `bright` 0.4, `damp` 0.7, `contour` 0.8 (sustaining), `strength` 0.6, `amp` 0.3.

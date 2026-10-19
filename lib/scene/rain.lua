@@ -16,7 +16,8 @@ local rain = {
 }
 
 -- beats between drops, slow to fast
-rain.DIVS = { 2, 1, 1 / 2, 1 / 3, 1 / 4, 1 / 6, 1 / 8 }
+-- (the middle of the knob, and the default, is a drop a beat: ambient, not a downpour)
+rain.DIVS = { 4, 3, 2, 1, 1 / 2, 1 / 3, 1 / 4 }
 
 function rain.wait(m)
   local div = rain.DIVS[H.round(m[1] * (#rain.DIVS - 1)) + 1]
