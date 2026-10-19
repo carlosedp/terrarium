@@ -66,10 +66,10 @@ params:set("voice_kind", 1)
 turn(1, -5); turn(1, 4)
 for k = 1, #params:lookup_param("drone_kind").options do
   params:set("drone_kind", k); M.run(0.3)
-  assert(M.sets.drone_set.pitch == 36 + params:get("t_root") - 1, "drone: not on the key's root")
+  assert(M.sets.drone_set.pitch == 48 + params:get("t_root") - 1, "drone: not on the key's root")
 end
 params:set("t_root", 8); M.run(0.2)
-assert(M.sets.drone_set.pitch == 36 + 7, "drone: didn't follow a new key")
+assert(M.sets.drone_set.pitch == 48 + 7, "drone: didn't follow a new key")
 press(3); M.run(0.2)
 assert(M.sets.drone_set.hush == 0, "drone: K3 didn't hush it")
 press(3); M.run(0.2)

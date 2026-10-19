@@ -44,6 +44,8 @@ the code.
 1. The engine compiles (it never has). Fix whatever SuperCollider complains about.
 2. Every slot sounds: each voice, color and air module, each variant.
 3. Levels: a balanced default with the default modules, then the loudest and quietest pairings.
+   The drone should sit about 6 dB under the notes (in the browser stand-in: notes -14 dBFS,
+   drone -20). Elements' output level is a guess (`amp` 0.3); check roots against aurora.
 4. CPU with the heaviest pairing: reeds + pond (two Rings) + fireflies.
 5. Tune each module's map by ear with `tune()`; paste the results back and update this file.
 
@@ -256,8 +258,8 @@ The depths are in `lib/daylight.lua` (`DEPTH`).
 
 ## Drone
 
-A sustained bed on the key's root (C2 + root) and fifth, gliding (4 s) when the key or a season
-turns. It plays into the air slot's input, so it shares the sky's space but skips color.
+A sustained bed on the key's root (C3 + root) and fifth, gliding (4 s) when the key or a season
+turns. (It started an octave lower, at C2: that sat below small speakers and nearly vanished.) It plays into the air slot's input, so it shares the sky's space but skips color.
 K3 hushes it and lets it rise (`hush`, glided over ~3 s). Its level is PARAMS > levels > drone
 (-6 dB by default).
 
