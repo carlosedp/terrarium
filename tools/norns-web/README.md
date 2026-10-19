@@ -14,7 +14,7 @@ node tools/norns-web/serve.mjs [script dir, default .] [port, default 8800]
 ```
 
 Open http://localhost:8800/. Files are read fresh on every load: edit a `.lua` file, reload.
-Keys: Q/W E1, A/S E2, Z/X E3, J/K/L for K1/K2/K3. Keys can be held (K + S is K2 + E2), and the
+Keys: A/S/D for K1/K2/K3; Y/H, U/J, I/K turn E1, E2, E3 up/down. Keys can be held (S + U is K2 + E2), and the
 encoders take the scroll wheel and dragging.
 
 ## Publish a static copy

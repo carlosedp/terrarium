@@ -169,8 +169,9 @@ document.querySelectorAll(".key").forEach(el => {
   el.addEventListener("keydown", e => { if ((e.key === " " || e.key === "Enter") && !e.repeat) down(e); });
   el.addEventListener("keyup", e => { if (e.key === " " || e.key === "Enter") up(); });
 });
-const KEYMAP = { q: [1, -1], w: [1, 1], a: [2, -1], s: [2, 1], z: [3, -1], x: [3, 1] };
-const KEYS = { j: 1, k: 2, l: 3 };
+// encoders: a vertical pair each, top key turns up (Y/H E1, U/J E2, I/K E3); keys: A S D
+const KEYMAP = { y: [1, 1], h: [1, -1], u: [2, 1], j: [2, -1], i: [3, 1], k: [3, -1] };
+const KEYS = { a: 1, s: 2, d: 3 };
 const typing = e => e.target.closest && e.target.closest("input, select, textarea");
 window.addEventListener("keydown", e => {
   if (e.metaKey || e.ctrlKey || e.altKey || typing(e)) return;
