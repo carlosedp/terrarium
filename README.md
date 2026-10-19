@@ -71,9 +71,9 @@ where each macro is right now and the attractor's path.
 or following the norns' clock. Night slows the weather, darkens the voice, opens up the air and
 brings the drone forward; the sky shows a sun by day and a moon and stars by night.
 
-**Tape** (a setting, subtle by default) puts the whole sound through a worn tape: wow, flutter,
-crackle, hiss, a rolled-off top, a little warmth. It glues the notes, the drone and the sky
-together; dust settles on the glass while it's on.
+**Patina** (a setting: off, faint, worn, aged, ancient; faint by default) gives the whole sound
+the wear of an old recording: wow, flutter, crackle, hiss, a rolled-off top, a little warmth. It
+glues the notes, the drone and the sky together; dust settles on the glass as it ages.
 
 **Breath** (a setting, off by default) adds silence: now and then the weather calms for a phrase
 or three, notes rest (the phrase keeps them) and their marks dim, then it breathes in again.
@@ -83,7 +83,7 @@ holds everything, including modules, variants, settings, levels, and whether the
 or the drone hushed.
 
 A quick tap of K1 still opens the norns menu. Settings (key, scale, range, length, seasons,
-climate, drift, day, breath, tape),
+climate, drift, day, breath, patina),
 every macro, and each module's fixed options (Plaits engine, DX bank, Rings model, Clouds
 mode) are also in PARAMS, so they save with PSETs and can be MIDI-mapped.
 

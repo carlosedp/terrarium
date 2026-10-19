@@ -257,23 +257,24 @@ The **day** setting (off, 20 min, 1 hour, clock) adds to every macro, like the c
 
 The depths are in `lib/daylight.lua` (`DEPTH`).
 
-## Tape
+## Patina
 
-The **tape** setting (off, subtle, worn; subtle by default) runs `terrarium_tape` last, on the
-whole engine output (ReplaceOut on the main bus), so voice, color, air and drone share it. Plain
-SuperCollider UGens, no mi-UGens. Off frees the synth (it fades back to dry over a second).
+The **patina** setting (off, faint, worn, aged, ancient; faint by default) runs `terrarium_tape`
+last, on the whole engine output (ReplaceOut on the main bus), so voice, color, air and drone
+share it. Plain SuperCollider UGens, no mi-UGens. Off frees the synth (it fades back to dry over
+a second).
 
-| Amount | What it does | subtle | worn |
-| --- | --- | --- | --- |
-| `wow` | slow wandering pitch drift: a 10 ms delay moved ±3 ms × wow by LFNoise2 (~0.5–0.9 Hz) | 0.3 | 0.7 |
-| `flutter` | fast fine wobble: ±0.3 ms × flutter at ~6.3 Hz | 0.25 | 0.55 |
-| `crackle` | dust pops: Dust at 8–10 × crackle per second, short noise bursts | 0.25 | 0.6 |
-| `hiss` | pink noise above 2.5 kHz, 0.012 × hiss | 0.15 | 0.35 |
-| `tone` | lowpass from 19 kHz down to 7 kHz × tone | 0.25 | 0.5 |
-| `drive` | tanh saturation, gain-compensated (unity for quiet signals) | 0.15 | 0.35 |
+| Amount | What it does | faint | worn | aged | ancient |
+| --- | --- | --- | --- | --- | --- |
+| `wow` | slow wandering pitch drift: a 10 ms delay moved ±3 ms × wow by LFNoise2 (~0.5–0.9 Hz) | 0.3 | 0.5 | 0.7 | 1 |
+| `flutter` | fast fine wobble: ±0.3 ms × flutter at ~6.3 Hz | 0.25 | 0.4 | 0.55 | 0.8 |
+| `crackle` | dust pops: Dust at 8–10 × crackle per second, short noise bursts | 0.25 | 0.4 | 0.6 | 0.9 |
+| `hiss` | pink noise above 2.5 kHz, 0.012 × hiss | 0.15 | 0.25 | 0.35 | 0.5 |
+| `tone` | lowpass from 19 kHz down to 7 kHz × tone | 0.25 | 0.38 | 0.5 | 0.7 |
+| `drive` | tanh saturation, gain-compensated (unity for quiet signals) | 0.15 | 0.25 | 0.35 | 0.5 |
 
-The amounts are the `TAPE` table in `terrarium.lua`. Visitors (nb) play outside the engine, so
-the tape doesn't reach them.
+The amounts are the `PATINA` table in `terrarium.lua`. Visitors (nb) play outside the engine, so
+the patina doesn't reach them.
 
 ## Drone
 

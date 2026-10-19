@@ -56,16 +56,19 @@ end
 local LEVELS = { { "level_voice", "voice level", 2, 0 }, { "level_color", "color level", 3, 0 },
   { "level_air", "air level", 4, 0 }, { "level_drone", "drone level", 5, -12 } }
 
-local SETTINGS = { "t_root", "t_scale", "t_range", "t_length", "t_seasons", "t_climate", "t_drift", "t_day", "t_breath", "t_tape" }
-local SETTING_NAMES = { "key", "scale", "range", "length", "seasons", "climate", "drift", "day", "breath", "tape" }
+local SETTINGS = { "t_root", "t_scale", "t_range", "t_length", "t_seasons", "t_climate", "t_drift", "t_day", "t_breath", "t_patina" }
+local SETTING_NAMES = { "key", "scale", "range", "length", "seasons", "climate", "drift", "day", "breath", "patina" }
 
--- tape: a lo-fi layer on the whole output, the glue between the notes, the drone and the sky
--- (the engine's terrarium_tape; doc/SOUND.md). Each step's amounts, 0..1:
-local TAPE_NAMES = { "off", "subtle", "worn" }
-local TAPE = {
+-- patina: the wear of an old recording on the whole output, the glue between the notes, the
+-- drone and the sky (the engine's terrarium_tape; doc/SOUND.md). Each step's amounts, 0..1,
+-- in order of wear:
+local PATINA_NAMES = { "off", "faint", "worn", "aged", "ancient" }
+local PATINA = {
   nil,
-  { wow = 0.3, flutter = 0.25, crackle = 0.25, hiss = 0.15, tone = 0.25, drive = 0.15 },
-  { wow = 0.7, flutter = 0.55, crackle = 0.6, hiss = 0.35, tone = 0.5, drive = 0.35 },
+  { wow = 0.3, flutter = 0.25, crackle = 0.25, hiss = 0.15, tone = 0.25, drive = 0.15 }, -- faint
+  { wow = 0.5, flutter = 0.4, crackle = 0.4, hiss = 0.25, tone = 0.38, drive = 0.25 },   -- worn
+  { wow = 0.7, flutter = 0.55, crackle = 0.6, hiss = 0.35, tone = 0.5, drive = 0.35 },   -- aged
+  { wow = 1, flutter = 0.8, crackle = 0.9, hiss = 0.5, tone = 0.7, drive = 0.5 },        -- ancient
 }
 local LENGTHS = { 4, 8, 12, 16 }
 local SEASONS = { 0, 8, 4, 2 } -- phrases between turns: off, slow, steady, quick
@@ -247,11 +250,11 @@ local function add_params()
     dirty_sound = true
   end)
   params:add_option("t_drift", "drift", Climate.DRIFTS, 2)
-  params:add_option("t_tape", "tape", TAPE_NAMES, 2)
-  params:set_action("t_tape", function(v)
-    sc.tape = v
-    if TAPE[v] then for k, x in pairs(TAPE[v]) do engine.tape_set(k, x) end end
-    engine.tape_set("on", TAPE[v] and 1 or 0)
+  params:add_option("t_patina", "patina", PATINA_NAMES, 2)
+  params:set_action("t_patina", function(v)
+    sc.patina = PATINA[v] and PATINA[v].wow or 0 -- how worn, 0..1 (the glass's dust follows it)
+    if PATINA[v] then for k, x in pairs(PATINA[v]) do engine.tape_set(k, x) end end
+    engine.tape_set("on", PATINA[v] and 1 or 0)
   end)
   params:add_option("t_breath", "breath", Breath.NAMES, 1)
   params:set_action("t_breath", function(v) Breath.set(v) end)
@@ -521,7 +524,7 @@ function redraw()
   cv.mul = dim(3); sc.cur(3):draw(cv, sc)  -- color (light, water)
   if drone.in_front then cv.mul = dim(5); drone:draw(cv, sc) end      -- roots glow up through water and soil
   cv.mul = 1
-  glass.draw(cv, sc)                       -- frost, condensation, tape dust, the jar's rim
+  glass.draw(cv, sc)                       -- frost, condensation, patina's dust, the jar's rim
   for i = 1, #LAYERS do
     cv.rect(102 + (i - 1) * 4, 1, 2, 2, i == sel and (focus_t > 0 and 13 or 5) or (focus_t > 0 and 3 or 1))
   end

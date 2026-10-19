@@ -1,6 +1,6 @@
 -- the glass of the terrarium, drawn over the whole scene: rounded corners and a
 -- glint, condensation while it rains (more at faster rates), frost while the air
--- is frozen, and dust on it when the tape setting is on (some specks pop with the
+-- is frozen, and dust on it with the patina setting (some specks pop with the
 -- crackle). Stateful: included only in terrarium.lua.
 
 local H = include('lib/helpers')
@@ -110,17 +110,17 @@ local function draw_rim(cv)
   for y = 9, 17 do cv.lit(5, y, 1) end
 end
 
--- dust on the glass, for the tape setting: fixed specks (more when worn), and now and
--- then one that pops, like the crackle
+-- dust on the glass, for the patina setting: fixed specks (more as it ages), and now
+-- and then one that pops, like the crackle
 local DUST = {}
 do
   local r = H.rng(1000)
   for i = 1, 26 do DUST[i] = { x = 4 + r() * 120, y = 2 + r() * 58, l = 1 + r() * 1.5 } end
 end
-local function draw_dust(cv, tape)
-  if not tape or tape < 2 then return end
-  for i = 1, tape == 2 and 10 or 26 do cv.lit(DUST[i].x, DUST[i].y, DUST[i].l) end
-  if math.random() < (tape == 2 and 0.06 or 0.18) then
+local function draw_dust(cv, wear) -- wear: 0 (off) .. 1 (ancient)
+  if not wear or wear <= 0 then return end
+  for i = 1, math.floor(4 + wear * 22) do cv.lit(DUST[i].x, DUST[i].y, DUST[i].l) end
+  if math.random() < wear * 0.28 then
     cv.lit(4 + math.random() * 120, 2 + math.random() * 58, 5 + math.random() * 4)
   end
 end
@@ -128,7 +128,7 @@ end
 function glass.draw(cv, sc)
   draw_frost(cv)
   draw_beads(cv)
-  draw_dust(cv, sc and sc.tape)
+  draw_dust(cv, sc and sc.patina)
   draw_rim(cv)
 end
 

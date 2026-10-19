@@ -152,13 +152,12 @@ assert(most_duck > 0.2 and most_lift > 0.2, "drone didn't answer the notes")
 params:set("rain_change", 0.2); params:set("rain_rate", 0.45)
 check(("drone follows the weather (%d intervals; duck %.2f, lift %.2f)"):format(moves, most_duck, most_lift))
 
--- tape: on by default (subtle), off frees it, worn turns it up
+-- patina: on by default (faint), off frees it, every step reaches the engine
 local calls = M.engine_calls.tape_set or 0
-params:set("t_tape", 1); M.run(0.3)
-params:set("t_tape", 3); M.run(0.3)
+for p = 1, #params:lookup_param("t_patina").options do params:set("t_patina", p); M.run(0.3) end
 assert((M.engine_calls.tape_set or 0) > calls + 6, "tape settings didn't reach the engine")
-params:set("t_tape", 2)
-check("tape (off, worn, subtle)")
+params:set("t_patina", 2)
+check("patina (every step)")
 
 -- tuning from maiden: tune() remaps a parameter live; levels reach the synths as vol
 params:set("air_kind", 1) -- clouds
