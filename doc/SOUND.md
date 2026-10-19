@@ -273,6 +273,12 @@ swells ±15% on another (0.071 / 0.053 Hz); the fifth sits a little under the ro
 pitch glides 4 s on key changes, but not in the first half second: the synth starts before its
 pitch arrives and must land on the key, not slide into it (roots does the same).
 
+- **Coupled:** `fifth` (the upper voice's interval) ← the weather, like Marbles' slower outputs:
+  at each phrase end, with a chance of `change × 0.6`, it moves to the consonant interval
+  (3, 4, 5, 7, 8 or 9 semitones, in the key) that the phrase's notes use most; the fifth wins
+  ties and is the fallback, also when a season leaves the chosen interval out of key.
+  `Brain.drone_follow` in `lib/brain.lua`.
+
 | Macro     | Parameter                                | Range       |
 | --------- | ---------------------------------------- | ----------- |
 | E2 glow   | `harm`                                   | 0.3 → 0.6   |

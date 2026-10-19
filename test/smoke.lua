@@ -128,6 +128,24 @@ params:set("t_day", 1); params:set("t_climate", 1); params:set("t_breath", 1); p
 params:set("voice_kind", 1); params:set("drone_kind", 1)
 check("K1 + K3: a new terrarium")
 
+-- the drone's upper voice follows the weather: at change 0 it keeps its fifth; with change,
+-- it moves now and then, only to consonant intervals in the key
+params:set("drone_kind", 1); params:set("brain_kind", 1); params:set("rain_rate", 1); params:set("t_seasons", 1)
+local function tops(change, sec)
+  params:set("rain_change", change)
+  local seen = {}
+  for _ = 1, sec * 10 do M.run(0.1); seen[M.sets.drone_set.fifth] = true end
+  return seen
+end
+local still = tops(0, 20)
+assert(still[7] and next(still, nil) == 7 and next(still, 7) == nil, "drone moved at change 0")
+local moving, moves = tops(0.9, 90), 0
+local ok_iv = { [3] = true, [4] = true, [5] = true, [7] = true, [8] = true, [9] = true }
+for iv in pairs(moving) do assert(ok_iv[iv], "drone moved to a dissonant interval: " .. iv); moves = moves + 1 end
+assert(moves > 1, "drone never followed the weather")
+params:set("rain_change", 0.2); params:set("rain_rate", 0.45)
+check(("drone follows the weather (%d intervals)"):format(moves))
+
 -- tuning from maiden: tune() remaps a parameter live; levels reach the synths as vol
 params:set("air_kind", 1) -- clouds
 params:set("clouds_size", 1)

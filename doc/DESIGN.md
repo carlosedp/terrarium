@@ -130,6 +130,11 @@ E1 picks a part, and the others dim for a moment so it's clear which one you're 
   (`map`) that `tune()` changes from maiden while it plays, printing the table to paste back. The
   same mechanism maps MI parameters no macro used to reach (Clouds reverb, Beads time). A levels
   group balances the slots.
+- **The weather moves the drone, slowly (October 2026).** Inspired by Marbles patches, where
+  the slower outputs share the melody's randomness but change less: at a phrase end the drone's
+  upper voice may move to the consonant interval the phrase leans on. The chance follows the
+  brain's change (none at 0), at most once a phrase, gliding; the root never moves, so the bed
+  keeps the key. Roots, a single voice, stays on the root.
 - **A new terrarium on K1 + K3 (October 2026).** For exploring: every part gets a random module,
   variety and knobs (kept between 0.15 and 0.85), and the settings change too: key, scale, range,
   length, seasons, climate, drift, breath. Never visitors, which need an outside voice, or none,

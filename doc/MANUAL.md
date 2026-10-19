@@ -321,6 +321,11 @@ follows the key, and glides when the key changes. **K3** hushes it and lets it r
 
 Curtains of light across the top of the sky. They flare when a season turns.
 
+The aurora's upper note follows the weather, slowly. Now and then, at the end of a phrase, it
+moves to a note the melody has been leaning on (a third, a fourth, a sixth, or back to the
+fifth), and the curtains flare softly. How often depends on the weather's **change**: with
+change all the way down the phrase repeats, and the drone stays on its fifth.
+
 - **E2 glow**: a warmer or brighter drone, and brighter curtains.
 - **E3 motion**: how much the drone and the curtains drift.
 - **Varieties:** seven drone sounds.

@@ -54,7 +54,7 @@ for i, L in ipairs(LAYERS) do
 end
 -- each sounding slot's level in PARAMS (dB), sent to its synth as vol
 local LEVELS = { { "level_voice", "voice level", 2, 0 }, { "level_color", "color level", 3, 0 },
-  { "level_air", "air level", 4, 0 }, { "level_drone", "drone level", 5, -10 } }
+  { "level_air", "air level", 4, 0 }, { "level_drone", "drone level", 5, -12 } }
 
 local SETTINGS = { "t_root", "t_scale", "t_range", "t_length", "t_seasons", "t_climate", "t_drift", "t_day", "t_breath" }
 local SETTING_NAMES = { "key", "scale", "range", "length", "seasons", "climate", "drift", "day", "breath" }
@@ -280,7 +280,12 @@ local function add_params()
 end
 
 -- the season turned: show it in the settings without moving home
-Brain.on_phrase = Breath.phrase
+-- at each phrase end: breath may calm the weather, and the drone may follow it
+Brain.on_phrase = function(change, t)
+  Breath.phrase()
+  Brain.drone_follow(change, t)
+  dirty_sound = true
+end
 
 Brain.on_season = function()
   seasoning = true

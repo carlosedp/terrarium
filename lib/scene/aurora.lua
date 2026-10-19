@@ -1,7 +1,8 @@
 -- aurora (drone, 2x MiPlaits): a drone on the key's root and fifth, drawn as
 -- curtains of light across the top of the sky. glow brightens the tone and
 -- lights the curtains; motion sets how far both drift. The drone follows the
--- key and glides when a season turns (the curtains flare). The Plaits engine
+-- key and glides when a season turns (the curtains flare), and its upper voice
+-- follows the weather now and then (they flare softly). The Plaits engine
 -- is the variant (hold K2 + E2). K3 hushes it and lets it rise again.
 
 local H = include('lib/helpers')
@@ -38,7 +39,7 @@ function aurora:sound(sc)
   local s = sc.mapped(self)
   s.engine = ENGINE[params:get("aurora_engine")]
   s.pitch = sc.brain.drone_root()
-  s.fifth = 7
+  s.fifth = sc.brain.drone_interval() -- the upper voice, moved now and then by the weather
   s.hush = sc.hushed and 0 or 1
   return s
 end
@@ -56,7 +57,8 @@ end
 function aurora:draw(cv, sc)
   if self.light < 0.02 then return end
   local glow, motion, t = sc.m(5, 1), sc.m(5, 2), self.flow
-  local flare = math.max(0, 1 - (sc.t - sc.brain.season_t) / 3) -- a season turning
+  local flare = math.max(0, 1 - (sc.t - sc.brain.season_t) / 3,  -- a season turning,
+    0.5 * (1 - (sc.t - sc.brain.drone_t) / 2.5))                    -- softer: the upper voice moving
   for x = 0, 127 do
     -- the curtain's lower edge waves; light hangs from the top, brightest near the edge
     local edge = 7 + glow * 7 + math.sin(x * 0.07 + t) * (2 + motion * 4) + math.sin(x * 0.19 - t * 1.3) * 1.5

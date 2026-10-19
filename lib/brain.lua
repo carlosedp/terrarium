@@ -79,7 +79,7 @@ function Brain.step(change, t)
   for k = 1, len do if Brain.reg[k] then any = true; break end end
   if not any then Brain.reg[i] = Brain.new_note(t) end -- never let the phrase go silent
   Brain.last_step, Brain.last_step_t = i, t
-  if i == len and Brain.on_phrase then Brain.on_phrase() end
+  if i == len and Brain.on_phrase then Brain.on_phrase(change, t) end
   if i == len and Brain.season_every > 0 then
     Brain.phrases = Brain.phrases + 1
     if Brain.phrases >= Brain.season_every then
@@ -111,6 +111,35 @@ function Brain.diff(a, b) return math.max(bits(a & ~b), bits(b & ~a)) end
 
 -- the drone's note: the key's root (C3 + root; an octave lower sat below small speakers)
 function Brain.drone_root() return 48 + Brain.root end
+
+-- The drone's upper voice: an interval above its root. Like Marbles' slower outputs (the
+-- same randomness, fewer changes), the weather moves it now and then: at a phrase end it
+-- may go to the consonant interval the phrase leans on. The chance follows change: at 0
+-- the phrase loops and the drone keeps its fifth; it never moves more than once a phrase.
+Brain.drone_top, Brain.drone_t = 7, -9
+local CONSONANT = { 3, 4, 5, 7, 8, 9 } -- the thirds, the fourth, the fifth, the sixths
+
+local function in_key(iv) return ((Brain.pcs(Brain.root, Brain.scale) >> ((Brain.root + iv) % 12)) & 1) == 1 end
+
+function Brain.drone_follow(change, t)
+  if math.random() >= change * 0.6 then return end
+  local count = {}
+  for k = 1, Brain.length do
+    local e = Brain.reg[k]
+    if e then
+      local iv = (Brain.pitch(e.x) - Brain.root) % 12
+      count[iv] = (count[iv] or 0) + 1
+    end
+  end
+  local best, n = 7, count[7] or 0 -- the fifth wins ties, and when the phrase leans nowhere
+  for _, iv in ipairs(CONSONANT) do
+    if in_key(iv) and (count[iv] or 0) > n then best, n = iv, count[iv] end
+  end
+  if best ~= Brain.drone_top then Brain.drone_top, Brain.drone_t = best, t end
+end
+
+-- the upper voice to play now: the fifth if a season turned the chosen interval out of key
+function Brain.drone_interval() return in_key(Brain.drone_top) and Brain.drone_top or 7 end
 
 -- place on the land -> MIDI note
 function Brain.pitch(x)
