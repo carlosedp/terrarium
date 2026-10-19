@@ -11,7 +11,7 @@ help: ## list the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{ printf "  make %-14s %s\n", $$1, $$2 }'
 
 # "[s]erve.mjs" can't match pkill's own shell, which "serve.mjs" would (and kill it)
-web: stop ## run the script in the browser (http://localhost:8800/, or PORT=...)
+web: stop ## run the script in the browser, reloading on save (http://localhost:8800/, or PORT=...)
 	node tools/norns-web/serve.mjs . $(PORT)
 
 norns-web: web

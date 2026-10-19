@@ -13,7 +13,10 @@ and engine commands should run; midi, grid, arc, softcut, crow and poll are sile
 node tools/norns-web/serve.mjs [script dir, default .] [port, default 8800]
 ```
 
-Open http://localhost:8800/. Files are read fresh on every load: edit a `.lua` file, reload.
+Open http://localhost:8800/. The page reloads by itself when you save a script file (`.lua`,
+`.js`, `.json`) or norns-web's own, and keeps your params across the reload (press Start sound
+again: browsers only start audio on a click). Changes to `serve.mjs` or `manifest.mjs` need a
+restart.
 Keys: A/S/D for K1/K2/K3; Y/H, U/J, I/K turn E1, E2, E3 up/down. Keys can be held (S + U is K2 + E2), and the
 encoders take the scroll wheel and dragging.
 

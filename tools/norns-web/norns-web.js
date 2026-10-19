@@ -155,6 +155,25 @@ function showAbout(a) {
   }
 }
 
+// ---------- live reload (dev server only) ----------
+// The dev server says "reload" when a file changes: keep the params in a preset
+// slot of their own, reload, and put them back, so the jar carries on with the
+// new code. (Sound needs a click again: browsers start audio only on a gesture.)
+const RESTORE = "norns-web:live-restore";
+function liveReload() {
+  if (sessionStorage.getItem(RESTORE)) {
+    sessionStorage.removeItem(RESTORE);
+    psetFn("load", "live");
+    log("reloaded with your changes; params kept (press Start sound again)");
+  }
+  const events = new EventSource("__reload");
+  events.onmessage = () => {
+    psetFn("save", "live");
+    sessionStorage.setItem(RESTORE, "1");
+    location.reload();
+  };
+}
+
 // ---------- boot ----------
 let lua = null, tick = null, encFn = null, keyFn = null, paramsJson = null, paramDelta = null, replFn = null, psetFn = null;
 let storagePrefix = "norns-web:";
@@ -168,7 +187,7 @@ async function boot() {
     fetch("files.json", { cache: "no-store" }).then(r => r.json()),
     fetch("norns.lua", { cache: "no-store" }).then(r => r.text()),
   ]);
-  const { name, main, root, files, about } = manifest;
+  const { name, main, root, files, about, dev } = manifest;
   document.title = `${name} · norns-web`;
   storagePrefix = `norns-web:${name}:`;
   $("#script-name").textContent = name;
@@ -202,6 +221,7 @@ async function boot() {
   await lua.doString(`norns_web.boot(${JSON.stringify(name)}, ${JSON.stringify(main)})`);
   const nw = n => lua.global.get("norns_web")[n];
   tick = nw("tick"); encFn = nw("enc"); keyFn = nw("key"); paramsJson = nw("params_json"); paramDelta = nw("param_delta"); replFn = nw("repl"); psetFn = nw("pset");
+  if (dev) liveReload();
   renderParams();
   setInterval(renderParams, 400);
   const t0 = performance.now();
