@@ -37,11 +37,13 @@ loads the same pinned version from jsdelivr.
 
 ## The page's text
 
-An optional `norns-web.json` next to the script gives the page a title, subtitle, intro, links and
-a footer (credits, license):
+An optional `norns-web.json` next to the script gives the page a title, subtitle and intro, links
+(shown at the top and in the footer), the maiden install line (with a copy button) and a footer
+(credits, license):
 
 ```json
-{ "title": "…", "subtitle": "…", "about": "…", "links": [{ "label": "…", "url": "…" }], "footer": "…" }
+{ "title": "…", "subtitle": "…", "about": "…", "install": ";install https://github.com/…",
+  "links": [{ "label": "…", "url": "…" }], "footer": "…" }
 ```
 
 ## The engine stand-in
