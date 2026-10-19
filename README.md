@@ -1,20 +1,24 @@
 # terrarium
 
+![terrarium: rain falling on a meadow, a pond, clouds and an aurora, inside the glass of a jar](doc/img/hero.png)
+
 A small world of Mutable Instruments for [monome norns](https://monome.org/docs/norns/).
 
-**[Read the manual](doc/MANUAL.md)** for how to play it (also as a [PDF](doc/terrarium-manual.pdf)).
+**[Read the manual](doc/MANUAL.md)** for how to play it (also as a [PDF](doc/terrarium-manual.pdf)),
+or **[try it in your browser](https://carlosedp.github.io/terrarium/)**, phones included: the real
+script, with rough stand-ins for the sound.
 
 The patch is a landscape. Five parts each draw one piece of the scene and play one part of
 the sound. Swap a module and that piece of the scene changes; turn a macro and the scene moves
 with the sound. The screen shows no numbers.
 
-| Part | In the scene | Modules |
-| --- | --- | --- |
-| **brain** | the weather: when notes happen and which ones | rain (clocked to the norns clock), lightning (random) |
-| **voice** | the ground: what plays | meadow (Plaits), crystals (Plaits 6-op FM), reeds (Rings), visitors (any [nb](https://github.com/sixolet/nb) voice) |
-| **color** | light and water: what shapes it | pond (Rings), fog (Ripples) |
-| **air** | the sky: where it rings out | clouds (Clouds), fireflies (Beads), mountains (MiVerb) |
-| **drone** | the bed under it all, on the key's root and fifth | aurora (Plaits), roots (Elements), none |
+| Part      | In the scene                                      | Modules                                                                                                             |
+| --------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| **brain** | the weather: when notes happen and which ones     | rain (clocked to the norns clock), lightning (random)                                                               |
+| **voice** | the ground: what plays                            | meadow (Plaits), crystals (Plaits 6-op FM), reeds (Rings), visitors (any [nb](https://github.com/sixolet/nb) voice) |
+| **color** | light and water: what shapes it                   | pond (Rings), fog (Ripples)                                                                                         |
+| **air**   | the sky: where it rings out                       | clouds (Clouds), fireflies (Beads), mountains (MiVerb)                                                              |
+| **drone** | the bed under it all, on the key's root and fifth | aurora (Plaits), roots (Elements), none                                                                             |
 
 The whole scene sits behind the terrarium's glass. Rain beads up on it, and freezing the air
 frosts it over.
@@ -48,15 +52,15 @@ use `git clone --recurse-submodules`.
 
 ## Controls
 
-| Control | Does |
-| --- | --- |
-| E1 | choose a part (the others dim for a moment) |
-| E2, E3 | that part's two macros (their names show for a moment while you turn) |
-| K2 | swap the part's module |
+| Control      | Does                                                                                                                               |
+| ------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
+| E1           | choose a part (the others dim for a moment)                                                                                        |
+| E2, E3       | that part's two macros (their names show for a moment while you turn)                                                              |
+| K2           | swap the part's module                                                                                                             |
 | hold K2 + E2 | pick the module's variant: Plaits engine (meadow), DX bank (crystals), Rings model (reeds, pond), nb voice (visitors), Clouds mode |
-| K3 | gesture: new phrase (brain), strike (voice, color), freeze (air), hush / rise (drone) |
-| hold K1 | peek at all parts; while held, E2 picks a setting and E3 changes it |
-| hold K1 + K3 | a new terrarium: random modules, varieties, knobs and settings, all but the day (also PARAMS > randomize the jar) |
+| K3           | gesture: new phrase (brain), strike (voice, color), freeze (air), hush / rise (drone)                                              |
+| hold K1      | peek at all parts; while held, E2 picks a setting and E3 changes it                                                                |
+| hold K1 + K3 | a new terrarium: random modules, varieties, knobs and settings, all but the day (also PARAMS > randomize the jar)                  |
 
 **Climate** (a setting, off by default) lets a chaotic attractor slowly move the macros: fronts
 (Lorenz), gusts (Rössler), tides (Thomas) or squalls (Chua). It moves them, the way CV moves a module's knobs: the macro you set is the center and
@@ -128,7 +132,7 @@ node tools/norns-web/serve.mjs     # then open http://localhost:8800/
 
 It runs this Lua as is (screen, controls, clocks, PARAMS), with rough Web Audio stand-ins for the
 engine (`lib/Engine_Terrarium.js`), not the MI engines. A published copy is at
-https://claude.ai/artifact/SBCpfHzewFWLQyez8d2hfZ.
+<https://claude.ai/artifact/SBCpfHzewFWLQyez8d2hfZ>.
 
 ## Tuning
 

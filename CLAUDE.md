@@ -20,7 +20,8 @@ node tools/norns-web/build.mjs --cdn  # static copy in tools/norns-web/dist/, to
 
 Run the smoke test after every Lua change. It also asserts that params group counts match.
 
-To update the published page: build with `--cdn`, then publish `tools/norns-web/dist/index.html` to
+GitHub Pages (`.github/workflows/pages.yml`) runs the smoke test on Lua 5.3 and publishes norns-web on
+every push to main. To update the claude.ai page: build with `--cdn`, then publish `tools/norns-web/dist/index.html` to
 https://claude.ai/artifact/SBCpfHzewFWLQyez8d2hfZ with `norns-web.js`, `norns.lua`, `files.json` and
 `script/lib/Engine_Terrarium.js` as files.
 

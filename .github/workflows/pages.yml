@@ -1,0 +1,54 @@
+# Web terrarium on GitHub Pages: on every push to main, test the Lua on Lua 5.3 (the
+# version norns runs), build norns-web for terrarium, and publish it.
+#
+# One-time setup: repository Settings > Pages > Build and deployment > Source: GitHub Actions.
+name: web terrarium
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: true # lib/nb
+
+      - name: Smoke test on Lua 5.3, like norns
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq lua5.3
+          lua5.3 test/smoke.lua
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Build norns-web
+        run: node tools/norns-web/build.mjs . _site
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4
