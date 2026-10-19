@@ -103,6 +103,11 @@ E1 picks a part, and the others dim for a moment so it's clear which one you're 
   tempting for crystals, but the 6-op FM banks are a real, distinct glassy sound. Reeds plays
   Rings with its internal exciter; most Rings models are strings, so they're drawn as reeds that
   vibrate when plucked. Appended after crystals so saved PSETs keep their voice.
+- **Mappings are data, tuned live (October 2026).** Tuning by ear means many small changes, and
+  reloading the script for each is slow. Each module's macro -> parameter mapping is now a table
+  (`map`) that `tune()` changes from maiden while it plays, printing the table to paste back. The
+  same mechanism maps MI parameters no macro used to reach (Clouds reverb, Beads time). A levels
+  group balances the slots.
 - **Names on touch (October 2026).** The scene shows _how much_ a macro moved but not _what_ it
   is, and the norns has no labels by its knobs, so a first-time player was guessing (the peek view
   answered, but only if you knew to hold K1). Now E2/E3 show the macro's name and a bar (with the

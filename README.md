@@ -112,6 +112,12 @@ It runs this Lua as is (screen, controls, clocks, PARAMS), with rough Web Audio 
 engine (`lib/Engine_Terrarium.js`), not the MI engines. A published copy is at
 https://claude.ai/artifact/SBCpfHzewFWLQyez8d2hfZ.
 
+## Tuning
+
+Each module's macro → parameter mapping is a table that `tune()` changes live from the maiden
+REPL, printing the result to paste back; PARAMS > levels balances the slots. See
+[doc/SOUND.md](doc/SOUND.md#tuning-on-the-norns) for the syntax and a first-night checklist.
+
 ## To do on hardware
 
 - [ ] engine loads and every slot sounds; fix anything SuperCollider complains about

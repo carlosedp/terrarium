@@ -62,6 +62,23 @@ assert(M.nb_mods > 0, "visitors: E2 never reached the voice's modulate")
 check(("visitors via nb (%d notes)"):format(M.nb_notes - nb_before))
 params:set("voice_kind", 1)
 
+-- tuning from maiden: tune() remaps a parameter live; levels reach the synths as vol
+params:set("air_kind", 1) -- clouds
+params:set("clouds_size", 1)
+tune("clouds", "rvb", 2, 0.1, 0.6)
+M.run(0.2)
+assert(math.abs(M.sets.air_set.rvb - 0.6) < 1e-6, "tune: clouds rvb didn't follow its macro")
+tune("clouds", "rvb", 0.3)
+M.run(0.2)
+assert(M.sets.air_set.rvb == 0.3, "tune: clouds rvb didn't go back to a fixed value")
+tune("meadow", "decay", "brain", 1, 0.75, 0.4)
+tune() -- lists the modules
+params:set("level_air", -60)
+M.run(0.2)
+assert(M.sets.air_set.vol == 0, "levels: air level didn't reach the synth")
+params:set("level_air", 0)
+check("tune() and levels")
+
 -- every meadow flora (Plaits engine) blooms its own flower
 turn(1, -4); turn(1, 1)
 for f = 1, #params:lookup_param("meadow_flora").options do

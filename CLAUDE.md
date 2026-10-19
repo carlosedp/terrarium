@@ -33,7 +33,8 @@ https://claude.ai/artifact/SBCpfHzewFWLQyez8d2hfZ with `norns-web.js`, `norns.lu
 - **`include()` is `dofile`, not `require`:** every call returns a fresh copy. Stateful modules
   (`lib/brain.lua`, `lib/canvas.lua`, `lib/glass.lua`, `lib/climate.lua`) are included only in `terrarium.lua`; modules reach them
   through the `sc` table passed to every module function.
-- **Lua owns all macro-to-parameter mappings** (each module's `sound()` in `lib/scene/`); the
+- **Lua owns all macro-to-parameter mappings** (each module's `map` table, evaluated by
+  `sc.mapped()`, plus its `sound()` for option params and conditional couplings); the
   engine only exposes raw parameters per slot. Keep `doc/SOUND.md` in sync when tuning.
 - **Draw through `lib/canvas.lua`** (framebuffer, later layers can erase/dim earlier ones), then
   `cv.blit()`; native `screen.text` overlays go after the blit.

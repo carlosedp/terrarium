@@ -26,16 +26,24 @@ local function pos(f, t, drift)
   return x, f.y + math.sin(t * f.fy + f.ph * 2) * 5
 end
 
+-- macro -> MiBeads parameter (see doc/SOUND.md; change live with tune() in maiden)
+fireflies.map = {
+  density   = { 1, 0.56, 0.95 }, -- random-grain zone (0.48..0.52 makes no grains)
+  fb        = { 1, 0.05, 0.35 },
+  size      = { 2, 0.2, 0.85 },
+  time_rnd  = { 2, 0.1, 0.5 },
+  drywet    = 0.5,
+  rvb       = 0.35,
+  shape     = 0.6,
+  pitch_rnd = 0.08,
+  time      = 0.5,
+  pitch     = 0,
+}
+
 function fireflies:sound(sc)
-  local dn, gl = sc.m(4, 1), sc.m(4, 2)
-  return {
-    density = H.lin(dn, 0.56, 0.95), -- random-grain zone (0.48..0.52 makes no grains)
-    fb = H.lin(dn, 0.05, 0.35),
-    size = H.lin(gl, 0.2, 0.85),
-    time_rnd = H.lin(gl, 0.1, 0.5),
-    drywet = 0.5, rvb = 0.35, shape = 0.6, pitch_rnd = 0.08,
-    freeze = sc.frozen and 1 or 0,
-  }
+  local s = sc.mapped(self)
+  s.freeze = sc.frozen and 1 or 0
+  return s
 end
 
 function fireflies:on_note(x, sc)

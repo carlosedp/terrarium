@@ -8,11 +8,44 @@ Conventions:
 
 - Every macro is `0..1` on the encoder. A mapping like `harm 0.05→0.95` is the parameter's
   value at macro 0 and macro 1, linear unless a curve is given.
-- **Fixed** values are per-module defaults, to be exposed in the PARAMS menu (hidden from the scene).
+- **Fixed** values are per-module defaults.
 - **Coupled** values come from *another* slot. That's where the "it just sounds good" comes from,
   so keep the list short and deliberate.
-- Signal flow: `brain → voice → color → air → out`. nb voices join after the voice slot through
-  the insert on the main output, the same way the fx mod works.
+- Signal flow: `brain → voice → color → air → out`. Visitors (nb voices) play outside it, dry.
+
+## Tuning on the norns
+
+Each module's mapping is a table in its file (`map`), and the tables below are its source.
+An entry is a number (fixed), `{ k, a, b [, curve] }` (this part's macro k from a to b, along
+`macro ^ curve` if given) or `{ "part", k, a, b [, curve] }` (another part's macro: a coupling).
+Option params, freeze and conditional couplings stay in each module's `sound()`.
+
+`tune()` in the maiden REPL changes a map while the script runs and prints it to paste back:
+
+```
+tune()                                          -- list the modules
+tune("clouds")                                  -- print clouds' map
+tune("clouds", "rvb", 2, 0.1, 0.6)              -- E3 (size) also opens the reverb
+tune("clouds", "rvb", 0.4)                      -- or fix it
+tune("meadow", "decay", "brain", 1, 0.75, 0.4)  -- follow the brain's rate
+tune("clouds", "rvb", nil)                      -- drop it (the synth's default applies)
+```
+
+Any control of the module's synth can be mapped, including ones no macro drives yet: Clouds
+`lofi`, `spread`, `rvb`; Beads `time`, `pitch`, `shape`, `rvb`; MiVerb `hp`, `diff`; Rings `pos`.
+A key the synth doesn't have does nothing. norns-web has the same REPL under its log.
+
+**Levels:** PARAMS > levels has voice, color and air levels in dB, sent to each slot's synth as
+`vol` (it scales the slot's whole output). Balance on the device, then move the good values into
+the code.
+
+**First night with the norns,** in order:
+
+1. The engine compiles (it never has). Fix whatever SuperCollider complains about.
+2. Every slot sounds: each voice, color and air module, each variant.
+3. Levels: a balanced default with the default modules, then the loudest and quietest pairings.
+4. CPU with the heaviest pairing: reeds + pond (two Rings) + fireflies.
+5. Tune each module's map by ear with `tune()`; paste the results back and update this file.
 
 ## Brain (no audio)
 

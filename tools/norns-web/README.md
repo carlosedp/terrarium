@@ -44,6 +44,11 @@ NornsWeb.engines.X = () => ({
 
 Without a stand-in, engine commands are only logged (tick "engine commands" under the log).
 
+## REPL
+
+The field under the log runs Lua in the script, like the maiden REPL: an expression prints its
+value (`params:get("x")`), a statement just runs. Up and down recall history.
+
 ## How it works
 
 - `norns.lua` is the norns API in Lua: the screen draws into a 128×64 framebuffer, params keep

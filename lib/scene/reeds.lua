@@ -32,15 +32,18 @@ function reeds:add_params(changed)
   params:set_action("reeds_model", changed)
 end
 
+-- macro -> MiRings parameter (see doc/SOUND.md; change live with tune() in maiden)
+reeds.map = {
+  struct = { 1, 0.15, 0.9 },
+  bright = { 2, 0.2, 0.85 },
+  damp   = { "brain", 1, 0.75, 0.45 }, -- fast rain, shorter rings
+  pos    = 0.3,
+}
+
 function reeds:sound(sc)
-  local st, br = sc.m(2, 1), sc.m(2, 2)
-  return {
-    struct = H.lin(st, 0.15, 0.9),
-    bright = H.lin(br, 0.2, 0.85),
-    damp = H.lin(sc.m(1, 1), 0.75, 0.45), -- fast rain, shorter rings
-    pos = 0.3,
-    model = params:get("reeds_model") - 1,
-  }
+  local s = sc.mapped(self)
+  s.model = params:get("reeds_model") - 1
+  return s
 end
 
 function reeds:on_note(x)

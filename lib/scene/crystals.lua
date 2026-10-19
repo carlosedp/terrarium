@@ -38,16 +38,19 @@ function crystals:add_params(changed)
   params:set_action("crystals_bank", changed)
 end
 
+-- macro -> MiPlaits parameter (see doc/SOUND.md; change live with tune() in maiden)
+crystals.map = {
+  harm   = { 1, 0, 1 },          -- picks the 6-op patch within the bank
+  timbre = { 2, 0.15, 0.85 },
+  morph  = { 2, 0.3, 0.7 },
+  decay  = { "brain", 1, 0.8, 0.5 },
+  lpg    = 0.6,
+}
+
 function crystals:sound(sc)
-  local ra, ix = sc.m(2, 1), sc.m(2, 2)
-  return {
-    engine = BANK_ENGINE[params:get("crystals_bank")],
-    harm = ra,                         -- picks the 6-op patch within the bank
-    timbre = H.lin(ix, 0.15, 0.85),
-    morph = H.lin(ix, 0.3, 0.7),
-    decay = H.lin(sc.m(1, 1), 0.8, 0.5),
-    lpg = 0.6,
-  }
+  local s = sc.mapped(self)
+  s.engine = BANK_ENGINE[params:get("crystals_bank")]
+  return s
 end
 
 function crystals:on_note(x, sc)

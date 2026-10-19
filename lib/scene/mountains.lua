@@ -25,15 +25,20 @@ for j = 1, 3 do
   RIDGES[j] = ridge
 end
 
+-- macro -> MiVerb parameter (see doc/SOUND.md; change live with tune() in maiden)
+mountains.map = {
+  time   = { 1, 0.5, 0.97 },
+  drywet = { 2, 0.12, 0.65 },
+  damp   = 0.5,
+  hp     = 0.05,
+  diff   = 0.7,
+}
+
 function mountains:sound(sc)
-  local damp = 0.5
-  if sc.kind(3) == "fog" then damp = H.lin(sc.m(3, 1), 0.75, 0.35) end -- foggy, darker tail
-  return {
-    time = H.lin(sc.m(4, 1), 0.5, 0.97),
-    drywet = H.lin(sc.m(4, 2), 0.12, 0.65),
-    damp = damp, hp = 0.05, diff = 0.7,
-    freeze = sc.frozen and 1 or 0,
-  }
+  local s = sc.mapped(self)
+  if sc.kind(3) == "fog" then s.damp = H.lin(sc.m(3, 1), 0.75, 0.35) end -- foggy, darker tail
+  s.freeze = sc.frozen and 1 or 0
+  return s
 end
 
 function mountains:on_note(x, sc)

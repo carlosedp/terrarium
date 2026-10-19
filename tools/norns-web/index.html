@@ -178,9 +178,14 @@ kbd { font-family: var(--font-mono); font-size: 0.85em; border: 1px solid var(--
 #log { height: 9.5rem; overflow: auto; font-family: var(--font-mono); font-size: 12px; line-height: 1.45; color: var(--muted); white-space: pre-wrap; overflow-wrap: anywhere; }
 #log .error { color: #b3261e; }
 #log .engine { color: var(--accent); }
+#log .repl { color: var(--ink); }
 .logbar { display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap; }
 .logbar label { font-family: var(--font-mono); font-size: var(--step--1); color: var(--muted); display: flex; gap: 6px; align-items: center; }
 .notes { font-size: var(--step--1); color: var(--muted); margin: 0; max-width: 62ch; }
+.repl { display: flex; align-items: center; gap: 8px; margin-top: -10px; font-family: var(--font-mono); font-size: var(--step--1); color: var(--muted); }
+.repl input { flex: 1; min-width: 0; font: inherit; color: var(--ink); background: var(--paper); border: 1px solid var(--rule); border-radius: 6px; padding: 6px 8px; }
+.repl input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 </style>
 </head>
 <body>
@@ -227,6 +232,10 @@ kbd { font-family: var(--font-mono); font-size: 0.85em; border: 1px solid var(--
       <div class="panel" id="params" aria-live="off"></div>
       <div class="logbar"><h2>Log</h2><label><input type="checkbox" id="show-engine"> engine commands</label></div>
       <div class="panel" id="log" role="log"></div>
+      <form id="repl-form" class="repl" autocomplete="off">
+        <label for="repl" class="visually-hidden">Lua</label>
+        <span aria-hidden="true">&gt;&gt;</span><input id="repl" spellcheck="false" placeholder="Lua, like the maiden REPL (↑ ↓ for history)">
+      </form>
       <p class="notes">Scroll on a param or use − and +; hold Shift for bigger steps.</p>
     </section>
   </div>

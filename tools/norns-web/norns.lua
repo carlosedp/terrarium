@@ -505,6 +505,23 @@ function norns_web.tick(t)
   end
 end
 
+-- the page's REPL, like maiden's: an expression prints its value, anything else just runs
+function norns_web.repl(code)
+  local chunk = load("return " .. code, "repl") or load(code, "repl")
+  if not chunk then
+    local _, err = load(code, "repl")
+    js.error(tostring(err))
+    return
+  end
+  local res = table.pack(pcall(chunk))
+  if not res[1] then js.error(tostring(res[2])); return end
+  if res.n > 1 then
+    local parts = {}
+    for i = 2, res.n do parts[#parts + 1] = tostring(res[i]) end
+    print(table.concat(parts, "\t"))
+  end
+end
+
 function norns_web.enc(n, d) if enc then guarded(enc, n, d) end end
 function norns_web.key(n, z) if key then guarded(key, n, z) end end
 function norns_web.set_tempo(t) tempo = t end

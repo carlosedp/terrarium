@@ -28,18 +28,24 @@ function clouds:add_params(changed)
   params:set_action("clouds_kind", changed)
 end
 
+-- macro -> MiClouds parameter (see doc/SOUND.md; change live with tune() in maiden)
+clouds.map = {
+  dens       = { 1, 0.35, 0.9 },
+  fb         = { 1, 0.05, 0.4 },
+  size       = { 2, 0.1, 0.85 },
+  tex        = { 2, 0.3, 0.7 },
+  drywet     = 0.45,
+  spread     = 0.7,
+  rvb        = 0.3,
+  lofi       = 0,
+  pit_jitter = { "brain", 2, 0, 0.3 }, -- windy weather wobbles the grains
+}
+
 function clouds:sound(sc)
-  local dn, sz = sc.m(4, 1), sc.m(4, 2)
-  return {
-    dens = H.lin(dn, 0.35, 0.9),
-    fb = H.lin(dn, 0.05, 0.4),
-    size = H.lin(sz, 0.1, 0.85),
-    tex = H.lin(sz, 0.3, 0.7),
-    drywet = 0.45, spread = 0.7, rvb = 0.3,
-    mode = params:get("clouds_kind") - 1,
-    freeze = sc.frozen and 1 or 0,
-    pit_jitter = sc.m(1, 2) * 0.3, -- windy weather wobbles the grains
-  }
+  local s = sc.mapped(self)
+  s.mode = params:get("clouds_kind") - 1
+  s.freeze = sc.frozen and 1 or 0
+  return s
 end
 
 function clouds:on_note(x)

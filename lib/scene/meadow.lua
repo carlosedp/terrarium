@@ -34,16 +34,19 @@ function meadow:add_params(changed)
   params:set_action("meadow_flora", changed)
 end
 
+-- macro -> MiPlaits parameter (see doc/SOUND.md; change live with tune() in maiden)
+meadow.map = {
+  harm   = { 1, 0.05, 0.95 },
+  timbre = { 2, 0.1, 0.9 },
+  morph  = { 2, 0.35, 0.65 },
+  decay  = { "brain", 1, 0.75, 0.4 }, -- fast rain, shorter notes
+  lpg    = 0.5,
+}
+
 function meadow:sound(sc)
-  local h, tb = sc.m(2, 1), sc.m(2, 2)
-  return {
-    engine = FLORA_ENGINE[params:get("meadow_flora")],
-    harm = H.lin(h, 0.05, 0.95),
-    timbre = H.lin(tb, 0.1, 0.9),
-    morph = H.lin(tb, 0.35, 0.65),
-    decay = H.lin(sc.m(1, 1), 0.75, 0.4), -- fast rain, shorter notes
-    lpg = 0.5,
-  }
+  local s = sc.mapped(self)
+  s.engine = FLORA_ENGINE[params:get("meadow_flora")]
+  return s
 end
 
 function meadow:on_note(x, sc)

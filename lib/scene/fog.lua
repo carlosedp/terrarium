@@ -11,14 +11,14 @@ local fog = {
   },
 }
 
-function fog:sound(sc)
-  local c, sh = sc.m(3, 1), sc.m(3, 2)
-  return {
-    cf = H.lin(c ^ 1.5, 0.12, 0.92), -- most of the action in the lower half
-    reson = H.lin(sh, 0.05, 0.85),   -- kept below self-oscillation
-    drive = H.lin(sh, 1, 1.6),
-  }
-end
+-- macro -> MiRipples parameter (see doc/SOUND.md; change live with tune() in maiden)
+fog.map = {
+  cf    = { 1, 0.12, 0.92, 1.5 }, -- curved: most of the action in the lower half
+  reson = { 2, 0.05, 0.85 },      -- kept below self-oscillation
+  drive = { 2, 1, 1.6 },
+}
+
+function fog:sound(sc) return sc.mapped(self) end
 
 -- soil under the ground: fixed specks, denser further down, and a few pebbles
 local r = H.rng(500)

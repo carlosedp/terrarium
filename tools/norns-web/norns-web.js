@@ -84,7 +84,7 @@ soundBtn.addEventListener("click", async () => {
 });
 
 // ---------- boot ----------
-let lua = null, tick = null, encFn = null, keyFn = null, paramsJson = null, paramDelta = null;
+let lua = null, tick = null, encFn = null, keyFn = null, paramsJson = null, paramDelta = null, replFn = null;
 
 async function boot() {
   const [manifest, nornsLua] = await Promise.all([
@@ -119,7 +119,7 @@ async function boot() {
   await lua.doString('dofile("/norns/norns.lua")');
   await lua.doString(`norns_web.boot(${JSON.stringify(name)}, ${JSON.stringify(main)})`);
   const nw = n => lua.global.get("norns_web")[n];
-  tick = nw("tick"); encFn = nw("enc"); keyFn = nw("key"); paramsJson = nw("params_json"); paramDelta = nw("param_delta");
+  tick = nw("tick"); encFn = nw("enc"); keyFn = nw("key"); paramsJson = nw("params_json"); paramDelta = nw("param_delta"); replFn = nw("repl");
   renderParams();
   setInterval(renderParams, 400);
   const t0 = performance.now();
@@ -183,6 +183,26 @@ window.addEventListener("keyup", e => {
   const k = e.key.toLowerCase();
   if (KEYS[k]) { document.querySelector(`.key[data-k="${KEYS[k]}"]`)?.classList.remove("down"); key(KEYS[k], 0); }
 });
+
+// ---------- REPL ----------
+const replEl = $("#repl"), history = [];
+let back = 0;
+$("#repl-form").addEventListener("submit", e => {
+  e.preventDefault();
+  const code = replEl.value.trim();
+  if (!code || !replFn) return;
+  log(`>> ${code}`, "repl");
+  history.push(code); back = 0; replEl.value = "";
+  try { replFn(code); } catch (err) { log(String(err.message || err), "error"); }
+  renderParams();
+});
+replEl.addEventListener("keydown", e => {
+  if (e.key !== "ArrowUp" && e.key !== "ArrowDown") return;
+  e.preventDefault();
+  back = clampInt(back + (e.key === "ArrowUp" ? 1 : -1), 0, history.length);
+  replEl.value = back ? history[history.length - back] : "";
+});
+const clampInt = (v, a, b) => Math.max(a, Math.min(b, v));
 
 // ---------- PARAMS panel ----------
 // Rebuilt when the list of params changes; otherwise only the values update,

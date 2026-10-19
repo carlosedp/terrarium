@@ -34,6 +34,13 @@ local LAYERS = {
   { id = "air",   name = "air",   mods = { include("lib/scene/clouds"), include("lib/scene/fireflies"), include("lib/scene/mountains") } },
 }
 local SLOT_SET = { nil, "voice_set", "color_set", "air_set" }
+local PART = {}
+for i, L in ipairs(LAYERS) do
+  PART[L.id] = i
+  for _, m in ipairs(L.mods) do m.part = i end
+end
+-- each sounding slot's level in PARAMS (dB), sent to its synth as vol
+local LEVELS = { { "level_voice", "voice level", 2 }, { "level_color", "color level", 3 }, { "level_air", "air level", 4 } }
 
 local SETTINGS = { "t_root", "t_scale", "t_range", "t_length", "t_seasons", "t_climate", "t_drift" }
 local SETTING_NAMES = { "key", "scale", "range", "length", "seasons", "climate", "drift" }
@@ -64,6 +71,25 @@ function sc.m(i, k)
   v = v + cv * 0.5 * Climate.out[CV_SRC[i][k]]
   return H.clamp(math.floor(v * 200 + 0.5) / 200, 0, 1)
 end
+-- a module's map (macro -> engine parameter), evaluated as it plays: a number is
+-- fixed, { k, a, b [, curve] } maps this part's macro k from a to b, and
+-- { "part", k, a, b [, curve] } follows another part's macro (a coupling)
+function sc.mapped(mod)
+  local out = {}
+  for key, e in pairs(mod.map or {}) do
+    if type(e) == "number" then
+      out[key] = e
+    else
+      local part, k, a, b, curve
+      if type(e[1]) == "string" then part, k, a, b, curve = PART[e[1]], e[2], e[3], e[4], e[5]
+      else part, k, a, b, curve = mod.part, e[1], e[2], e[3], e[4] end
+      local v = sc.m(part, k)
+      if curve then v = v ^ curve end
+      out[key] = a + (b - a) * v
+    end
+  end
+  return out
+end
 -- the weather's wind, shared with the sky (never blowing backwards)
 function sc.wind() return math.max(0, sc.cur(1).wind(sc)) end
 
@@ -86,10 +112,14 @@ local function focus() focus_t = 2.5 end
 
 -- ---------- sound ----------
 
+local function db_amp(db) return db <= -59.5 and 0 or 10 ^ (db / 20) end
+
 local function send_sound()
   for i = 2, 4 do
     local fn = engine[SLOT_SET[i]]
-    for k, v in pairs(sc.cur(i):sound(sc)) do
+    local s = sc.cur(i):sound(sc)
+    for _, l in ipairs(LEVELS) do if l[3] == i then s.vol = db_amp(params:get(l[1])) end end
+    for k, v in pairs(s) do
       if sent[i][k] ~= v then
         fn(k, v)
         sent[i][k] = v
@@ -145,6 +175,11 @@ local function add_params()
   local changed = function() dirty_sound = true end
 
   params:add_separator("terrarium", "terrarium")
+  params:add_group("terrarium_levels", "levels", #LEVELS)
+  for _, l in ipairs(LEVELS) do
+    params:add_control(l[1], l[2], controlspec.new(-60, 6, "lin", 0, 0, "dB", 0.01))
+    params:set_action(l[1], changed)
+  end
   params:add_group("terrarium_settings", "settings", #SETTINGS)
   params:add_option("t_root", "key", Brain.NOTES, Brain.root + 1)
   params:set_action("t_root", function(v)
@@ -209,6 +244,58 @@ Brain.on_season = function()
   params:set("t_scale", Brain.scale)
   seasoning = false
   say(Brain.key_name())
+end
+
+-- ---------- tuning from maiden ----------
+-- Every module's macro -> engine mapping is a table (its `map`). tune() changes
+-- one while the script runs and prints the table to paste back into the module:
+--   tune()                                   list the modules
+--   tune("clouds")                           print clouds' map
+--   tune("clouds", "rvb", 2, 0.1, 0.6)       clouds' E3 macro moves rvb 0.1 -> 0.6
+--   tune("clouds", "rvb", 0.4)               fix rvb at 0.4
+--   tune("clouds", "rvb", 2, 0.1, 0.6, 2)    ... along a curve (macro ^ 2)
+--   tune("meadow", "decay", "brain", 1, 0.75, 0.4)   follow another part's macro
+--   tune("clouds", "rvb", nil)               drop it (the synth's default applies)
+-- A key that isn't a control of the module's synth does nothing (see doc/SOUND.md).
+local function show(v) return type(v) == "string" and ('"' .. v .. '"') or tostring(v) end
+
+function tune(id, key, ...)
+  local mod
+  for _, L in ipairs(LAYERS) do
+    for _, m in ipairs(L.mods) do
+      if m.id == id then mod = m end
+    end
+  end
+  if not mod then
+    local ids = {}
+    for _, L in ipairs(LAYERS) do
+      for _, m in ipairs(L.mods) do if m.map then ids[#ids + 1] = m.id end end
+    end
+    print("tune: modules with a map: " .. table.concat(ids, ", "))
+    return
+  end
+  if key then
+    local args = table.pack(...)
+    if args.n == 0 or args[1] == nil then mod.map[key] = nil
+    elseif args.n == 1 then mod.map[key] = args[1]
+    else mod.map[key] = { table.unpack(args, 1, args.n) } end
+    sent[mod.part] = {}
+    dirty_sound = true
+  end
+  local keys = {}
+  for k in pairs(mod.map) do keys[#keys + 1] = k end
+  table.sort(keys)
+  print(mod.id .. ".map = {")
+  for _, k in ipairs(keys) do
+    local e = mod.map[k]
+    if type(e) == "table" then
+      local parts = {}
+      for i, v in ipairs(e) do parts[i] = show(v) end
+      e = "{ " .. table.concat(parts, ", ") .. " }"
+    end
+    print(("  %s = %s,"):format(k, tostring(e)))
+  end
+  print("}")
 end
 
 -- ---------- drawing ----------

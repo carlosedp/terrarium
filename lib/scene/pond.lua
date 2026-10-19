@@ -22,16 +22,19 @@ function pond:add_params(changed)
   params:set_action("pond_kind", changed)
 end
 
+-- macro -> MiRings parameter (see doc/SOUND.md; change live with tune() in maiden)
+pond.map = {
+  struct = { 1, 0.1, 0.85 },
+  damp   = { 2, 0.92, 0.35 },         -- more damping, shorter ring
+  bright = { "voice", 2, 0.35, 0.7 }, -- a brighter voice rings brighter
+  pos    = 0.3,
+  mix    = 0.8,
+}
+
 function pond:sound(sc)
-  local st, dp = sc.m(3, 1), sc.m(3, 2)
-  return {
-    struct = H.lin(st, 0.1, 0.85),
-    damp = H.lin(dp, 0.92, 0.35),           -- more damping, shorter ring
-    bright = H.lin(sc.m(2, 2), 0.35, 0.7),  -- a brighter voice rings brighter
-    model = params:get("pond_kind") - 1,
-    pos = 0.3,
-    mix = 0.8,
-  }
+  local s = sc.mapped(self)
+  s.model = params:get("pond_kind") - 1
+  return s
 end
 
 function pond:on_note(x)

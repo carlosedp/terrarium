@@ -58,64 +58,66 @@ Engine_Terrarium : CroneEngine {
 		// slot synths fade in and out, so swapping a module doesn't click
 		var fade = { |gate| EnvGen.kr(Env.asr(0.05, 1, 0.3), gate, doneAction: 2) };
 
+		// every slot synth has vol: its level from the levels group in PARAMS
 		SynthDef(\terrarium_voice_plaits, { |out, gate = 1, pitch = 60, t_trig = 0, engine = 12, harm = 0.5,
-			timbre = 0.5, morph = 0.5, decay = 0.5, lpg = 0.5, level = 0.8, pan = 0, amp = 0.35|
+			timbre = 0.5, morph = 0.5, decay = 0.5, lpg = 0.5, level = 0.8, pan = 0, amp = 0.35, vol = 1|
 			var sig = plaits.ar(pitch, engine, harm.lag(0.05), timbre.lag(0.05), morph.lag(0.05),
 				t_trig, level, decay: decay, lpg_colour: lpg);
-			Out.ar(out, Pan2.ar(sig[0], pan, amp) * fade.(gate));
+			Out.ar(out, Pan2.ar(sig[0], pan, amp) * vol.lag(0.1) * fade.(gate));
 		}).add;
 
 		// a Rings voice: the internal exciter strikes the resonator on each note;
 		// two voices of polyphony inside Rings, so notes ring over each other
 		SynthDef(\terrarium_voice_rings, { |out, gate = 1, pitch = 60, t_trig = 0, struct = 0.4, bright = 0.5,
-			damp = 0.6, pos = 0.3, model = 0, amp = 0.5|
+			damp = 0.6, pos = 0.3, model = 0, amp = 0.5, vol = 1|
 			var sig = rings.ar(0, t_trig, pitch, struct.lag(0.05), bright.lag(0.05), damp.lag(0.05), pos,
 				model, 2, 1);
-			Out.ar(out, sig * amp * fade.(gate));
+			Out.ar(out, sig * amp * vol.lag(0.1) * fade.(gate));
 		}).add;
 
 		// color: the voice excites Rings; more structure, more resonator in the mix
 		SynthDef(\terrarium_pond, { |in, out, gate = 1, pitch = 60, t_trig = 0, struct = 0.4, bright = 0.5,
-			damp = 0.6, pos = 0.3, model = 0, mix = 0.8|
+			damp = 0.6, pos = 0.3, model = 0, mix = 0.8, vol = 1|
 			var dry = In.ar(in, 2);
 			var wet = rings.ar(dry.sum * 0.5, t_trig, pitch, struct.lag(0.1), bright.lag(0.1), damp.lag(0.1),
 				pos, model, 2);
-			Out.ar(out, ((dry * (1 - (0.5 * struct))) + (wet * mix)) * fade.(gate));
+			Out.ar(out, ((dry * (1 - (0.5 * struct))) + (wet * mix)) * vol.lag(0.1) * fade.(gate));
 		}).add;
 
-		SynthDef(\terrarium_fog, { |in, out, gate = 1, cf = 0.5, reson = 0.2, drive = 1|
+		SynthDef(\terrarium_fog, { |in, out, gate = 1, cf = 0.5, reson = 0.2, drive = 1, vol = 1|
 			var dry = In.ar(in, 2);
 			var wet = ripples.ar(dry, cf.lag(0.1), reson.lag(0.1), drive.lag(0.1));
-			Out.ar(out, wet * fade.(gate));
+			Out.ar(out, wet * vol.lag(0.1) * fade.(gate));
 		}).add;
 
 		// air: grain position drifts on a 20 s triangle so the clouds move
 		SynthDef(\terrarium_clouds, { |in, out, gate = 1, dens = 0.5, fb = 0.2, size = 0.4, tex = 0.5,
-			drywet = 0.45, spread = 0.7, rvb = 0.3, freeze = 0, mode = 0, pit_jitter = 0|
+			drywet = 0.45, spread = 0.7, rvb = 0.3, freeze = 0, mode = 0, pit_jitter = 0, lofi = 0, vol = 1|
 			var dry = In.ar(in, 2);
 			var wet = clouds.ar(dry, LFNoise1.kr(0.4) * pit_jitter, LFTri.kr(0.05).range(0.3, 0.7),
-				size.lag(0.1), dens.lag(0.1), tex.lag(0.1), drywet, 1, spread, rvb, fb.lag(0.1), freeze, mode);
-			Out.ar(out, wet * fade.(gate));
+				size.lag(0.1), dens.lag(0.1), tex.lag(0.1), drywet, 1, spread, rvb, fb.lag(0.1), freeze, mode, lofi);
+			Out.ar(out, wet * vol.lag(0.1) * fade.(gate));
 		}).add;
 
 		// seed is never passed: any input there counts as patched and stops
 		// density from generating grains on its own
 		beads !? {
 			SynthDef(\terrarium_fireflies, { |in, out, gate = 1, density = 0.7, fb = 0.2, size = 0.5,
-				time_rnd = 0.2, drywet = 0.5, rvb = 0.35, shape = 0.6, pitch_rnd = 0.08, freeze = 0|
+				time_rnd = 0.2, drywet = 0.5, rvb = 0.35, shape = 0.6, pitch_rnd = 0.08, freeze = 0, time = 0.5,
+				pitch = 0, vol = 1|
 				var dry = In.ar(in, 2);
-				var wet = beads.ar(dry, pitch: 0, pitch_rnd: pitch_rnd, time: 0.5, time_rnd: time_rnd,
+				var wet = beads.ar(dry, pitch: pitch, pitch_rnd: pitch_rnd, time: time.lag(0.1), time_rnd: time_rnd,
 					size: size.lag(0.1), shape: shape, density: density.lag(0.1), fb: fb.lag(0.1),
 					drywet: drywet, rvb: rvb, freeze: freeze, seed_btn: 2, quality: 0, in_gain: 1);
-				Out.ar(out, wet * fade.(gate));
+				Out.ar(out, wet * vol.lag(0.1) * fade.(gate));
 			}).add;
 		};
 
 		SynthDef(\terrarium_mountains, { |in, out, gate = 1, time = 0.7, drywet = 0.4, damp = 0.5, hp = 0.05,
-			freeze = 0, diff = 0.7|
+			freeze = 0, diff = 0.7, vol = 1|
 			var dry = In.ar(in, 2);
 			var wet = verb.ar(dry, time.lag(0.1), drywet.lag(0.1), damp.lag(0.1), hp, freeze, diff);
-			Out.ar(out, wet * fade.(gate));
+			Out.ar(out, wet * vol.lag(0.1) * fade.(gate));
 		}).add;
 	}
 
