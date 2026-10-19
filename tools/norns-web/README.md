@@ -35,6 +35,15 @@ The out dir holds the page, the runtime, `files.json` (every `.lua` file of the 
 script's engine stand-ins. Without `--cdn` it also copies the vendored wasmoon; with it, the page
 loads the same pinned version from jsdelivr.
 
+## The page's text
+
+An optional `norns-web.json` next to the script gives the page a title, subtitle, intro, links and
+a footer (credits, license):
+
+```json
+{ "title": "…", "subtitle": "…", "about": "…", "links": [{ "label": "…", "url": "…" }], "footer": "…" }
+```
+
 ## The engine stand-in
 
 When the script sets `engine.name = "X"`, the page loads `lib/Engine_X.js` from the script (norns

@@ -126,6 +126,24 @@ function nbCall(kind, note, v) {
   nbNotes.set(note, { o, g });
 }
 
+// ---------- the script's own page text (norns-web.json): title, intro, links, footer ----------
+function showAbout(a) {
+  if (a.title) { $("#script-name").textContent = a.title; document.title = a.title; }
+  if (a.subtitle) { const s = $("#subtitle"); s.textContent = a.subtitle; s.hidden = false; }
+  if (a.about) $(".lede").textContent = a.about;
+  const link = l => { const el = document.createElement("a"); el.href = l.url; el.textContent = l.label; el.rel = "noopener"; return el; };
+  if (a.links && a.links.length) {
+    const nav = $("#links");
+    a.links.forEach(l => nav.append(link(l)));
+    nav.hidden = false;
+  }
+  if (a.footer || (a.links && a.links.length)) {
+    const f = $("#about-footer");
+    if (a.footer) { const p = document.createElement("p"); p.textContent = a.footer; f.append(p); }
+    f.hidden = false;
+  }
+}
+
 // ---------- boot ----------
 let lua = null, tick = null, encFn = null, keyFn = null, paramsJson = null, paramDelta = null, replFn = null, psetFn = null;
 let storagePrefix = "norns-web:";
@@ -139,11 +157,12 @@ async function boot() {
     fetch("files.json", { cache: "no-store" }).then(r => r.json()),
     fetch("norns.lua", { cache: "no-store" }).then(r => r.text()),
   ]);
-  const { name, main, root, files } = manifest;
+  const { name, main, root, files, about } = manifest;
   document.title = `${name} · norns-web`;
   storagePrefix = `norns-web:${name}:`;
   $("#script-name").textContent = name;
   $(".brand").textContent = name;
+  if (about) showAbout(about);
 
   // the engine stand-in, found from the script's engine.name before it runs
   const m = /engine\.name\s*=\s*["']([\w-]+)["']/.exec(files[main] || "");

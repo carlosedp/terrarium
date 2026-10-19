@@ -102,7 +102,7 @@ h1 {
 .norns[data-shell="shield"] {
   max-width: 540px; border-radius: 12px; padding: 20px 22px 24px; gap: 16px 12px;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  grid-template-areas: "brand brand k1 e1" "screen screen screen ." "k2 k3 e2 e3";
+  grid-template-areas: "brand brand k1 e1" "screen screen screen screen" "k2 k3 e2 e3";
   justify-items: center;
 }
 .norns[data-shell="shield"] .brand { justify-self: start; }
@@ -214,9 +214,14 @@ kbd { font-family: var(--font-mono); font-size: 0.85em; border: 1px solid var(--
 @media (max-width: 560px) {
   body { padding-block: 16px 32px; }
   .wrap { gap: 18px; }
-  .lede { display: none; } /* on a phone, the instrument comes first */
+  .lede, .keys { display: none; } /* on a phone, the instrument comes first; no keyboard to hint at */
 }
 .param button.go { width: auto; padding: 0 10px; grid-column: 2 / 5; justify-self: start; }
+.subtitle { margin: -4px 0 0; font-style: italic; color: var(--muted); }
+.about { border-top: 1px solid var(--rule); padding-top: 16px; display: grid; gap: 10px; font-size: var(--step--1); color: var(--muted); }
+.about p { margin: 0; max-width: 80ch; }
+.links { display: flex; flex-wrap: wrap; gap: 6px 18px; font-family: var(--font-mono); }
+.links a { color: var(--ink); text-underline-offset: 3px; }
 .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 </style>
 </head>
@@ -224,6 +229,7 @@ kbd { font-family: var(--font-mono); font-size: 0.85em; border: 1px solid var(--
 <div class="wrap">
   <header>
     <h1 id="script-name">norns-web</h1>
+    <p class="subtitle" id="subtitle" hidden></p>
     <p class="lede">The script's real Lua, running in the browser against a stand-in for norns: the screen, encoders, keys, clocks and PARAMS are emulated, and the SuperCollider engine is replaced by rough Web Audio stand-ins. Good for checking behavior and the scene; the sound is only a sketch of the real engine.</p>
   </header>
 
@@ -274,6 +280,9 @@ kbd { font-family: var(--font-mono); font-size: 0.85em; border: 1px solid var(--
       <p class="notes">Scroll on a param or use − and +; hold Shift for bigger steps.</p>
     </section>
   </div>
+  <footer class="about" id="about-footer" hidden>
+    <nav class="links" id="links" hidden aria-label="links"></nav>
+  </footer>
 </div>
 <script>window.NORNS_WEB_WASMOON = "vendor/wasmoon/"; /* the build can point this at a CDN */</script>
 <script src="vendor/wasmoon/index.js"></script>

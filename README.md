@@ -131,8 +131,8 @@ node tools/norns-web/serve.mjs     # then open http://localhost:8800/
 ```
 
 It runs this Lua as is (screen, controls, clocks, PARAMS), with rough Web Audio stand-ins for the
-engine (`lib/Engine_Terrarium.js`), not the MI engines. A published copy is at
-<https://claude.ai/artifact/SBCpfHzewFWLQyez8d2hfZ>.
+engine (`lib/Engine_Terrarium.js`), not the MI engines. Every push to main publishes it to
+<https://carlosedp.github.io/terrarium/> (`.github/workflows/pages.yml`).
 
 ## Tuning
 

@@ -1,5 +1,7 @@
 // The files.json the page loads: the script's name, its main file, where its
-// other files are served from (root), and the source of every .lua file.
+// other files are served from (root), the source of every .lua file, and the
+// script's optional norns-web.json (about: a title, subtitle, intro, links and
+// footer for the page).
 import fs from "node:fs";
 import path from "node:path";
 
@@ -19,5 +21,7 @@ export function manifest(scriptDir, root) {
   walk(scriptDir);
   const main = `${name}.lua`;
   if (!files[main]) throw new Error(`no ${main} in ${scriptDir}`);
-  return { name, main, root, files };
+  const aboutFile = path.join(scriptDir, "norns-web.json");
+  const about = fs.existsSync(aboutFile) ? JSON.parse(fs.readFileSync(aboutFile, "utf8")) : null;
+  return { name, main, root, files, about };
 }

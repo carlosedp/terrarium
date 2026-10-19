@@ -46,8 +46,7 @@ and Elements breathes under the ground. Émilie Gillet's instruments, alive insi
 ## What you need
 
 - A **norns** (any kind: the original, shield, or fates).
-- The **mi-UGens**, the Mutable Instruments sound modules for norns. You don't need to find
-  them: the first time you open terrarium without them, it offers to install them for you.
+- The **mi-UGens**, the Mutable Instruments sound modules for norns. The first time you open terrarium without them, it offers to install for you.
 - Optional: **nb voices** (like Emplaitress or Doubledecker, installed as norns mods) or a MIDI
   synth, if you'd like visitors in your jar. More on that in [visitors](#visitors).
 
@@ -239,6 +238,11 @@ Visitors are voices from outside the jar: an nb voice (a norns mod like Emplaitr
 Doubledecker), a MIDI synth, or Just Friends. Each voice brings its own creatures (ants, beetles
 or moths), which wander in from the edge. When a note plays, the nearest one hurries over and
 glows for as long as the note lasts.
+
+**A MIDI synth as a visitor:** plug it into the norns over USB (or through a USB MIDI interface)
+before opening terrarium, and it appears in the voice list as "midi: _its name_ 1". The notes go
+out to it as MIDI, on channel 1 unless you change it; its channel, the CC that E2 sends and its
+pitch-bend range are in **PARAMS**, under its name.
 
 - **Choose the voice:** hold K2 and turn E2. With "none", nothing arrives and nothing plays.
 - **E2 modulate**: whatever that voice chooses to do with it.
@@ -443,7 +447,6 @@ without some of them is (Beads and Elements came later). Press K3 (with
 Wi-Fi), then **SYSTEM > RESTART**. If you copied a `mi-UGens-norns*.tar.gz` into `dust/` yourself,
 press K2 instead.
 
-
 **Visitors: nothing arrives.** Hold K2 and turn E2 on the visitors to pick a voice. If the only
 choice is "none", install an nb voice mod (and enable it in **SYSTEM > MODS**), or connect a MIDI
 synth before opening terrarium.
@@ -485,21 +488,21 @@ output
 
 ### What's inside
 
-| Part  | Module    | Mutable Instruments module  | E2        | E3         | hold K2 + E2     |
-| ----- | --------- | --------------------------- | --------- | ---------- | ---------------- |
-| brain | rain      | (norns clock)               | rate      | change     | —                |
-| brain | lightning | (random timing)             | rate      | change     | —                |
-| voice | meadow    | Plaits (12 melodic engines) | harmonics | timbre     | Plaits engine    |
-| voice | crystals  | Plaits (6-op FM banks)      | ratio     | index      | FM bank          |
-| voice | reeds     | Rings (internal exciter)    | structure | brightness | resonator type   |
-| voice | visitors  | any nb voice                | modulate  | length     | nb voice         |
-| color | pond      | Rings                       | structure | damping    | resonator type   |
-| color | fog       | Ripples                     | clarity   | shimmer    | —                |
-| air   | clouds    | Clouds                      | density   | size       | mode             |
-| air   | fireflies | Beads                       | density   | glow       | —                |
-| air   | mountains | MiVerb (Clouds' reverb)     | size      | echo       | —                |
-| drone | aurora    | Plaits ×2 (root and fifth)  | glow      | motion     | Plaits engine    |
-| drone | roots     | Elements                    | breath    | depth      | resonator type   |
+| Part  | Module    | Mutable Instruments module  | E2        | E3         | hold K2 + E2   |
+| ----- | --------- | --------------------------- | --------- | ---------- | -------------- |
+| brain | rain      | (norns clock)               | rate      | change     | —              |
+| brain | lightning | (random timing)             | rate      | change     | —              |
+| voice | meadow    | Plaits (12 melodic engines) | harmonics | timbre     | Plaits engine  |
+| voice | crystals  | Plaits (6-op FM banks)      | ratio     | index      | FM bank        |
+| voice | reeds     | Rings (internal exciter)    | structure | brightness | resonator type |
+| voice | visitors  | any nb voice                | modulate  | length     | nb voice       |
+| color | pond      | Rings                       | structure | damping    | resonator type |
+| color | fog       | Ripples                     | clarity   | shimmer    | —              |
+| air   | clouds    | Clouds                      | density   | size       | mode           |
+| air   | fireflies | Beads                       | density   | glow       | —              |
+| air   | mountains | MiVerb (Clouds' reverb)     | size      | echo       | —              |
+| drone | aurora    | Plaits ×2 (root and fifth)  | glow      | motion     | Plaits engine  |
+| drone | roots     | Elements                    | breath    | depth      | resonator type |
 
 The phrase works like a Turing Machine: a loop of notes and rests where **change** sets the
 chance that a step mutates as it plays. **Seasons** move between keys that share all but one or

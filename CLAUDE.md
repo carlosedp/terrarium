@@ -21,9 +21,8 @@ node tools/norns-web/build.mjs --cdn  # static copy in tools/norns-web/dist/, to
 Run the smoke test after every Lua change. It also asserts that params group counts match.
 
 GitHub Pages (`.github/workflows/pages.yml`) runs the smoke test on Lua 5.3 and publishes norns-web on
-every push to main. To update the claude.ai page: build with `--cdn`, then publish `tools/norns-web/dist/index.html` to
-https://claude.ai/artifact/SBCpfHzewFWLQyez8d2hfZ with `norns-web.js`, `norns.lua`, `files.json` and
-`script/lib/Engine_Terrarium.js` as files.
+every push to main, at https://carlosedp.github.io/terrarium/. The page's title, intro, links and
+copyright footer come from `norns-web.json`.
 
 ## Rules that are easy to break
 
@@ -62,7 +61,7 @@ https://claude.ai/artifact/SBCpfHzewFWLQyez8d2hfZ with `norns-web.js`, `norns.lu
 
 ## Related repo
 
-`~/norns-mi-UGens` (github.com/carlosedp/norns-mi-UGens, not pushed yet as of 2026-10-18) builds
+`~/projects/norns-mi-UGens` (github.com/carlosedp/norns-mi-UGens, published; v1.0.0 on 2026-10-19) builds
 mi-UGens for norns: `./build.sh --pr 24` cross-compiles in a Debian Buster armhf container
 (upstream v7b1/mi-UGens + PR 24 = MiBeads), `./deploy.sh` installs over ssh. Its GitHub release
 asset `mi-UGens-norns.tar.gz` (fixed name, latest release) is what `lib/installer.lua` downloads;
@@ -79,3 +78,5 @@ form for Windows paths. `gh`, `podman`, `lua`/`luac` are available.
 - `doc/DESIGN.md`: decisions and their reasons (read before changing behavior)
 - `doc/SOUND.md`: macro -> mi-UGen parameter map, ranges, couplings, open tuning questions
 - `tools/norns-web/README.md`: running the script in a browser (generic, not terrarium-specific)
+- `doc/MANUAL.md`: the player's manual (`make manual-pdf` rebuilds the PDF, `make manual-images`
+  its pictures); keep it in step with behavior changes
