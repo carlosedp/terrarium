@@ -7,7 +7,8 @@
 -- ("A" = 0 .. "P" = 15).
 --
 -- Covered: screen (no anti-aliasing, a small bitmap font), params (with a
--- panel on the page), controlspec, clock, metro, util, tab, include, norns,
+-- panel on the page, and PSETs in browser storage), controlspec, clock,
+-- metro, util, tab, include, norns,
 -- and engine commands (sent to a JS stand-in, lib/Engine_<name>.js, if any).
 -- midi, grid, arc, softcut, crow, poll and the rest are silent stubs.
 
@@ -320,8 +321,35 @@ function P:bang() for _, p in ipairs(self.params) do if p.action and p.id and p.
 function P:hide(id) self:lookup_param(id).hidden = true end
 function P:show(id) self:lookup_param(id).hidden = false end
 function P:visible(id) return not self:lookup_param(id).hidden end
-function P:read() end
-function P:write() end
+-- PSETs, kept in the browser's storage (one per numbered slot): every param's value
+function P:write(n, name)
+  n = n or 1
+  local lines = {}
+  for _, p in ipairs(self.params) do
+    if p.id and p.kind ~= "separator" and p.kind ~= "group" and p.kind ~= "trigger" then
+      lines[#lines + 1] = p.id .. "\t" .. tostring(p.value)
+    end
+  end
+  js.storage_set("pset:" .. tostring(n), table.concat(lines, "\n"))
+  print(("pset %s saved (%d params)"):format(tostring(n), #lines))
+  if self.action_write then self.action_write(n, name, n) end
+end
+function P:read(n, silent)
+  n = n or 1
+  local s = js.storage_get("pset:" .. tostring(n))
+  if not s or s == "" then print("pset " .. tostring(n) .. ": empty"); return end
+  local count = 0
+  for line in s:gmatch("[^\n]+") do
+    local id, v = line:match("^([^\t]+)\t(.*)$")
+    if id and self.lookup[id] then
+      local p = self.params[self.lookup[id]]
+      self:set(id, (p.kind == "text" or p.kind == "file") and v or tonumber(v), silent)
+      count = count + 1
+    end
+  end
+  print(("pset %s loaded (%d params)"):format(tostring(n), count))
+  if self.action_read then self.action_read(n, silent, n) end
+end
 function P:default() end
 function P:clear() end
 
@@ -346,6 +374,10 @@ function norns_web.params_json()
   return "[" .. table.concat(out, ",") .. "]"
 end
 function norns_web.param_delta(i, d) P:delta(i, d) end
+function norns_web.pset(action, n)
+  local ok, err = pcall(action == "save" and P.write or P.read, P, n)
+  if not ok then js.error(tostring(err)) end
+end
 
 -- ---------- clock and metro (driven by norns_web.tick) ----------
 local now, tempo = 0, 120

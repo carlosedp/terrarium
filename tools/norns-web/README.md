@@ -66,6 +66,7 @@ value (`params:get("x")`), a statement just runs. Up and down recall history.
 - **Lua 5.4, not 5.3.** A 5.4-only feature works here and fails on the device.
 - **Screen:** no anti-aliasing, line widths or fonts; text is a 3×5 bitmap font in capitals, so
   `screen.text_extents` is only approximately right.
-- **PARAMS:** no PSETs (`params:read`/`write` do nothing), no MIDI mapping, no clock params.
+- **PARAMS:** PSETs live in the browser's storage (8 slots next to the panel, or `params:write(n)` /
+  `params:read(n)` from the REPL), not in files; no MIDI mapping, no clock params.
 - **Audio:** only what the stand-in sketches.
 - `norns.system_cmd` is logged, not run.

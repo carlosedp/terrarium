@@ -84,7 +84,12 @@ soundBtn.addEventListener("click", async () => {
 });
 
 // ---------- boot ----------
-let lua = null, tick = null, encFn = null, keyFn = null, paramsJson = null, paramDelta = null, replFn = null;
+let lua = null, tick = null, encFn = null, keyFn = null, paramsJson = null, paramDelta = null, replFn = null, psetFn = null;
+let storagePrefix = "norns-web:";
+const store = {   // PSETs in localStorage, per script; private windows may refuse it
+  get(k) { try { return localStorage.getItem(storagePrefix + k) || ""; } catch (e) { return ""; } },
+  set(k, v) { try { localStorage.setItem(storagePrefix + k, v); } catch (e) { log("can't save: browser storage is blocked", "error"); } },
+};
 
 async function boot() {
   const [manifest, nornsLua] = await Promise.all([
@@ -93,6 +98,7 @@ async function boot() {
   ]);
   const { name, main, root, files } = manifest;
   document.title = `${name} · norns-web`;
+  storagePrefix = `norns-web:${name}:`;
   $("#script-name").textContent = name;
   $(".brand").textContent = name;
 
@@ -115,11 +121,13 @@ async function boot() {
     log: s => log(String(s)),
     error: s => log(String(s), "error"),
     os_capture: cmd => (engine && engine.os_capture ? engine.os_capture(String(cmd)) : "") || "",
+    storage_get: k => store.get(String(k)),
+    storage_set: (k, v) => store.set(String(k), String(v)),
   });
   await lua.doString('dofile("/norns/norns.lua")');
   await lua.doString(`norns_web.boot(${JSON.stringify(name)}, ${JSON.stringify(main)})`);
   const nw = n => lua.global.get("norns_web")[n];
-  tick = nw("tick"); encFn = nw("enc"); keyFn = nw("key"); paramsJson = nw("params_json"); paramDelta = nw("param_delta"); replFn = nw("repl");
+  tick = nw("tick"); encFn = nw("enc"); keyFn = nw("key"); paramsJson = nw("params_json"); paramDelta = nw("param_delta"); replFn = nw("repl"); psetFn = nw("pset");
   renderParams();
   setInterval(renderParams, 400);
   const t0 = performance.now();
@@ -183,6 +191,15 @@ window.addEventListener("keyup", e => {
   const k = e.key.toLowerCase();
   if (KEYS[k]) { document.querySelector(`.key[data-k="${KEYS[k]}"]`)?.classList.remove("down"); key(KEYS[k], 0); }
 });
+
+// ---------- PSET ----------
+for (const action of ["save", "load"]) {
+  $(`#pset-${action}`).addEventListener("click", () => {
+    if (!psetFn) return;
+    psetFn(action, +$("#pset-slot").value);
+    renderParams();
+  });
+}
 
 // ---------- REPL ----------
 const replEl = $("#repl"), history = [];

@@ -26,6 +26,7 @@ local nb = include("lib/nb/lib/nb")
 local FPS = 15
 local GY = 54 -- the ground line
 
+-- (a part's hold is the state its K3 toggles, kept as a param so presets save it)
 -- the five parts of the scene: brain = weather, voice = ground, color = light and
 -- water, air = sky, drone = the bed under it all (aurora in the sky, roots in the earth)
 local LAYERS = {
@@ -33,8 +34,10 @@ local LAYERS = {
   { id = "voice", name = "voice", mods = { include("lib/scene/meadow"), include("lib/scene/crystals"), include("lib/scene/reeds"),
     include("lib/scene/visitors") } },
   { id = "color", name = "color", mods = { include("lib/scene/pond"), include("lib/scene/fog") } },
-  { id = "air",   name = "air",   mods = { include("lib/scene/clouds"), include("lib/scene/fireflies"), include("lib/scene/mountains") } },
-  { id = "drone", name = "drone", mods = { include("lib/scene/aurora"), include("lib/scene/roots"), include("lib/scene/none") } },
+  { id = "air",   name = "air",   mods = { include("lib/scene/clouds"), include("lib/scene/fireflies"), include("lib/scene/mountains") },
+    hold = { id = "air_freeze", name = "freeze", field = "frozen" } },
+  { id = "drone", name = "drone", mods = { include("lib/scene/aurora"), include("lib/scene/roots"), include("lib/scene/none") },
+    hold = { id = "drone_hush", name = "hush", field = "hushed" } },
 }
 local SLOT_SET = { nil, "voice_set", "color_set", "air_set", "drone_set" }
 local PART = {}
@@ -234,9 +237,17 @@ local function add_params()
       names[#names + 1] = m.name
       count = count + #m.macros * 2 + (m.extra_count or 0) -- each macro and its cv
     end
+    if L.hold then count = count + 1 end
     params:add_group("terrarium_" .. L.id, L.name, count)
     params:add_option(L.id .. "_kind", L.name, names, 1)
     params:set_action(L.id .. "_kind", function() on_kind(i) end)
+    if L.hold then -- freeze (air), hush (drone): K3 flips it
+      params:add_option(L.hold.id, L.hold.name, { "off", "on" }, 1)
+      params:set_action(L.hold.id, function(v)
+        sc[L.hold.field] = v == 2
+        dirty_sound = true
+      end)
+    end
     for _, m in ipairs(L.mods) do
       for k, mac in ipairs(m.macros) do
         local id = m.id .. "_" .. mac.id
@@ -253,6 +264,9 @@ local function add_params()
   -- each nb voice's own params (visitors play them)
   params:add_separator("terrarium_nb", "visitor voices")
   nb:add_player_params()
+
+  -- loading a PSET: nb asks for its voices to be stopped, so no note hangs
+  params.action_read = function() nb:stop_all() end
 end
 
 -- the season turned: show it in the settings without moving home
@@ -557,12 +571,10 @@ function key(n, z)
       Brain.new_phrase(sc.t)
       say("new phrase")
     elseif sel == 4 then
-      sc.frozen = not sc.frozen
-      dirty_sound = true
+      params:set("air_freeze", sc.frozen and 1 or 2)
       say(sc.frozen and "freeze" or "thaw")
     elseif sel == 5 then -- the drone fades out, or rises again
-      sc.hushed = not sc.hushed
-      dirty_sound = true
+      params:set("drone_hush", sc.hushed and 1 or 2)
       say(sc.hushed and "hush" or "rise")
     else
       play({ x = 4 + math.random() * 119 }, true) -- strike

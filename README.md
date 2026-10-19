@@ -67,6 +67,10 @@ brings the drone forward; the sky shows a sun by day and a moon and stars by nig
 **Breath** (a setting, off by default) adds silence: now and then the weather calms for a phrase
 or three, notes rest (the phrase keeps them) and their marks dim, then it breathes in again.
 
+**Presets:** norns saves them for you: in the norns menu, PARAMS > PSET > save / load. A preset
+holds everything, including modules, variants, settings, levels, and whether the air is frozen
+or the drone hushed.
+
 A quick tap of K1 still opens the norns menu. Settings (key, scale, range, length, seasons,
 climate, drift, day, breath),
 every macro, and each module's fixed options (Plaits engine, DX bank, Rings model, Clouds

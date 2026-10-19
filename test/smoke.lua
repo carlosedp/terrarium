@@ -100,6 +100,17 @@ assert(calm < open_air * 0.95, ("breath: %d notes with deep breath, %d without")
 params:set("t_breath", 1); params:set("brain_kind", 1)
 check(("breath (%d notes vs %d)"):format(calm, open_air))
 
+-- freeze and hush are params (so PSETs keep them), and K3 flips them
+turn(1, -5); turn(1, 3); press(3)
+assert(params:get("air_freeze") == 2, "K3 on air didn't set the freeze param")
+params:set("air_freeze", 1); M.run(0.2)
+assert(M.sets.air_set.freeze == 0, "the freeze param didn't thaw the air")
+turn(1, 1); press(3); M.run(0.2)
+assert(params:get("drone_hush") == 2 and M.sets.drone_set.hush == 0, "K3 on the drone didn't hush it through its param")
+params:set("drone_hush", 1); M.run(0.2)
+assert(M.sets.drone_set.hush == 1, "the hush param didn't let the drone rise")
+check("freeze and hush as params")
+
 -- tuning from maiden: tune() remaps a parameter live; levels reach the synths as vol
 params:set("air_kind", 1) -- clouds
 params:set("clouds_size", 1)
