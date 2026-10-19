@@ -56,6 +56,7 @@ use `git clone --recurse-submodules`.
 | hold K2 + E2 | pick the module's variant: Plaits engine (meadow), DX bank (crystals), Rings model (reeds, pond), nb voice (visitors), Clouds mode |
 | K3 | gesture: new phrase (brain), strike (voice, color), freeze (air), hush / rise (drone) |
 | hold K1 | peek at all parts; while held, E2 picks a setting and E3 changes it |
+| hold K1 + K3 | a new terrarium: random modules, varieties and knobs (also PARAMS > randomize the jar) |
 
 **Climate** (a setting, off by default) lets a chaotic attractor slowly move the macros: fronts
 (Lorenz), gusts (Rössler), tides (Thomas) or squalls (Chua). It moves them, the way CV moves a module's knobs: the macro you set is the center and

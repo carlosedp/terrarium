@@ -44,6 +44,11 @@ NornsWeb.engines.X = () => ({
 
 Without a stand-in, engine commands are only logged (tick "engine commands" under the log).
 
+## nb voices
+
+Scripts that use [nb](https://github.com/sixolet/nb) get one built-in voice, "web synth" (a soft
+triangle; `modulate` opens its filter), since the browser has no nb mods or MIDI devices.
+
 ## REPL
 
 The field under the log runs Lua in the script, like the maiden REPL: an expression prints its

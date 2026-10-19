@@ -9,7 +9,8 @@
 -- Covered: screen (no anti-aliasing, a small bitmap font), params (with a
 -- panel on the page, and PSETs in browser storage), controlspec, clock,
 -- metro, util, tab, include, norns,
--- and engine commands (sent to a JS stand-in, lib/Engine_<name>.js, if any).
+-- engine commands (sent to a JS stand-in, lib/Engine_<name>.js, if any), and one
+-- built-in nb voice ("web synth") for scripts that use nb.
 -- midi, grid, arc, softcut, crow, poll and the rest are silent stubs.
 
 local W, H = 128, 64
@@ -512,6 +513,21 @@ grid, arc, hid, crow, softcut, audio, poll, osc, keyboard, gamepad = stub("grid"
   stub("crow"), stub("softcut"), stub("audio"), stub("poll"), stub("osc"), stub("keyboard"), stub("gamepad")
 _menu = { rebuild_params = function() end, redraw = function() end }
 wifi = stub("wifi")
+
+-- ---------- a built-in nb voice ----------
+-- nb (sixolet/nb) finds voices in the global note_players, which mods fill in on a
+-- norns. Here there are no mods, so the page offers one simple voice, played in JS.
+note_players = note_players or {}
+note_players["web synth"] = {
+  add_params = function() end,
+  note_on = function(_, note, vel) js.nb("on", note, vel or 1) end,
+  note_off = function(_, note) js.nb("off", note, 0) end,
+  modulate = function(_, v) js.nb("mod", 0, v) end,
+  describe = function()
+    return { name = "web synth", supports_bend = false, supports_slew = false, modulate_description = "brightness",
+      note_mod_targets = {}, voice_mod_targets = {}, params = {} }
+  end,
+}
 
 -- ---------- the page's entry points ----------
 local function guarded(f, ...)

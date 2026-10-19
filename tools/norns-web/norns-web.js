@@ -83,6 +83,25 @@ soundBtn.addEventListener("click", async () => {
   soundBtn.textContent = on ? "Mute" : "Start sound";
 });
 
+// ---------- the built-in nb voice ("web synth" in norns.lua) ----------
+// a soft triangle per note, its filter opened by modulate, straight to the output
+const nbNotes = new Map();
+let nbBright = 0.5;
+function nbCall(kind, note, v) {
+  if (!audio || audio.ctx.state !== "running") return;
+  const { ctx, out } = audio, t = ctx.currentTime;
+  const release = n => { const s = nbNotes.get(n); if (!s) return; s.g.gain.setTargetAtTime(0, t, 0.15); s.o.stop(t + 1); nbNotes.delete(n); };
+  if (kind === "mod") { nbBright = v; return; }
+  if (kind === "off") { release(note); return; }
+  release(note);
+  const o = ctx.createOscillator(), f = ctx.createBiquadFilter(), g = ctx.createGain();
+  o.type = "triangle"; o.frequency.value = 440 * Math.pow(2, (note - 69) / 12);
+  f.type = "lowpass"; f.frequency.value = o.frequency.value * (1.5 + nbBright * 10);
+  g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.18 * v, t + 0.01);
+  o.connect(f); f.connect(g); g.connect(out); o.start(t);
+  nbNotes.set(note, { o, g });
+}
+
 // ---------- boot ----------
 let lua = null, tick = null, encFn = null, keyFn = null, paramsJson = null, paramDelta = null, replFn = null, psetFn = null;
 let storagePrefix = "norns-web:";
@@ -121,6 +140,7 @@ async function boot() {
     log: s => log(String(s)),
     error: s => log(String(s), "error"),
     os_capture: cmd => (engine && engine.os_capture ? engine.os_capture(String(cmd)) : "") || "",
+    nb: (kind, note, v) => nbCall(String(kind), +note, +v),
     storage_get: k => store.get(String(k)),
     storage_set: (k, v) => store.set(String(k), String(v)),
   });

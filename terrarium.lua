@@ -8,6 +8,7 @@
 -- hold K2 + E2: its variant
 -- K3 gesture
 -- hold K1: peek + settings
+-- hold K1 + K3: a new terrarium
 --
 -- needs mi-UGens
 
@@ -115,10 +116,11 @@ local redraw_metro
 
 -- names on touch: what an encoder just moved, shown for a moment, never resting on screen
 local hud, hud_t = nil, 0 -- { part = i } after E1, { part = i, k = macro } after E2/E3
-local HUD_SEC, HUD_BAR = 1.2, 20
+local HUD_SEC, HUD_PART_SEC, HUD_BAR = 1.2, 2.5, 20 -- after E1 the names stay as long as the dimming
 
 local function say(text) toast, toast_t, hud_t = text, 1.8, 0 end
-local function touched(t) hud, hud_t, toast_t = t, HUD_SEC, 0 end
+local function touched(t) hud, hud_t, toast_t = t, t.k and HUD_SEC or HUD_PART_SEC, 0 end
+local scramble -- a new terrarium (below)
 local function focus() focus_t = 2.5 end
 
 -- ---------- sound ----------
@@ -188,6 +190,8 @@ local function add_params()
   local changed = function() dirty_sound = true end
 
   params:add_separator("terrarium", "terrarium")
+  params:add_trigger("t_randomize", "randomize the jar")
+  params:set_action("t_randomize", function() scramble() end)
   params:add_group("terrarium_levels", "levels", #LEVELS)
   for _, l in ipairs(LEVELS) do
     params:add_control(l[1], l[2], controlspec.new(-60, 6, "lin", 0, l[4], "dB", 0.01))
@@ -278,6 +282,25 @@ Brain.on_season = function()
   params:set("t_scale", Brain.scale)
   seasoning = false
   say(Brain.key_name())
+end
+
+-- ---------- a new terrarium ----------
+-- hold K1 + K3 (or PARAMS > randomize the jar): every part gets a random module,
+-- variety and knobs, kept away from the extremes. Never visitors (they need an
+-- outside voice) or none (silence); the key and the slow settings stay as they are.
+scramble = function()
+  for i, L in ipairs(LAYERS) do
+    local choices = {}
+    for k, m in ipairs(L.mods) do
+      if m.id ~= "visitors" and m.id ~= "none" then choices[#choices + 1] = k end
+    end
+    params:set(L.id .. "_kind", choices[math.random(#choices)])
+    local mod = sc.cur(i)
+    if mod.variant then params:set(mod.variant, math.random(#params:lookup_param(mod.variant).options)) end
+    for _, mac in ipairs(mod.macros) do params:set(mod.id .. "_" .. mac.id, 0.15 + math.random() * 0.7) end
+  end
+  Brain.season_t = sc.t -- the light sweeps along the ground, like a season turning
+  say("a new terrarium")
 end
 
 -- ---------- tuning from maiden ----------
@@ -549,6 +572,10 @@ function key(n, z)
   end
   if n == 1 then
     k1 = z == 1
+    return
+  end
+  if k1 and n == 3 then -- hold K1 + K3: a new terrarium
+    if z == 1 then scramble() end
     return
   end
   if n == 2 then -- swap on release, unless E2 picked a variant while it was held

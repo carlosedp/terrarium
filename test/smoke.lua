@@ -111,6 +111,17 @@ params:set("drone_hush", 1); M.run(0.2)
 assert(M.sets.drone_set.hush == 1, "the hush param didn't let the drone rise")
 check("freeze and hush as params")
 
+-- hold K1 + K3: a new terrarium, never visitors or none; K1 alone still peeks
+local root_before = params:get("t_root")
+for _ = 1, 25 do
+  key(1, 1); key(3, 1); key(3, 0); key(1, 0); M.run(0.3)
+  assert(params:string("voice_kind") ~= "visitors" and params:string("drone_kind") ~= "none", "scramble picked visitors or none")
+end
+assert(params:get("t_root") == root_before, "scramble changed the key")
+params:set("t_randomize", 1); M.run(0.3)
+params:set("voice_kind", 1); params:set("drone_kind", 1)
+check("K1 + K3: a new terrarium")
+
 -- tuning from maiden: tune() remaps a parameter live; levels reach the synths as vol
 params:set("air_kind", 1) -- clouds
 params:set("clouds_size", 1)

@@ -60,6 +60,7 @@ function P:add_separator(id, name) -- ends the open group, like the menu does vi
   if self._group and not self._group.stop then self._group.stop = #self.list end
 end
 function P:add_text(id, name, default) add({ id = id, kind = "text", value = default or "" }) end
+function P:add_trigger(id, name) add({ id = id, kind = "trigger", value = 0 }) end
 function P:add_binary(id, name) add({ id = id, kind = "binary", value = 0 }) end
 function P:hide(id) end
 function P:show(id) end

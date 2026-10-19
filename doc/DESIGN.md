@@ -130,12 +130,16 @@ E1 picks a part, and the others dim for a moment so it's clear which one you're 
   (`map`) that `tune()` changes from maiden while it plays, printing the table to paste back. The
   same mechanism maps MI parameters no macro used to reach (Clouds reverb, Beads time). A levels
   group balances the slots.
+- **A new terrarium on K1 + K3 (October 2026).** For exploring: every part gets a random module,
+  variety and knobs (kept between 0.15 and 0.85). Never visitors, which need an outside voice, or
+  none, which is silence; the key and the slow settings stay, so it's a new landscape in the same
+  place. The light sweeps along the ground as it changes.
 - **Names on touch (October 2026).** The scene shows _how much_ a macro moved but not _what_ it
   is, and the norns has no labels by its knobs, so a first-time player was guessing (the peek view
   answered, but only if you knew to hold K1). Now E2/E3 show the macro's name and a bar (with the
   climate's tick) on their side of the bottom strip, where the encoders are; E1 shows the part,
-  its module and both macro names. No numbers, and it fades after about a second, so nothing
-  rests on screen.
+  its module and both macro names, for as long as the other parts stay dimmed (2.5 s). No numbers,
+  and it fades, so nothing rests on screen.
 - **The browser runs the real Lua (October 2026).** The prototype was a JavaScript copy of the
   script, and every scene change had to be written twice; the copy drifted twice in one session.
   `tools/norns-web` runs the actual Lua in the browser instead (wasmoon, Lua compiled to
