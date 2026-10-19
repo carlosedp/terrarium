@@ -239,6 +239,21 @@ Outputs are centered on each attractor's median and scaled by its 5th/95th perce
 (measured over a long run; the table is in `lib/climate.lua`). Played values are rounded to
 1/200 so slow drift doesn't send the engine a stream of tiny changes.
 
+## Day
+
+The **day** setting (off, 20 min, 1 hour, clock) adds to every macro, like the climate, by
+`depth × light`, where light is +1 at noon and -1 at midnight (dawn at 6:00 for "clock"):
+
+| Part | E2 macro | E3 macro | Meaning |
+| --- | --- | --- | --- |
+| brain | +0.12 | 0 | rain faster by day, slower at night |
+| voice | 0 | +0.12 | brighter by day |
+| color | +0.1 | 0 | clearer by day |
+| air | -0.12 | -0.1 | denser, bigger, longer at night |
+| drone | -0.12 | 0 | comes forward at night |
+
+The depths are in `lib/daylight.lua` (`DEPTH`).
+
 ## Drone
 
 A sustained bed on the key's root (C2 + root) and fifth, gliding (4 s) when the key or a season

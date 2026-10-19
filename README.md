@@ -60,8 +60,12 @@ use `git clone --recurse-submodules`.
 the climate pushes it around it. Each macro has a cv amount in PARAMS; the peek view shows
 where each macro is right now and the attractor's path.
 
+**Day** (a setting, off by default) adds the longest arc: a day and night of 20 minutes, an hour,
+or following the norns' clock. Night slows the weather, darkens the voice, opens up the air and
+brings the drone forward; the sky shows a sun by day and a moon and stars by night.
+
 A quick tap of K1 still opens the norns menu. Settings (key, scale, range, length, seasons,
-climate, drift),
+climate, drift, day),
 every macro, and each module's fixed options (Plaits engine, DX bank, Rings model, Clouds
 mode) are also in PARAMS, so they save with PSETs and can be MIDI-mapped.
 

@@ -77,6 +77,16 @@ assert(M.sets.drone_set.hush == 1, "drone: K3 didn't let it rise")
 params:set("t_root", 3); params:set("drone_kind", 1)
 check("drone (root, key, hush)")
 
+-- the day: it starts at noon, where the voice's second macro sits higher; off puts it back
+params:set("voice_kind", 1); params:set("meadow_timbre", 0.5)
+params:set("t_day", 2); M.run(0.2)
+local noon = M.sets.voice_set.timbre
+params:set("t_day", 1); M.run(0.2)
+assert(noon > M.sets.voice_set.timbre + 0.05, "day: noon didn't brighten the voice")
+for d = 2, #params:lookup_param("t_day").options do params:set("t_day", d); M.run(2) end
+params:set("t_day", 1)
+check("day (offsets, every mode)")
+
 -- tuning from maiden: tune() remaps a parameter live; levels reach the synths as vol
 params:set("air_kind", 1) -- clouds
 params:set("clouds_size", 1)

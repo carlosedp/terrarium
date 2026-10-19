@@ -19,6 +19,7 @@ local Brain = include("lib/brain")
 local installer = include("lib/installer")
 local glass = include("lib/glass")
 local Climate = include("lib/climate")
+local Day = include("lib/daylight")
 local nb = include("lib/nb/lib/nb")
 
 local FPS = 15
@@ -44,8 +45,8 @@ end
 local LEVELS = { { "level_voice", "voice level", 2, 0 }, { "level_color", "color level", 3, 0 },
   { "level_air", "air level", 4, 0 }, { "level_drone", "drone level", 5, -6 } }
 
-local SETTINGS = { "t_root", "t_scale", "t_range", "t_length", "t_seasons", "t_climate", "t_drift" }
-local SETTING_NAMES = { "key", "scale", "range", "length", "seasons", "climate", "drift" }
+local SETTINGS = { "t_root", "t_scale", "t_range", "t_length", "t_seasons", "t_climate", "t_drift", "t_day" }
+local SETTING_NAMES = { "key", "scale", "range", "length", "seasons", "climate", "drift", "day" }
 local LENGTHS = { 4, 8, 12, 16 }
 local SEASONS = { 0, 8, 4, 2 } -- phrases between turns: off, slow, steady, quick
 
@@ -63,14 +64,18 @@ function sc.base(i, k)
   local mod = sc.cur(i)
   return params:get(mod.id .. "_" .. mod.macros[k].id)
 end
--- a macro as it plays: your setting is the center, the climate adds to it like
--- CV. Rounded so a slow drift doesn't flood the engine with tiny changes.
+-- a macro as it plays: your setting is the center; the climate and the day add
+-- to it like CV. Rounded so a slow drift doesn't flood the engine with tiny changes.
+local function moving() return Climate.on() or Day.on() end
 function sc.m(i, k)
   local v = sc.base(i, k)
-  if not Climate.on() then return v end
-  local mod = sc.cur(i)
-  local cv = params:get(mod.id .. "_" .. mod.macros[k].id .. "_cv")
-  v = v + cv * 0.5 * Climate.out[CV_SRC[i][k]]
+  if not moving() then return v end
+  if Climate.on() then
+    local mod = sc.cur(i)
+    local cv = params:get(mod.id .. "_" .. mod.macros[k].id .. "_cv")
+    v = v + cv * 0.5 * Climate.out[CV_SRC[i][k]]
+  end
+  v = v + Day.offset(i, k)
   return H.clamp(math.floor(v * 200 + 0.5) / 200, 0, 1)
 end
 -- a module's map (macro -> engine parameter), evaluated as it plays: a number is
@@ -213,6 +218,11 @@ local function add_params()
     dirty_sound = true
   end)
   params:add_option("t_drift", "drift", Climate.DRIFTS, 2)
+  params:add_option("t_day", "day", Day.NAMES, 1)
+  params:set_action("t_day", function(v)
+    Day.set(v)
+    dirty_sound = true
+  end)
 
   for i, L in ipairs(LAYERS) do
     local names, count = {}, 1
@@ -312,12 +322,12 @@ local function peek_canvas()
       local bx = 76 + (k - 1) * 26
       cv.rect(bx, y, 22, 3, 2)
       cv.rect(bx, y, math.max(1, H.round(sc.base(i, k) * 22)), 3, on and 13 or 6)
-      if Climate.on() then -- where the climate has pushed it right now
+      if moving() then -- where the climate and the day have pushed it right now
         cv.rect(bx + math.min(21, H.round(sc.m(i, k) * 22)), y - 1, 1, 5, on and 15 or 9)
       end
     end
   end
-  for j = 1, #SETTINGS do cv.rect(100 + (j - 1) * 4, 42, 2, 2, j == set_cursor and 13 or 3) end
+  for j = 1, #SETTINGS do cv.rect(96 + (j - 1) * 4, 42, 2, 2, j == set_cursor and 13 or 3) end
   if SETTINGS[set_cursor] == "t_climate" or SETTINGS[set_cursor] == "t_drift" then
     local n = #Climate.trail -- the attractor's recent path (x across, z up), next to its name
     for j, q in ipairs(Climate.trail) do cv.px(82 + q[1] * 16, 46 - q[2] * 3.5, 1 + 12 * j / n) end
@@ -370,7 +380,7 @@ local function hud_canvas()
         local bx = x + w + 4
         cv.rect(bx, 58, HUD_BAR, 2, 2)
         cv.rect(bx, 58, math.max(1, H.round(sc.base(hud.part, k) * HUD_BAR)), 2, 10 * fade)
-        if Climate.on() then
+        if moving() then
           cv.rect(bx + math.min(HUD_BAR - 1, H.round(sc.m(hud.part, k) * HUD_BAR)), 57, 1, 4, 15 * fade)
         end
       end
@@ -409,7 +419,8 @@ function redraw()
   local function dim(i) return (focus_t > 0 and i ~= sel) and (1 - 0.65 * ease) or 1 end
 
   local drone = sc.cur(5)
-  if not drone.in_front then cv.mul = dim(5); drone:draw(cv, sc) end -- drone, furthest back (aurora)
+  cv.mul = 1; Day.draw(cv, sc)                                   -- sun, moon, stars: furthest back
+  if not drone.in_front then cv.mul = dim(5); drone:draw(cv, sc) end -- then the drone (aurora)
   cv.mul = dim(4); sc.cur(4):draw(cv, sc)  -- air (sky)
   cv.mul = dim(1); sc.cur(1):draw(cv, sc)  -- brain (weather)
   cv.mul = 1
@@ -462,7 +473,8 @@ local function tick()
   hud_t = hud_t - dt
   if not installer.active then
     Climate.update(dt, params:get("t_drift"))
-    if Climate.on() then dirty_sound = true end
+    Day.update(dt)
+    if moving() then dirty_sound = true end
     for i = 1, #LAYERS do
       local mod = sc.cur(i)
       if mod.update then mod:update(dt, sc) end

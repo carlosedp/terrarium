@@ -106,6 +106,12 @@ E1 picks a part, and the others dim for a moment so it's clear which one you're 
   tempting for crystals, but the 6-op FM banks are a real, distinct glassy sound. Reeds plays
   Rings with its internal exciter; most Rings models are strings, so they're drawn as reeds that
   vibrate when plucked. Appended after crystals so saved PSETs keep their voice.
+- **A day for the longest arc (October 2026).** Seasons turn the key over phrases and the climate
+  drifts the timbre over minutes, but nothing changed over an hour, which an ambient piece needs.
+  The day is an offset on the macros like the climate (your settings stay the center): night
+  slows, darkens, opens the air and brings the drone forward. "clock" follows the local time so
+  the terrarium's night is yours. The sky shows it with a sun, a moon and stars, and a glow at
+  dawn and dusk.
 - **A drone as a fifth part (October 2026).** Everything else is struck (flowers, plucks, strikes),
   so between notes the piece could fall apart. A sustained bed on the root and fifth holds it
   together, follows the key and glides when a season turns. It got its own part rather than a

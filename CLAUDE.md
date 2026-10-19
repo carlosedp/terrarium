@@ -31,7 +31,7 @@ https://claude.ai/artifact/SBCpfHzewFWLQyez8d2hfZ with `norns-web.js`, `norns.lu
   generating grains.
 - **norns runs Lua 5.3.** No `<const>`/`<close>` or other 5.4+ features (the dev machine has Lua 5.5).
 - **`include()` is `dofile`, not `require`:** every call returns a fresh copy. Stateful modules
-  (`lib/brain.lua`, `lib/canvas.lua`, `lib/glass.lua`, `lib/climate.lua`) are included only in `terrarium.lua`; modules reach them
+  (`lib/brain.lua`, `lib/canvas.lua`, `lib/glass.lua`, `lib/climate.lua`, `lib/daylight.lua`) are included only in `terrarium.lua`; modules reach them
   through the `sc` table passed to every module function.
 - **Lua owns all macro-to-parameter mappings** (each module's `map` table, evaluated by
   `sc.mapped()`, plus its `sound()` for option params and conditional couplings); the
@@ -45,7 +45,7 @@ https://claude.ai/artifact/SBCpfHzewFWLQyez8d2hfZ with `norns-web.js`, `norns.lu
   module sets `voice` to the engine voice it plays (`plaits`, `rings`: `terrarium_voice_<kind>`;
   `none` when it plays elsewhere, like visitors).
 - Add new modules and option entries at the end of their lists, so saved PSETs keep their choices.
-- **Read macros with `sc.m(i, k)`** (the value as it plays, climate included), never with
+- **Read macros with `sc.m(i, k)`** (the value as it plays, climate and day included), never with
   `params:get` directly; `sc.base(i, k)` is the value as set. Each macro also has a `<id>_cv` param.
 - A voice module can define `play(sc, note, vel)` to play notes itself instead of the engine
   (visitors does, through nb). `lib/nb` is a git submodule (sixolet/nb); don't edit it.
