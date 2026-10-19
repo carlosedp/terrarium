@@ -192,7 +192,8 @@
 
     .norns[data-shell="shield"] .screen {
       justify-self: center;
-      width: min(100%, 450px); /* the norns screen's size */
+      width: min(100%, 450px);
+      /* the norns screen's size */
     }
 
     .norns[data-shell="shield"] .enc {
@@ -652,17 +653,6 @@
       text-underline-offset: 3px;
     }
 
-    /* at the top, where people look first: where the script lives, and how to get it */
-    .top-links {
-      font-size: var(--step-0);
-      font-weight: 600;
-      gap: 6px 22px;
-      margin-top: 4px;
-    }
-
-    .top-links a:first-child {
-      color: var(--accent);
-    }
 
     .install {
       margin: 0;
@@ -703,12 +693,7 @@
       <p class="lede">The script's real Lua, running in the browser against a stand-in for norns: the screen, encoders,
         keys, clocks and PARAMS are emulated, and the SuperCollider engine is replaced by rough Web Audio stand-ins.
         Good for checking behavior and the scene; the sound is only a sketch of the real engine.</p>
-      <nav class="links top-links" id="top-links" hidden aria-label="links"></nav>
-      <p class="install" id="install" hidden>
-        <span>Get it for your norns, in maiden:</span>
-        <code id="install-cmd"></code>
-        <button type="button" class="btn small" id="install-copy">copy</button>
-      </p>
+
     </header>
 
     <div class="stage">
@@ -745,7 +730,8 @@
           </div>
         </div>
         <div class="keys">Top key turns an encoder up, bottom key down. Keys can be held: hold <kbd>S</kbd> and press
-          <kbd>U</kbd> for K2 + E2. Encoders also take the scroll wheel and dragging up and down.</div>
+          <kbd>U</kbd> for K2 + E2. Encoders also take the scroll wheel and dragging up and down.
+        </div>
       </div>
 
       <section class="side" aria-label="PARAMS and log">
@@ -780,7 +766,12 @@
       </section>
     </div>
     <footer class="about" id="about-footer" hidden>
-      <nav class="links" id="links" hidden aria-label="links"></nav>
+      <nav class="links" id="links" aria-label="links"></nav>
+      <p class="install" id="install" hidden>
+        <span>Get it for your norns, in maiden:</span>
+        <code id="install-cmd"></code>
+        <button type="button" class="btn small" id="install-copy">copy</button>
+      </p>
     </footer>
   </div>
   <script>window.NORNS_WEB_WASMOON = "vendor/wasmoon/"; /* the build can point this at a CDN */</script>

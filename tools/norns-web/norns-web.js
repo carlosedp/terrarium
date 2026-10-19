@@ -139,13 +139,7 @@ function showAbout(a) {
   if (a.subtitle) { const s = $("#subtitle"); s.textContent = a.subtitle; s.hidden = false; }
   if (a.about) $(".lede").textContent = a.about;
   const link = l => { const el = document.createElement("a"); el.href = l.url; el.textContent = l.label; el.rel = "noopener"; return el; };
-  if (a.links && a.links.length) { // at the top, and again in the footer
-    for (const id of ["#top-links", "#links"]) {
-      const nav = $(id);
-      a.links.forEach(l => nav.append(link(l)));
-      nav.hidden = false;
-    }
-  }
+  if (a.links && a.links.length) $("#links").append(...a.links.map(link)); // in the footer
   if (a.install) { // how to get the script onto a norns, with a copy button
     $("#install-cmd").textContent = a.install;
     $("#install").hidden = false;
@@ -155,7 +149,7 @@ function showAbout(a) {
       setTimeout(() => { $("#install-copy").textContent = "copy"; }, 1500);
     });
   }
-  if (a.footer || (a.links && a.links.length)) {
+  if (a.footer || a.install || (a.links && a.links.length)) {
     const f = $("#about-footer");
     if (a.footer) { const p = document.createElement("p"); p.textContent = a.footer; f.append(p); }
     f.hidden = false;
