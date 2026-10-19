@@ -20,6 +20,7 @@ local installer = include("lib/installer")
 local glass = include("lib/glass")
 local Climate = include("lib/climate")
 local Day = include("lib/daylight")
+local Breath = include("lib/breath")
 local nb = include("lib/nb/lib/nb")
 
 local FPS = 15
@@ -45,8 +46,8 @@ end
 local LEVELS = { { "level_voice", "voice level", 2, 0 }, { "level_color", "color level", 3, 0 },
   { "level_air", "air level", 4, 0 }, { "level_drone", "drone level", 5, -6 } }
 
-local SETTINGS = { "t_root", "t_scale", "t_range", "t_length", "t_seasons", "t_climate", "t_drift", "t_day" }
-local SETTING_NAMES = { "key", "scale", "range", "length", "seasons", "climate", "drift", "day" }
+local SETTINGS = { "t_root", "t_scale", "t_range", "t_length", "t_seasons", "t_climate", "t_drift", "t_day", "t_breath" }
+local SETTING_NAMES = { "key", "scale", "range", "length", "seasons", "climate", "drift", "day", "breath" }
 local LENGTHS = { 4, 8, 12, 16 }
 local SEASONS = { 0, 8, 4, 2 } -- phrases between turns: off, slow, steady, quick
 
@@ -56,7 +57,7 @@ local CV_SRC = { { 3, 1 }, { 1, 2 }, { 2, 3 }, { 3, 1 }, { 2, 3 } }
 local CV_DEFAULT = { { 0, 0.3 }, { 0.4, 0.3 }, { 0.35, 0.25 }, { 0.35, 0.3 }, { 0.3, 0.35 } }
 
 -- shared scene state handed to every module
-local sc = { t = 0, GY = GY, frozen = false, fly_t = 0, brain = Brain, nb = nb }
+local sc = { t = 0, GY = GY, frozen = false, fly_t = 0, brain = Brain, nb = nb, breath = Breath }
 function sc.cur(i) return LAYERS[i].mods[params:get(LAYERS[i].id .. "_kind")] end
 function sc.kind(i) return sc.cur(i).id end
 -- a macro as you set it
@@ -153,6 +154,7 @@ local function brain_loop()
     local m = { sc.m(1, 1), sc.m(1, 2) }
     local dt = mod.wait(m)
     local ev, fresh = Brain.step(m[2], sc.t)
+    if ev and Breath.rest() then ev = nil end -- a calm spell: the note rests, the phrase keeps it
     if mod.lookahead then -- rain: the drop spawned last step lands now
       if pending then play(pending, pending_fresh) end
       pending, pending_fresh = ev, fresh
@@ -218,6 +220,8 @@ local function add_params()
     dirty_sound = true
   end)
   params:add_option("t_drift", "drift", Climate.DRIFTS, 2)
+  params:add_option("t_breath", "breath", Breath.NAMES, 1)
+  params:set_action("t_breath", function(v) Breath.set(v) end)
   params:add_option("t_day", "day", Day.NAMES, 1)
   params:set_action("t_day", function(v)
     Day.set(v)
@@ -252,6 +256,8 @@ local function add_params()
 end
 
 -- the season turned: show it in the settings without moving home
+Brain.on_phrase = Breath.phrase
+
 Brain.on_season = function()
   seasoning = true
   params:set("t_root", Brain.root + 1)
@@ -327,7 +333,7 @@ local function peek_canvas()
       end
     end
   end
-  for j = 1, #SETTINGS do cv.rect(96 + (j - 1) * 4, 42, 2, 2, j == set_cursor and 13 or 3) end
+  for j = 1, #SETTINGS do cv.rect(92 + (j - 1) * 4, 42, 2, 2, j == set_cursor and 13 or 3) end
   if SETTINGS[set_cursor] == "t_climate" or SETTINGS[set_cursor] == "t_drift" then
     local n = #Climate.trail -- the attractor's recent path (x across, z up), next to its name
     for j, q in ipairs(Climate.trail) do cv.px(82 + q[1] * 16, 46 - q[2] * 3.5, 1 + 12 * j / n) end
@@ -474,6 +480,7 @@ local function tick()
   if not installer.active then
     Climate.update(dt, params:get("t_drift"))
     Day.update(dt)
+    Breath.update(dt, Climate.on() and Climate.out[1] or nil)
     if moving() then dirty_sound = true end
     for i = 1, #LAYERS do
       local mod = sc.cur(i)

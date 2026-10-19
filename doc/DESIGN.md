@@ -106,6 +106,12 @@ E1 picks a part, and the others dim for a moment so it's clear which one you're 
   tempting for crystals, but the 6-op FM banks are a real, distinct glassy sound. Reeds plays
   Rings with its internal exciter; most Rings models are strings, so they're drawn as reeds that
   vibrate when plucked. Appended after crystals so saved PSETs keep their voice.
+- **Breath: silence as part of the music (October 2026).** Ambient lives on the space between
+  sounds, but density only changed when you turned rate or change. The breath setting brings calm
+  spells: at a phrase end, sometimes (gentle 20%, deep 35%) the weather calms for one to three
+  phrases and notes rest with a chance up to 55% / 85%, fading in and out over seconds. Resting
+  notes stay in the phrase, so it comes back intact; their marks dim meanwhile. With the climate
+  on, its first output deepens the calm too, so the calm and the gusts line up.
 - **A day for the longest arc (October 2026).** Seasons turn the key over phrases and the climate
   drifts the timbre over minutes, but nothing changed over an hour, which an ambient piece needs.
   The day is an offset on the macros like the climate (your settings stay the center): night

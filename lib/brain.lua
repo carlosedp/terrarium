@@ -79,6 +79,7 @@ function Brain.step(change, t)
   for k = 1, len do if Brain.reg[k] then any = true; break end end
   if not any then Brain.reg[i] = Brain.new_note(t) end -- never let the phrase go silent
   Brain.last_step, Brain.last_step_t = i, t
+  if i == len and Brain.on_phrase then Brain.on_phrase() end
   if i == len and Brain.season_every > 0 then
     Brain.phrases = Brain.phrases + 1
     if Brain.phrases >= Brain.season_every then

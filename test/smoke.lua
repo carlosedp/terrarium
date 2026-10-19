@@ -87,6 +87,15 @@ for d = 2, #params:lookup_param("t_day").options do params:set("t_day", d); M.ru
 params:set("t_day", 1)
 check("day (offsets, every mode)")
 
+-- breath: deep calm spells let notes rest, so fewer play than without
+params:set("brain_kind", 2); params:set("lightning_rate", 0.6); params:set("lightning_change", 0)
+local function notes_in(sec) local before = M.engine_calls.note or 0; M.run(sec); return (M.engine_calls.note or 0) - before end
+params:set("t_breath", 1); local open_air = notes_in(90)
+params:set("t_breath", 3); local calm = notes_in(90)
+assert(calm < open_air * 0.95, ("breath: %d notes with deep breath, %d without"):format(calm, open_air))
+params:set("t_breath", 1); params:set("brain_kind", 1)
+check(("breath (%d notes vs %d)"):format(calm, open_air))
+
 -- tuning from maiden: tune() remaps a parameter live; levels reach the synths as vol
 params:set("air_kind", 1) -- clouds
 params:set("clouds_size", 1)

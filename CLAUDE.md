@@ -31,7 +31,7 @@ https://claude.ai/artifact/SBCpfHzewFWLQyez8d2hfZ with `norns-web.js`, `norns.lu
   generating grains.
 - **norns runs Lua 5.3.** No `<const>`/`<close>` or other 5.4+ features (the dev machine has Lua 5.5).
 - **`include()` is `dofile`, not `require`:** every call returns a fresh copy. Stateful modules
-  (`lib/brain.lua`, `lib/canvas.lua`, `lib/glass.lua`, `lib/climate.lua`, `lib/daylight.lua`) are included only in `terrarium.lua`; modules reach them
+  (`lib/brain.lua`, `lib/canvas.lua`, `lib/glass.lua`, `lib/climate.lua`, `lib/daylight.lua`, `lib/breath.lua`) are included only in `terrarium.lua`; modules reach them
   through the `sc` table passed to every module function.
 - **Lua owns all macro-to-parameter mappings** (each module's `map` table, evaluated by
   `sc.mapped()`, plus its `sound()` for option params and conditional couplings); the

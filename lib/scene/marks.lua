@@ -1,5 +1,6 @@
 -- marks on the ground for every note in the phrase; new or changed notes glow,
--- the step that just played pulses. Shared by the brain modules.
+-- the step that just played pulses, and in a calm spell they dim while they
+-- rest. Shared by the brain modules.
 
 local H = include('lib/helpers')
 
@@ -10,7 +11,7 @@ return function(cv, sc, kind)
     if e then
       local fresh = H.clamp(1 - (t - e.born) / 1.2, 0, 1)
       local hit = (i == B.last_step) and H.clamp(1 - (t - B.last_step_t) / 0.4, 0, 1) or 0
-      local lv = 2 + fresh * 8 + hit * 5
+      local lv = (2 + fresh * 8 + hit * 5) * (1 - sc.breath.calm * 0.6)
       if kind == "rain" then
         cv.line(e.x - 2, GY + 2, e.x + 2, GY + 2, lv)                 -- puddle
       else
