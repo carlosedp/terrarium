@@ -92,6 +92,13 @@ function engineCall(cmd, ...args) {
 // ---------- sound ----------
 let audio = null;
 const soundBtn = $("#sound");
+// the button follows the audio's actual state: a new context starts "suspended" and
+// only turns "running" a moment later, and the browser can change it by itself
+function showSound() {
+  const on = !!audio && audio.ctx.state === "running";
+  soundBtn.setAttribute("aria-pressed", on ? "true" : "false");
+  soundBtn.textContent = on ? "Mute" : "Start sound";
+}
 soundBtn.addEventListener("click", async () => {
   if (!audio) {
     const ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -99,12 +106,12 @@ soundBtn.addEventListener("click", async () => {
     const comp = ctx.createDynamicsCompressor(); comp.threshold.value = -16; comp.ratio.value = 4;
     out.connect(comp); comp.connect(ctx.destination);
     audio = { ctx, out };
+    ctx.onstatechange = showSound;
     if (engine && engine.start) engine.start(ctx, out);
+    await ctx.resume();
   } else if (audio.ctx.state === "running") await audio.ctx.suspend();
   else await audio.ctx.resume();
-  const on = audio.ctx.state === "running";
-  soundBtn.setAttribute("aria-pressed", on ? "true" : "false");
-  soundBtn.textContent = on ? "Mute" : "Start sound";
+  showSound();
 });
 
 // ---------- the built-in nb voice ("web synth" in norns.lua) ----------
