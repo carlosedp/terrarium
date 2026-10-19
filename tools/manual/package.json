@@ -1,0 +1,10 @@
+{
+  "name": "terrarium-manual",
+  "private": true,
+  "description": "Builds the PDF manual from doc/MANUAL.md (see pdf.mjs)",
+  "type": "module",
+  "dependencies": {
+    "marked": "14.1.4",
+    "playwright-core": "1.54.1"
+  }
+}

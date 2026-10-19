@@ -2,3 +2,5 @@ tools/norns-web/dist/
 # the vendored wasmoon is meant to be committed (a global ignore may hide vendor/)
 !tools/norns-web/vendor/
 tools/manual/pgm/
+tools/manual/node_modules/
+tools/manual/.print.html

@@ -99,7 +99,8 @@ function P:string(id)
   if p.formatter then return p.formatter({ get = function() return p.value end }) end
   return tostring(p.value)
 end
-function P:bang() for _, p in ipairs(self.list) do if p.action then p.action(p.value) end end end
+-- like norns, bang skips triggers (a trigger's action is a one-off, like "randomize")
+function P:bang() for _, p in ipairs(self.list) do if p.action and p.kind ~= "trigger" then p.action(p.value) end end end
 function P:check_groups()
   for i, g in ipairs(self.groups or {}) do
     local stop = g.stop or self.groups[i + 1] and self.groups[i + 1].start or #self.list

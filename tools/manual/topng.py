@@ -1,5 +1,5 @@
 # terrarium manual: PGM screen dumps (levels 0..15) -> framed RGB PNGs, like the OLED.
-# The flora_* dumps become one strip (flora.png).
+# The flora_* dumps become one picture of all the flowers (flora.png), in two columns.
 #   python3 tools/manual/topng.py <pgm dir> doc/img
 import os, sys, struct, zlib
 src, dst = sys.argv[1], sys.argv[2]
@@ -40,11 +40,14 @@ for f in sorted(os.listdir(src)):
     if f.endswith(".pgm") and not f.startswith("flora_"):
         png(os.path.join(dst, f[:-4] + ".png"), framed(load(f[:-4])))
 
-# the flowers: the bottom of each flora's screen, stacked
+# the flowers: the bottom of each flora's screen, in two columns
 floras = sorted(f[:-4] for f in os.listdir(src) if f.startswith("flora_"))
+crops = [load(name)[30:64] for name in floras]
+if len(crops) % 2: crops.append([[0] * 128 for _ in range(34)])
 strip = []
-for i, name in enumerate(floras):
-    strip += load(name)[30:64]
-    if i < len(floras) - 1: strip += [[0] * 128] * 2
+for i in range(0, len(crops), 2):
+    left, right = crops[i], crops[i + 1]
+    strip += [left[y] + [0] * 4 + right[y] for y in range(34)]
+    if i + 2 < len(crops): strip += [[0] * 260] * 3
 if floras: png(os.path.join(dst, "flora.png"), framed(strip, k=3, pad=10))
 print(len(os.listdir(dst)), "images")

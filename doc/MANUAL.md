@@ -8,6 +8,8 @@
 
 # terrarium
 
+_generative music in a jar, for monome norns_
+
 ![terrarium: rain falling on a meadow, a pond, clouds and an aurora, inside the glass of a jar](img/hero.png)
 
 <!-- PHOTO: your norns on a table, running terrarium -->
@@ -20,8 +22,9 @@ choose what lives in each part of the jar, and you shape it with two knobs.
 It's built for long, slow listening. Leave it running and it keeps changing: the phrase drifts,
 the key turns with the seasons, the weather comes and goes, and day turns into night.
 
-Inside are the sound modules of Mutable Instruments (Plaits, Rings, Clouds, Beads, Elements and
-more), running on your norns.
+It's a living world of sound, grown from the modules of Mutable Instruments. Plaits blooms in
+the meadow, Rings rings through the pond and the reeds, Clouds and Beads drift through the sky,
+and Elements breathes under the ground. Émilie Gillet's instruments, alive inside your norns.
 
 ---
 
@@ -57,7 +60,8 @@ To install terrarium, type this in the maiden REPL:
 
 If the Mutable Instruments modules aren't on your norns yet, terrarium shows a short message
 instead of the landscape. Press **K3** to download and install them (it needs Wi-Fi), then go to
-**SYSTEM > RESTART** in the norns menu and open terrarium again. You only do this once.
+**SYSTEM > RESTART** in the norns menu and open terrarium again. You only do this once. terrarium installs its own norns build of the mi-UGens, which includes
+Beads.
 
 <!-- PHOTO or screenshot: the installer screen ("terrarium needs mi-UGens") -->
 
@@ -75,23 +79,24 @@ The drops aren't random. The weather keeps a short **phrase** of notes, and play
 over, changing a note now and then. You can see the phrase as small puddles along the ground,
 one for each note. When a note changes, its puddle glows for a moment.
 
-Above it all, a quiet **drone** holds everything together, drawn as an aurora across the top of
+Above it all, a quiet **drone** holds everything together, shown as an aurora across the top of
 the sky.
 
 ---
 
 ## Playing it
 
-The jar has **five parts**, from the weather down to the drone. You pick a part, then shape it.
+Terrarium has **five parts**, from the weather down to the drone. You pick a part, then shape it.
 
-| | |
-| --- | --- |
-| **E1** | choose a part: brain (the weather), voice (the ground), color (light and water), air (the sky) or drone |
-| **E2, E3** | shape that part (each part has two knobs) |
-| **K2** | swap what lives in that part (meadow → crystals → reeds…) |
-| **hold K2 + turn E2** | choose its variety (which flowers, which kind of resonance…) |
-| **K3** | that part's gesture (see below) |
-| **hold K1** | peek at everything, and change the settings |
+|                       |                                                                                                         |
+| --------------------- | ------------------------------------------------------------------------------------------------------- |
+| **E1**                | choose a part: brain (the weather), voice (the ground), color (light and water), air (the sky) or drone |
+| **E2, E3**            | shape that part (each part has two knobs)                                                               |
+| **K2**                | swap what lives in that part (meadow → crystals → reeds…)                                               |
+| **hold K2 + turn E2** | choose its variety (which flowers, which kind of resonance, which NB voice…)                            |
+| **K3**                | that part's gesture (see below)                                                                         |
+| **hold K1**           | peek at everything, and change the settings                                                             |
+| **hold K1 + K3**      | a new terrarium: everything chosen at random                                                            |
 
 ### Choosing a part
 
@@ -99,6 +104,7 @@ Turn **E1**. The part you choose stays bright while the rest of the jar dims for
 its name appears at the top, along with what its two knobs do.
 
 ![After turning E1: "voice meadow" at the top, "harmonics" and "timbre" at the bottom](img/touch_e1.png)
+
 <!-- retake on norns -->
 
 ### Shaping it
@@ -107,6 +113,7 @@ its name appears at the top, along with what its two knobs do.
 the left, E3 on the right, where the knobs are on your norns. The bar shows where it is.
 
 ![Turning E2 on the meadow: "harmonics" with a bar](img/touch_e2.png)
+
 <!-- retake on norns -->
 
 There are no numbers. **The picture is the readout**: turn harmonics and the grass grows taller;
@@ -120,16 +127,17 @@ turn timbre and the flowers open wider. Every knob changes something you can see
 meadow, a different resonance in the pond. Its name appears as you turn.
 
 ![Holding K2 and turning E2 on the meadow: "string"](img/variant.png)
+
 <!-- retake on norns -->
 
 ### Gestures (K3)
 
-| Part | K3 |
-| --- | --- |
-| brain | a new phrase: the weather forgets its notes and starts another |
-| voice, color | strike: play a note right now |
-| air | freeze: hold the sky still (and the jar frosts over); again to thaw |
-| drone | hush: the drone fades out; again to let it rise |
+| Part         | K3                                                                  |
+| ------------ | ------------------------------------------------------------------- |
+| brain        | a new phrase: the weather forgets its notes and starts another      |
+| voice, color | strike: play a note right now                                       |
+| air          | freeze: hold the sky still (and the jar frosts over); again to thaw |
+| drone        | hush: the drone fades out; again to let it rise                     |
 
 ### Peeking (hold K1)
 
@@ -138,9 +146,18 @@ the settings: while K1 is held, **E2** chooses a setting and **E3** changes it. 
 back in the landscape.
 
 ![Holding K1: the five parts with their bars, and the key setting at the bottom](img/peek.png)
+
 <!-- retake on norns -->
 
-A quick *tap* of K1 opens the norns menu, as usual. Terrarium only uses K1 while it's held.
+A quick _tap_ of K1 opens the norns menu, as usual. Terrarium only uses K1 while it's held.
+
+### A new terrarium (hold K1 + K3)
+
+Hold **K1** and press **K3**, and the jar fills with something new: every part gets a random
+module, variety and knob settings, and a light sweeps along the ground as it changes. The key
+and your slow settings stay as they are, so it's a new landscape in the same place. Press again
+until something catches your ear, then shape it from there. (It never picks visitors or an empty
+drone. It's also in **PARAMS > randomize the jar**.)
 
 ---
 
@@ -209,7 +226,7 @@ Each note plucks a reed by the water, and you can see it vibrate like a string.
 
 - **E2 structure**: taller, bent reeds; stranger, more bell-like resonances.
 - **E3 brightness**: the reed heads light up; a brighter tone.
-- **Varieties:** six kinds of resonance. In *sympathetic strings*, the reeds next to the one you
+- **Varieties:** six kinds of resonance. In _sympathetic strings_, the reeds next to the one you
   pluck start ringing too.
 
 #### visitors
@@ -272,7 +289,7 @@ Clouds made of tiny grains of sound drift across the sky; they flicker when a no
 
 ![Fireflies with glowing trails](img/fireflies.png)
 
-Each grain of sound is a firefly. The ones nearest a note light up.
+Each grain of sound is a firefly, like little beads in the air. The ones nearest a note light up.
 
 - **E2 density**: more fireflies.
 - **E3 glow**: longer trails, longer grains.
@@ -323,16 +340,16 @@ No drone at all, for when you'd rather have silence between the notes.
 Hold **K1**; **E2** chooses a setting, **E3** changes it. They're all in **PARAMS > settings**
 too.
 
-| Setting | What it does |
-| --- | --- |
+| Setting            | What it does                                                                |
+| ------------------ | --------------------------------------------------------------------------- |
 | **key**, **scale** | the notes the landscape plays: major, minor, dorian, pentatonic, hirajoshi… |
-| **range** | how many octaves the land spans, from left to right (1 to 3) |
-| **length** | how many notes are in the phrase (4 to 16) |
-| **seasons** | lets the key change by itself, slowly |
-| **climate** | slow, ever-changing movement of all the knobs |
-| **drift** | how fast the climate moves |
-| **day** | a day and night |
-| **breath** | moments of calm |
+| **range**          | how many octaves the land spans, from left to right (1 to 3)                |
+| **length**         | how many notes are in the phrase (4 to 16)                                  |
+| **seasons**        | lets the key change by itself, slowly                                       |
+| **climate**        | slow, ever-changing movement of all the knobs                               |
+| **drift**          | how fast the climate moves                                                  |
+| **day**            | a day and night                                                             |
+| **breath**         | moments of calm                                                             |
 
 ### seasons
 
@@ -341,7 +358,7 @@ music shifts gently instead of jumping. The key you set is home: the seasons wan
 keep finding their way back. A light sweeps along the ground when a season turns, and the
 aurora flares.
 
-*slow*, *steady* and *quick* turn the season every 8, 4 or 2 phrases.
+_slow_, _steady_ and _quick_ turn the season every 8, 4 or 2 phrases.
 
 ### climate and drift
 
@@ -356,12 +373,13 @@ There are four climates, each with its own way of moving:
 - **tides**: slow and rolling, like a tide coming in and out
 - **squalls**: flips abruptly between two moods
 
-**drift** sets how fast: *slow* (about 40 seconds per cycle), *medium* or *fast*.
+**drift** sets how fast: _slow_ (about 40 seconds per cycle), _medium_ or _fast_.
 
 When the climate is on, the peek view shows a small tick on each bar, where the climate has
 pushed that knob right now. On the climate setting, you can see the climate's path.
 
 ![The peek view with the climate on: ticks on the bars, and the climate's path at the bottom](img/peek_climate.png)
+
 <!-- retake on norns -->
 
 ### day
@@ -370,23 +388,23 @@ A day and a night pass in the jar: in **20 min**, **1 hour**, or following your 
 so that night in the jar is night outside. By night the weather slows, the sound darkens, the
 sky opens up and the drone comes forward. By day, the reverse.
 
-| | |
-| --- | --- |
-| ![Dawn: the sun low on the horizon](img/day_dawn.png) | ![Noon: the sun high in the sky](img/day_noon.png) |
+|                                                                   |                                                        |
+| ----------------------------------------------------------------- | ------------------------------------------------------ |
+| ![Dawn: the sun low on the horizon](img/day_dawn.png)             | ![Noon: the sun high in the sky](img/day_noon.png)     |
 | ![Dusk: the sun setting, a glow on the horizon](img/day_dusk.png) | ![Night: a crescent moon and stars](img/day_night.png) |
 
 ### breath
 
 Music needs space. With breath on, the weather sometimes calms for a phrase or three: notes
 rest, their puddles dim, and then it breathes in again. The phrase isn't lost; the notes come
-back when the calm passes. *gentle* calms now and then; *deep* calms more often, and deeper.
+back when the calm passes. _gentle_ calms now and then; _deep_ calms more often, and deeper.
 
 ---
 
 ## Saving what you like
 
 norns keeps presets for you. In the norns menu (a quick tap of K1), go to **PARAMS**, and
-**PSET** is at the top: *save*, *load*, *delete*. A preset remembers everything: which modules
+**PSET** is at the top: _save_, _load_, _delete_. A preset remembers everything: which modules
 live in each part, their varieties, every knob, the settings, and even whether the air is frozen
 or the drone hushed.
 
@@ -394,16 +412,17 @@ or the drone hushed.
 
 ## A few places to start
 
-These are starting points. Load one, then let it grow.
+These are starting points. Set one up, then let it grow, or hold **K1 + K3** until something
+surprises you.
 
 **Rain on the meadow** (how terrarium opens): rain, meadow, pond, clouds, aurora. Just listen.
-Then try *seasons: slow*.
+Then try _seasons: slow_.
 
 **Night pond**: lightning with a low rate, reeds, pond with low damping (long ringing), mountains
-with a big size, roots. Settings: *day: clock*, *breath: deep*. Best late at night.
+with a big size, roots. Settings: _day: clock_, _breath: deep_. Best late at night.
 
 **Glass garden**: rain with a little change, crystals, fog with some shimmer, fireflies with long
-glow, aurora. *climate: tides*, *drift: slow*.
+glow, aurora. _climate: tides_, _drift: slow_.
 
 **Still air**: anything you like, then freeze the clouds (K3 on air) and let the frost come in.
 Swap the voice while the sky stays frozen.
@@ -434,9 +453,9 @@ synth before opening terrarium.
 so the pond, the fog and the sky don't change it.
 
 **Crackles or dropouts.** Some combinations are heavier than others: reeds with the pond and
-roots is the heaviest. Swap one of them, or choose *none* for the drone.
+roots is the heaviest. Swap one of them, or choose _none_ for the drone.
 
-**I tapped K1 and the norns menu opened.** Terrarium only uses K1 while it's *held*. A tap is
+**I tapped K1 and the norns menu opened.** Terrarium only uses K1 while it's _held_. A tap is
 the norns menu, as usual.
 
 ---
@@ -467,21 +486,21 @@ output
 
 ### What's inside
 
-| Part | Module | Mutable Instruments module | E2 | E3 |
-| --- | --- | --- | --- | --- |
-| brain | rain | (norns clock) | rate | change |
-| brain | lightning | (random timing) | rate | change |
-| voice | meadow | Plaits (12 melodic engines) | harmonics | timbre |
-| voice | crystals | Plaits (6-op FM banks) | ratio | index |
-| voice | reeds | Rings (internal exciter) | structure | brightness |
-| voice | visitors | any nb voice | modulate | length |
-| color | pond | Rings | structure | damping |
-| color | fog | Ripples | clarity | shimmer |
-| air | clouds | Clouds | density | size |
-| air | fireflies | Beads | density | glow |
-| air | mountains | MiVerb (Clouds' reverb) | size | echo |
-| drone | aurora | Plaits ×2 (root and fifth) | glow | motion |
-| drone | roots | Elements | breath | depth |
+| Part  | Module    | Mutable Instruments module  | E2        | E3         | hold K2 + E2     |
+| ----- | --------- | --------------------------- | --------- | ---------- | ---------------- |
+| brain | rain      | (norns clock)               | rate      | change     | —                |
+| brain | lightning | (random timing)             | rate      | change     | —                |
+| voice | meadow    | Plaits (12 melodic engines) | harmonics | timbre     | Plaits engine    |
+| voice | crystals  | Plaits (6-op FM banks)      | ratio     | index      | FM bank          |
+| voice | reeds     | Rings (internal exciter)    | structure | brightness | resonator type   |
+| voice | visitors  | any nb voice                | modulate  | length     | nb voice         |
+| color | pond      | Rings                       | structure | damping    | resonator type   |
+| color | fog       | Ripples                     | clarity   | shimmer    | —                |
+| air   | clouds    | Clouds                      | density   | size       | mode             |
+| air   | fireflies | Beads                       | density   | glow       | —                |
+| air   | mountains | MiVerb (Clouds' reverb)     | size      | echo       | —                |
+| drone | aurora    | Plaits ×2 (root and fifth)  | glow      | motion     | Plaits engine    |
+| drone | roots     | Elements                    | breath    | depth      | resonator type   |
 
 The phrase works like a Turing Machine: a loop of notes and rests where **change** sets the
 chance that a step mutates as it plays. **Seasons** move between keys that share all but one or
@@ -508,5 +527,6 @@ and tuning notes are in [SOUND.md](SOUND.md); the design decisions are in [DESIG
 ### In a browser
 
 terrarium can run in a web browser for development: `make web` in the repository, then open
-http://localhost:8800/. It's the same Lua code with rough sound stand-ins, not the Mutable
-Instruments modules. See [tools/norns-web](../tools/norns-web/README.md).
+<http://localhost:8800/>. It's the same Lua code with rough sound stand-ins, not the Mutable
+Instruments modules. In the browser, visitors come with one simple built-in voice ("web synth").
+See [tools/norns-web](../tools/norns-web/README.md).
