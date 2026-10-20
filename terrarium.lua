@@ -281,7 +281,7 @@ local function add_params()
     Brain.length = LENGTHS[v]
     Brain.pos = Brain.pos % Brain.length
   end)
-  params:add_option("t_seasons", "seasons", { "off", "slow", "steady", "quick" }, 1)
+  params:add_option("t_seasons", "seasons", { "off", "slow", "steady", "quick" }, 2)
   params:set_action("t_seasons", function(v)
     Brain.season_every = SEASONS[v]
     Brain.phrases = 0
@@ -298,7 +298,7 @@ local function add_params()
     if EROSION[v] then for k, x in pairs(EROSION[v]) do engine.tape_set(k, x) end end
     engine.tape_set("on", EROSION[v] and 1 or 0)
   end)
-  params:add_option("t_breath", "breath", Breath.NAMES, 1)
+  params:add_option("t_breath", "breath", Breath.NAMES, 2)
   params:set_action("t_breath", function(v) Breath.set(v) end)
   params:add_option("t_day", "day", Day.NAMES, 1)
   params:set_action("t_day", function(v)

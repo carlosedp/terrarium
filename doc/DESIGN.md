@@ -65,13 +65,15 @@ E1 picks a part, and the others dim for a moment so it's clear which one you're 
 - **Clouds is Clouds, Beads got its own scene (fireflies).** Both are granular, so they needed
   distinct pictures.
 - **The key never changes by itself unless you ask.** An early version picked random keys; that
-  felt like interruptions. Key, scale, range and phrase length are settings (K1 + E2/E3, PARAMS,
+  felt like interruptions. (Seasons, below, now start on _slow_: a close neighbor every 8
+  phrases, always finding its way home, which reads as evolving, not interrupting. _off_ keeps
+  this rule.) Key, scale, range and phrase length are settings (K1 + E2/E3, PARAMS,
   grid later).
 - **Turing Machine phrase instead of a déjà vu toggle.** The brain keeps a register of notes and
   rests. `change` (E3) is the chance per step that a note is replaced (75%) or dropped (25%), or a
   rest filled, always within the key. At 0 the phrase loops forever, which replaced the toggle.
   The phrase is drawn as marks on the ground so you can watch it evolve.
-- **Seasons (opt-in) instead of random keys.** At a phrase boundary every 8/4/2 phrases, the key
+- **Seasons instead of random keys.** At a phrase boundary every 8/4/2 phrases, the key
   moves to a close neighbor: a one-note swap (dorian → minor, C → G) or a pentatonic gaining or
   losing two notes. It can't stray more than 3 notes from home (the key you set) and heads back
   toward home 40% of the time. Named "Seasons" because it turns gradually and comes back around.
@@ -97,8 +99,7 @@ E1 picks a part, and the others dim for a moment so it's clear which one you're 
   setting. A chaotic attractor instead of LFOs because its outputs are linked (the parts drift
   together, like weather) and never quite repeat. Four attractors with different characters,
   named on screen for how they move (fronts, gusts, tides, squalls; not "seasons", which is
-  taken), one drift setting scaled per attractor so slow/medium/fast feel alike. Off by default, like
-  seasons. The params stay plain, so norns mods and MIDI still work on top.
+  taken), one drift setting scaled per attractor so slow/medium/fast feel alike. Off by default. The params stay plain, so norns mods and MIDI still work on top.
 - **One gesture for variants (October 2026).** The Plaits engine, DX bank, Rings model and Clouds
   mode used to be PARAMS-only. Hold K2 + E2 reaches all of them the same way, keeps harmonics and
   timbre on E2/E3 for every engine, and leaves K3 free for its gesture. The meadow's flora list
@@ -222,6 +223,10 @@ E1 picks a part, and the others dim for a moment so it's clear which one you're 
   corners. Stillness rather than a longer reverb: snow deadens sound. Condensation freezing on
   the glass was considered, but beads fade within seconds of the rain stopping, long before
   the cold builds.
+- **The plain launch evolves (October 2026).** Left running without touching a setting, the jar
+  played the same key and the same density for hours: seasons, breath and climate all started
+  off. Seasons now start on _slow_ and breath on _gentle_, so the default already turns and
+  pauses. Climate stays off: it moves every macro, which is a bigger thing to find on by surprise.
 
 ## Open questions
 

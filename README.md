@@ -26,7 +26,7 @@ frosts it over.
 Every note is a place: where it lands across the screen sets its pitch in the current key
 and scale. The weather keeps a Turing Machine-style phrase, and each note leaves a mark on the
 ground. **Change** sets how often notes are replaced, dropped to a rest or added back.
-**Seasons** can let the key drift between close neighbors and find its way home.
+**Seasons** (slow by default) let the key drift between close neighbors and find its way home.
 
 > **Status: v0.1, untested on hardware.** The Lua side runs headless against a mocked norns
 > (see [Development](#development)); the engine and the sound mappings still need a real norns.
@@ -79,7 +79,7 @@ glues the notes, the hum and the sky together; dust settles on the glass as it w
 snow cover muffles the soil, more the longer it snows; with the day on, the sun thaws it (the
 meltwater drips a few soft notes) and the night lets it build up again.
 
-**Breath** (a setting, off by default) adds silence: now and then the weather calms for a phrase
+**Breath** (a setting, gentle by default) adds silence: now and then the weather calms for a phrase
 or three, notes rest (the phrase keeps them) and their marks dim, then it breathes in again.
 
 **Presets:** norns saves them for you: in the norns menu, PARAMS > PSET > save / load. A preset

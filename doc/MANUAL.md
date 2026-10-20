@@ -415,7 +415,8 @@ music shifts gently instead of jumping. The key you set is home: the seasons wan
 keep finding their way back. A light sweeps along the ground when a season turns, and the
 aurora flares.
 
-_slow_, _steady_ and _quick_ turn the season every 8, 4 or 2 phrases.
+_slow_ (how terrarium starts), _steady_ and _quick_ turn the season every 8, 4 or 2 phrases;
+_off_ keeps the key where you set it.
 
 ### climate and drift
 
@@ -455,7 +456,8 @@ by day.
 
 Music needs space. With breath on, the weather sometimes calms for a phrase or three: notes
 rest, their puddles dim, and then it breathes in again. The phrase isn't lost; the notes come
-back when the calm passes. _gentle_ calms now and then; _deep_ calms more often, and deeper.
+back when the calm passes. _gentle_ (how terrarium starts) calms now and then; _deep_ calms more
+often, and deeper; _off_ never pauses.
 
 ### erosion
 
@@ -484,8 +486,8 @@ or the hum hushed.
 These are starting points. Set one up, then let it grow, or hold **K1 + K3** until something
 surprises you.
 
-**Rain on the meadow** (how terrarium opens): rain, meadow, pond, clouds, aurora. Just listen.
-Then try _seasons: slow_.
+**Rain on the meadow** (how terrarium opens): rain, meadow, pond, clouds, aurora. Just listen:
+the key turns now and then, and the weather pauses to breathe. Then try _day: 1 hour_.
 
 **Night pond**: lightning with a low rate, reeds, pond with low damping (long ringing), mountains
 with a big size, roots. Settings: _day: clock_, _breath: deep_. Best late at night.
