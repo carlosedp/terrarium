@@ -152,12 +152,34 @@ assert(most_duck > 0.2 and most_lift > 0.2, "drone didn't answer the notes")
 params:set("rain_change", 0.2); params:set("rain_rate", 0.45)
 check(("drone follows the weather (%d intervals; duck %.2f, lift %.2f)"):format(moves, most_duck, most_lift))
 
--- patina: on by default (faint), off frees it, every step reaches the engine
+-- erosion: on by default (faint), off frees it, every step reaches the engine
 local calls = M.engine_calls.tape_set or 0
-for p = 1, #params:lookup_param("t_patina").options do params:set("t_patina", p); M.run(0.3) end
+for p = 1, #params:lookup_param("t_erosion").options do params:set("t_erosion", p); M.run(0.3) end
 assert((M.engine_calls.tape_set or 0) > calls + 6, "tape settings didn't reach the engine")
-params:set("t_patina", 2)
-check("patina (every step)")
+params:set("t_erosion", 2)
+check("erosion (every step)")
+
+-- snow: flakes land loosely, settle into a cover that muffles the voice, the day thaws it
+-- (meltwater drips), and it thaws away under other weather
+params:set("voice_kind", 1); params:set("meadow_timbre", 0.5); params:set("t_day", 1)
+params:set("brain_kind", 3); params:set("snow_rate", 0.8); params:set("snow_change", 0)
+M.run(0.5)
+local clear_timbre = M.sets.voice_set.timbre
+local before = M.engine_calls.note or 0
+M.run(90)
+local snowed = M.sets.voice_set.timbre
+assert((M.engine_calls.note or 0) > before + 20, "snow: too few flakes landed")
+assert(snowed < clear_timbre - 0.05, ("snow: the cover didn't muffle the voice (%.2f -> %.2f)"):format(clear_timbre, snowed))
+params:set("snow_change", 1); M.run(30) -- loose, gusty: still plays
+params:set("snow_rate", 0.1); params:set("t_day", 4) -- the day on the (mocked) clock: noon
+before = M.engine_calls.note or 0
+M.run(120)
+assert(M.sets.voice_set.timbre > snowed + 0.02, "snow: the day didn't thaw the cover")
+local thaw_notes = (M.engine_calls.note or 0) - before
+params:set("t_day", 1); params:set("brain_kind", 1); M.run(120)
+assert(math.abs(M.sets.voice_set.timbre - clear_timbre) < 0.02, "snow: the cover didn't thaw away under rain")
+params:set("snow_rate", 0.5); params:set("snow_change", 0.3)
+check(("snow (timbre %.2f under cover, %d notes in the thaw)"):format(snowed, thaw_notes))
 
 -- tuning from maiden: tune() remaps a parameter live; levels reach the synths as vol
 params:set("air_kind", 1) -- clouds

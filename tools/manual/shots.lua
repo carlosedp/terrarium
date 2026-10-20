@@ -94,4 +94,8 @@ set({ t_day = 2, aurora_glow = 0.5 })
 for _, ph in ipairs({ { "dawn", 0.02 }, { "noon", 0.2 }, { "dusk", 0.485 }, { "night", 0.72 } }) do
   Day.phase = ph[2]; M.run(1.5); Day.phase = ph[2]; M.run(0.1); dump("day_" .. ph[1])
 end
+
+-- snow, last so the shots above keep their random sequence: let it settle for a while first
+set({ t_day = 1, brain_kind = 3, snow_rate = 0.85, snow_change = 0.4, voice_kind = 1, meadow_harmonics = 0.35 })
+M.run(150); pick("snow", 4, 0, 53)
 os.exit(0)

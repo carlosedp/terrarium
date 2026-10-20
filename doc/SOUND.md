@@ -15,6 +15,8 @@ Conventions:
 - **Coupled** values come from _another_ slot. That's where the "it just sounds good" comes from,
   so keep the list short and deliberate.
 - Signal flow: `brain → voice → color → air → out`. Visitors (nb voices) play outside it, dry.
+- Parts go by their code names here (brain, voice, color, air, drone), as in param ids and
+  `tune()`. On screen they're weather, soil, water, air and hum.
 
 ## Tuning on the norns
 
@@ -38,7 +40,7 @@ Any control of the module's synth can be mapped, including ones no macro drives 
 `lofi`, `spread`, `rvb`; Beads `time`, `pitch`, `shape`, `rvb`; MiVerb `hp`, `diff`; Rings `pos`.
 A key the synth doesn't have does nothing. norns-web has the same REPL under its log.
 
-**Levels:** PARAMS > levels has voice, color and air levels in dB, sent to each slot's synth as
+**Levels:** PARAMS > levels has soil, water, air and hum levels in dB, sent to each slot's synth as
 `vol` (it scales the slot's whole output). Balance on the device, then move the good values into
 the code.
 
@@ -55,15 +57,38 @@ the code.
 
 ## Brain (no audio)
 
-| Macro     | Drives                                                                                                                                                                                    | Notes                                   |
-| --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
-| E2 rate   | event rate: rain from a drop every 4 beats to 4 per beat, a drop a beat in the middle (clocked; 0.5→8 Hz at 120 BPM), lightning 0.3→6 Hz average (random, with occasional double strikes) | stepped (rain), exponential (lightning) |
-| E3 change | chance per step that the phrase mutates: `change²`                                                                                                                                        | 0 = loop forever                        |
-| K3        | new phrase                                                                                                                                                                                |                                         |
-| Settings  | key, scale, range (1–3 octaves), length (4–16), seasons                                                                                                                                   | also in PARAMS; grid later              |
+| Macro     | Drives                                                                                                                                                                                                                              | Notes                                         |
+| --------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| E2 rate   | event rate: rain from a drop every 4 beats to 4 per beat, a drop a beat in the middle (clocked; 0.5→8 Hz at 120 BPM), lightning 0.3→6 Hz average (random, with occasional double strikes), snow a flake every 8 beats to one a beat | stepped (rain, snow), exponential (lightning) |
+| E3 change | chance per step that the phrase mutates: `change²`; snow: also how far a flake drifts off the beat (it lands 1 → 1 + 1.5 × change × random steps after it leaves)                                                                   | 0 = loop forever                              |
+| K3        | new phrase                                                                                                                                                                                                                          |                                               |
+| Settings  | key, scale, range (1–3 octaves), length (4–16), seasons                                                                                                                                                                             | also in PARAMS; grid later                    |
 
 Each note sends `pitch` (MIDI note) and a velocity-like `accent` (0..1, from the brain: e.g.
 lightning double strikes and new notes accent higher).
+
+### Snow cover
+
+Snow (`lib/scene/snow.lua`) keeps `sc.cover`, 0..1, the snow on the ground. Each landing flake
+adds `0.025 × (1 − cover)`; it thaws by `exp(−dt / 90 s)`, times `4 ^ light` with the day on (×4
+at noon, ÷4 at midnight). Under other weather it thaws over ~20 s (`exp(−dt / 20 s)`). Measured
+in the headless test at 120 BPM: around 0.5 with no day at the default rate, about 0.25 at noon,
+0.85 at midnight.
+
+The cover muffles the voice. Each key in the voice module's `muffle` table is multiplied by
+`1 − amount × cover` (cover rounded to 1/100, results to 1/200), and every note's velocity by
+`1 − 0.35 × cover`:
+
+| Voice    | `muffle` at full cover                |
+| -------- | ------------------------------------- |
+| meadow   | `timbre` 0.5, `decay` 0.45, `lpg` 0.7 |
+| crystals | `timbre` 0.5, `decay` 0.45, `lpg` 0.7 |
+| reeds    | `bright` 0.55, `damp` 0.4             |
+| visitors | none (velocity only)                  |
+
+When the cover shrinks (checked every 4 s), every 0.04 that melted becomes a drip: a note from
+the phrase at velocity 0.35, skipped in a deep calm (breath). Over a 20-minute day that's about
+twenty drips, most of them between dawn and noon.
 
 ## Voice
 
@@ -261,32 +286,31 @@ The **day** setting (off, 20 min, 1 hour, clock) adds to every macro, like the c
 
 The depths are in `lib/daylight.lua` (`DEPTH`).
 
-## Patina
+## Erosion
 
-The **patina** setting (off, faint, worn, aged, ancient; faint by default) runs `terrarium_tape`
+The **erosion** setting (off, faint, worn, deep, ancient; faint by default) runs `terrarium_tape`
 last, on the whole engine output (ReplaceOut on the main bus), so voice, color, air and drone
 share it. Plain SuperCollider UGens, no mi-UGens. Off frees the synth (it fades back to dry over
 a second).
 
-| Amount | What it does | faint | worn | aged | ancient |
-| --- | --- | --- | --- | --- | --- |
-| `wow` | slow wandering pitch drift: a 10 ms delay moved ±3 ms × wow by LFNoise2 (~0.5–0.9 Hz) | 0.3 | 0.5 | 0.7 | 1 |
-| `flutter` | fast fine wobble: ±0.3 ms × flutter at ~6.3 Hz | 0.25 | 0.4 | 0.55 | 0.8 |
-| `crackle` | dust pops: Dust at 8–10 × crackle per second, short noise bursts | 0.25 | 0.4 | 0.6 | 0.9 |
-| `hiss` | pink noise above 2.5 kHz, 0.012 × hiss | 0.15 | 0.25 | 0.35 | 0.5 |
-| `tone` | lowpass from 19 kHz down to 7 kHz × tone | 0.25 | 0.38 | 0.5 | 0.7 |
-| `drive` | tanh saturation, gain-compensated (unity for quiet signals) | 0.15 | 0.25 | 0.35 | 0.5 |
+| Amount    | What it does                                                                          | faint | worn | deep | ancient |
+| --------- | ------------------------------------------------------------------------------------- | ----- | ---- | ---- | ------- |
+| `wow`     | slow wandering pitch drift: a 10 ms delay moved ±3 ms × wow by LFNoise2 (~0.5–0.9 Hz) | 0.3   | 0.5  | 0.7  | 1       |
+| `flutter` | fast fine wobble: ±0.3 ms × flutter at ~6.3 Hz                                        | 0.25  | 0.4  | 0.55 | 0.8     |
+| `crackle` | dust pops: Dust at 8–10 × crackle per second, short noise bursts                      | 0.25  | 0.4  | 0.6  | 0.9     |
+| `hiss`    | pink noise above 2.5 kHz, 0.012 × hiss                                                | 0.15  | 0.25 | 0.35 | 0.5     |
+| `tone`    | lowpass from 19 kHz down to 7 kHz × tone                                              | 0.25  | 0.38 | 0.5  | 0.7     |
+| `drive`   | tanh saturation, gain-compensated (unity for quiet signals)                           | 0.15  | 0.25 | 0.35 | 0.5     |
 
-The amounts are the `PATINA` table in `terrarium.lua`. Visitors (nb) play outside the engine, so
-the patina doesn't reach them.
+The amounts are the `EROSION` table in `terrarium.lua`. Visitors (nb) play outside the engine, so
+the erosion doesn't reach them.
 
 ## Drone
 
 A sustained bed on the key's root (C3 + root) and fifth, gliding (4 s) when the key or a season
 turns. (It started an octave lower, at C2: that sat below small speakers and nearly vanished.) It plays into the air slot's input, so it shares the sky's space but skips color.
 K3 hushes it and lets it rise (`hush`, glided over ~3 s). The **none** module turns it off for
-good: the engine frees the drone synth, so it costs no CPU. Its level is PARAMS > levels > drone
-(-12 dB by default).
+good: the engine frees the drone synth, so it costs no CPU. Its level is PARAMS > levels > hum level.
 
 ### Aurora → 2x `MiPlaits` (root and fifth, no trigger)
 
@@ -342,6 +366,9 @@ Worst case is 2–3 Plaits + Rings + Beads, plus the drone: 2 more Plaits (auror
 
 - Climate defaults: which macros should move out of the box, and how far. Brain rate is left at
   0 so rain doesn't jump between clock divisions.
+- Snow: how fast the cover builds and thaws, and how deep the muffle goes; a hush you notice
+  after a few minutes, not a filter closing. The drips might want a quieter velocity or fewer
+  of them.
 
 1. Default Plaits engine for the meadow. Modal (12) is the safe pick, string machine (22) the lush one.
 2. Should the voice → Rings feed be audio (voice excites Rings) or trigger-only (Rings uses its

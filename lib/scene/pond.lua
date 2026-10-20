@@ -37,8 +37,9 @@ function pond:sound(sc)
   return s
 end
 
-function pond:on_note(x)
-  table.insert(self.rings, { x = x, t = 0 })
+-- a snowflake barely stirs the water: smaller, fainter rings than a raindrop or a strike
+function pond:on_note(x, sc)
+  table.insert(self.rings, { x = x, t = 0, size = sc.kind(1) == "snow" and 0.4 or 1 })
   if #self.rings > 10 then table.remove(self.rings, 1) end
 end
 
@@ -62,11 +63,11 @@ local function reflect(cv, sc, rings, life)
     for x = 0, 127 do
       local ox = math.sin(t * 2.1 + y * 1.7 + x * 0.05) * (0.3 + d * 0.08)
       for _, r in ipairs(rings) do
-        local rad = r.t * 22
+        local rad = r.t * 22 * r.size
         if rad >= 1 then
           local ex, ey = x - r.x, (y - GY - 4) / 0.14
           local e = math.sqrt(ex * ex + ey * ey)
-          if math.abs(e - rad) < 4 then ox = ox + 2.2 * (1 - r.t / life) * math.sin((e - rad) * 1.4) end
+          if math.abs(e - rad) < 4 then ox = ox + 2.2 * r.size * (1 - r.t / life) * math.sin((e - rad) * 1.4) end
         end
       end
       local v = cv.get(H.round(x + ox), sy)
@@ -83,9 +84,9 @@ function pond:draw(cv, sc)
   for _, r in ipairs(self.rings) do -- flat rings that stay in the water
     local k = 1 - r.t / life
     for i = 0, n - 1 do
-      local rad = (r.t - i * 0.11) * 22
+      local rad = (r.t - i * 0.11) * 22 * r.size
       if rad > 0.5 then
-        local ry, l = math.min(5, rad * 0.14), 11 * k * (1 - i / (n + 1))
+        local ry, l = math.min(5, rad * 0.14), 11 * k * (1 - i / (n + 1)) * (0.4 + 0.6 * r.size)
         local steps = math.max(8, math.ceil(rad * 6))
         for s = 0, steps do
           local a = s / steps * 2 * math.pi

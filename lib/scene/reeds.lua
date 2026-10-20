@@ -39,6 +39,8 @@ reeds.map = {
   damp   = { "brain", 1, 0.75, 0.45 }, -- fast rain, shorter rings
   pos    = 0.3,
 }
+-- under snow (at full cover): darker, and the reeds stop ringing sooner
+reeds.muffle = { bright = 0.55, damp = 0.4 }
 
 function reeds:sound(sc)
   local s = sc.mapped(self)

@@ -1,6 +1,6 @@
 -- the glass of the terrarium, drawn over the whole scene: rounded corners and a
 -- glint, condensation while it rains (more at faster rates), frost while the air
--- is frozen, and dust on it with the patina setting (some specks pop with the
+-- is frozen, and dust on it with the erosion setting (some specks pop with the
 -- crackle). Stateful: included only in terrarium.lua.
 
 local H = include('lib/helpers')
@@ -110,7 +110,7 @@ local function draw_rim(cv)
   for y = 9, 17 do cv.lit(5, y, 1) end
 end
 
--- dust on the glass, for the patina setting: fixed specks (more as it ages), and now
+-- dust on the glass, for the erosion setting: fixed specks (more as it ages), and now
 -- and then one that pops, like the crackle
 local DUST = {}
 do
@@ -128,7 +128,7 @@ end
 function glass.draw(cv, sc)
   draw_frost(cv)
   draw_beads(cv)
-  draw_dust(cv, sc and sc.patina)
+  draw_dust(cv, sc and sc.erosion)
   draw_rim(cv)
 end
 

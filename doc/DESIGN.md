@@ -13,8 +13,8 @@ Mutable Instruments mi-UGens. What makes it a norns instrument is the screen: li
 scripts inspired by real-world visuals, the patch _is_ a scene.
 
 - **The patch is a landscape.** Five parts, each one piece of the scene and one stage of the sound:
-  brain (weather) → voice (ground) → color (light and water) → air (sky), with the drone (a bed
-  under it all, aurora or roots) playing into the air.
+  weather → soil → water (pond, fog) → air (sky), with the hum (always there, aurora or roots)
+  playing into the air. In the code they keep their working names: brain, voice, color, air, drone.
 - **Fixed signal path, swappable modules.** Free patching on a 128×64 screen with 3 encoders
   would be miserable, so the routing is pre-wired, like a semi-modular synth. You swap what sits
   in each slot.
@@ -33,6 +33,7 @@ scripts inspired by real-world visuals, the patch _is_ a scene.
 | ----- | --------- | -------------- | ---------------------------------------------------------------------------------- | --------------------- |
 | brain | rain      | — (clocked)    | drops fall on the norns clock and play where they land; puddles mark the phrase    | rate, change          |
 | brain | lightning | — (random)     | random strikes, sometimes doubled, light up the land; scorch marks hold the phrase | rate, change          |
+| brain | snow      | — (drifting)   | flakes leave on the clock and land loosely; the cover muffles the voice            | rate, change          |
 | voice | meadow    | Plaits         | each note blooms a flower in swaying grass; each Plaits engine grows its own kind  | harmonics, timbre     |
 | voice | crystals  | Plaits 6-op FM | glass spires glint and throw sparks                                                | ratio, index          |
 | voice | reeds     | Rings          | each note plucks a reed and it vibrates like a string                              | structure, brightness |
@@ -53,7 +54,7 @@ Hold K2 and turn E2 to pick the module's variant: the Plaits engine for the mead
 its own flower), the DX bank for crystals, the Rings model for reeds and the pond, the mode for clouds. A K2
 tap still swaps the module (on release, so the hold can't swap it).
 
-K3 is a gesture per part: new phrase (brain), strike (voice, color), freeze (air), hush/rise (drone).
+K3 is a gesture per part: new phrase (weather), strike (soil, water), freeze (air), hush/rise (hum).
 E1 picks a part, and the others dim for a moment so it's clear which one you're steering.
 
 ## Decisions and why
@@ -130,12 +131,14 @@ E1 picks a part, and the others dim for a moment so it's clear which one you're 
   (`map`) that `tune()` changes from maiden while it plays, printing the table to paste back. The
   same mechanism maps MI parameters no macro used to reach (Clouds reverb, Beads time). A levels
   group balances the slots.
-- **A patina over everything, for glue (October 2026).** Generative ambient often sounds like one
+- **An erosion over everything, for glue (October 2026).** Generative ambient often sounds like one
   recording because everything shares a medium. A tape stage at the very end (wow, flutter,
   crackle, hiss, rolled-off top, gentle drive) gives terrarium that: a setting, not an air
-  module, so it combines with clouds, fireflies or mountains. First called "tape", renamed
-  patina to sit with seasons, climate, day and breath (and it's the wear of the jar's glass as
-  much as of the sound). Five steps from off to ancient, faint by default; its saturation is
+  module, so it combines with clouds, fireflies or mountains. First called "tape", then "patina"
+  to sit with seasons, climate, day and breath, then "erosion": patina sounded like an antique
+  shop, erosion is what weather does to a landscape (and glass worn by it is sea glass). Not
+  "decay", which is already Plaits' note length here and reads as an envelope to a musician.
+  Five steps (off, faint, worn, deep, ancient), faint by default; its saturation is
   gain-compensated so switching steps doesn't change the level. Dust on the glass shows it.
 - **The drone answers the weather (October 2026).** A drone that only sat there turned into a
   drone you notice, then one that annoys. Now each note makes it give way a little (a sidechain,
@@ -182,6 +185,27 @@ E1 picks a part, and the others dim for a moment so it's clear which one you're 
   the jar (ants, beetles, moths), because their sound is outside it too: nb doesn't route audio,
   so color and air can't process them. An earlier note assumed an insert on the main output
   would carry them through; nb has no such thing, so they stay dry.
+- **Parts named for the landscape (October 2026).** On screen the parts were brain, voice, color,
+  air and drone: what each does in a synth. They're now weather, soil, water, air and hum: where
+  each sits in the picture, so the words match what you look at. "hum" over "earth" or "bedrock"
+  because the aurora is a drone module too, and it's in the sky: the part is about being always
+  there, not below. "water" over "light", tried first: fog isn't light and the pond only
+  reflects it, but both are water, on the ground and in the air. Only the names on screen and in
+  PARAMS changed; param ids, `tune()` and the code keep the old ones, so presets and MIDI maps
+  still work.
+- **Snow, between rain and lightning (October 2026).** Rain is clocked and lightning random;
+  snow slides between them on change: each flake leaves on the clock (slower divisions than rain)
+  and takes one step to fall, plus up to one and a half more with change, so at 0 it lands on the
+  beat and at 1 later flakes overtake earlier ones. Its twist is the cover: each flake adds to
+  `sc.cover`, which muffles the voice (each voice module's `muffle` table pulls those keys toward
+  0, and notes play softer), and it thaws slowly, four times faster at noon and four times slower
+  at midnight with the day on, so it gives the day a sound of its own. When the cover shrinks the
+  meltwater drips soft notes from the phrase. A note plays when its flake lands (a clock per flake)
+  rather than one step later as with rain, because a drift isn't a fixed length. It's done in Lua
+  with the voices' existing parameters: no engine change. The flakes that play were too few to
+  read as snow, so silent specks fall around them (more with rate), and the playing ones are
+  little tumbling stars; the cover is drawn after the soil (`draw_front`), burying the foot of
+  the grass. A flake barely stirs the pond: its rings are smaller and fainter than a drop's.
 
 ## Open questions
 

@@ -42,6 +42,8 @@ meadow.map = {
   decay  = { "brain", 1, 0.75, 0.4 }, -- fast rain, shorter notes
   lpg    = 0.5,
 }
+-- under snow (at full cover): darker, shorter, and the low-pass gate closes in
+meadow.muffle = { timbre = 0.5, decay = 0.45, lpg = 0.7 }
 
 function meadow:sound(sc)
   local s = sc.mapped(self)

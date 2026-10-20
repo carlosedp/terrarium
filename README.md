@@ -12,19 +12,19 @@ The patch is a landscape. Five parts each draw one piece of the scene and play o
 the sound. Swap a module and that piece of the scene changes; turn a macro and the scene moves
 with the sound. The screen shows no numbers.
 
-| Part      | In the scene                                      | Modules                                                                                                             |
-| --------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| **brain** | the weather: when notes happen and which ones     | rain (clocked to the norns clock), lightning (random)                                                               |
-| **voice** | the ground: what plays                            | meadow (Plaits), crystals (Plaits 6-op FM), reeds (Rings), visitors (any [nb](https://github.com/sixolet/nb) voice) |
-| **color** | light and water: what shapes it                   | pond (Rings), fog (Ripples)                                                                                         |
-| **air**   | the sky: where it rings out                       | clouds (Clouds), fireflies (Beads), mountains (MiVerb)                                                              |
-| **drone** | the bed under it all, on the key's root and fifth | aurora (Plaits), roots (Elements), none                                                                             |
+| Part        | In the scene                                            | Modules                                                                                                             |
+| ----------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| **weather** | when notes happen and which ones                        | rain (clocked to the norns clock), lightning (random), snow (drifting, and it settles)                              |
+| **soil**    | what grows from the ground: what plays                  | meadow (Plaits), crystals (Plaits 6-op FM), reeds (Rings), visitors (any [nb](https://github.com/sixolet/nb) voice) |
+| **water**   | the pond and the fog: what shapes it                    | pond (Rings), fog (Ripples)                                                                                         |
+| **air**     | the sky: where it rings out                             | clouds (Clouds), fireflies (Beads), mountains (MiVerb)                                                              |
+| **hum**     | always there, under it all, on the key's root and fifth | aurora (Plaits), roots (Elements), none                                                                             |
 
 The whole scene sits behind the terrarium's glass. Rain beads up on it, and freezing the air
 frosts it over.
 
 Every note is a place: where it lands across the screen sets its pitch in the current key
-and scale. The brain keeps a Turing Machine-style phrase, and each note leaves a mark on the
+and scale. The weather keeps a Turing Machine-style phrase, and each note leaves a mark on the
 ground. **Change** sets how often notes are replaced, dropped to a rest or added back.
 **Seasons** can let the key drift between close neighbors and find its way home.
 
@@ -58,7 +58,7 @@ use `git clone --recurse-submodules`.
 | E2, E3       | that part's two macros (their names show for a moment while you turn)                                                              |
 | K2           | swap the part's module                                                                                                             |
 | hold K2 + E2 | pick the module's variant: Plaits engine (meadow), DX bank (crystals), Rings model (reeds, pond), nb voice (visitors), Clouds mode |
-| K3           | gesture: new phrase (brain), strike (voice, color), freeze (air), hush / rise (drone)                                              |
+| K3           | gesture: new phrase (weather), strike (soil, water), freeze (air), hush / rise (hum)                                               |
 | hold K1      | peek at all parts; while held, E2 picks a setting and E3 changes it                                                                |
 | hold K1 + K3 | a new terrarium: random modules, varieties, knobs and settings, all but the day (also PARAMS > randomize the jar)                  |
 
@@ -68,22 +68,26 @@ the climate pushes it around it. Each macro has a cv amount in PARAMS; the peek 
 where each macro is right now and the attractor's path.
 
 **Day** (a setting, off by default) adds the longest arc: a day and night of 20 minutes, an hour,
-or following the norns' clock. Night slows the weather, darkens the voice, opens up the air and
-brings the drone forward; the sky shows a sun by day and a moon and stars by night.
+or following the norns' clock. Night slows the weather, darkens the soil, opens up the air and
+brings the hum forward; the sky shows a sun by day and a moon and stars by night.
 
-**Patina** (a setting: off, faint, worn, aged, ancient; faint by default) gives the whole sound
+**Erosion** (a setting: off, faint, worn, deep, ancient; faint by default) gives the whole sound
 the wear of an old recording: wow, flutter, crackle, hiss, a rolled-off top, a little warmth. It
-glues the notes, the drone and the sky together; dust settles on the glass as it ages.
+glues the notes, the hum and the sky together; dust settles on the glass as it wears.
+
+**Snow** (a weather module) falls slower and looser than rain and settles on the ground. The
+snow cover muffles the soil, more the longer it snows; with the day on, the sun thaws it (the
+meltwater drips a few soft notes) and the night lets it build up again.
 
 **Breath** (a setting, off by default) adds silence: now and then the weather calms for a phrase
 or three, notes rest (the phrase keeps them) and their marks dim, then it breathes in again.
 
 **Presets:** norns saves them for you: in the norns menu, PARAMS > PSET > save / load. A preset
 holds everything, including modules, variants, settings, levels, and whether the air is frozen
-or the drone hushed.
+or the hum hushed.
 
 A quick tap of K1 still opens the norns menu. Settings (key, scale, range, length, seasons,
-climate, drift, day, breath, patina),
+climate, drift, day, breath, erosion),
 every macro, and each module's fixed options (Plaits engine, DX bank, Rings model, Clouds
 mode) are also in PARAMS, so they save with PSETs and can be MIDI-mapped.
 
@@ -109,6 +113,9 @@ test/                    mocked norns runtime and a smoke test
 The Lua side owns every macro-to-parameter mapping (each module's `sound()` function, written
 from [doc/SOUND.md](doc/SOUND.md)); the engine only exposes raw parameters per slot. Tuning the
 sound means editing those functions.
+
+On screen the parts are weather, soil, water, air and hum; in the code (param ids, `tune()`,
+module files) they keep their working names: brain, voice, color, air and drone.
 
 A module is one file under `lib/scene/` with `macros`, `draw`, `update`, and either
 `wait`/`spawn`/`wind` (brain; `flash` optional) or `sound`/`on_note` (voice, color, air). Add it to `LAYERS` in `terrarium.lua`; a new

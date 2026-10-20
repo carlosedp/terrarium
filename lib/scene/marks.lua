@@ -14,6 +14,9 @@ return function(cv, sc, kind)
       local lv = (2 + fresh * 8 + hit * 5) * (1 - sc.breath.calm * 0.6)
       if kind == "rain" then
         cv.line(e.x - 2, GY + 2, e.x + 2, GY + 2, lv)                 -- puddle
+      elseif kind == "snow" then
+        cv.px(e.x, GY + 2, lv)                                        -- a drift
+        cv.line(e.x - 2, GY + 3, e.x + 2, GY + 3, lv * 0.6)
       else
         cv.px(e.x, GY + 2, lv)                                        -- scorch mark
         cv.px(e.x - 1, GY + 3, lv * 0.6)

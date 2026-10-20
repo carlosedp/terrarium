@@ -34,16 +34,18 @@ local FPS = 15
 local GY = 54 -- the ground line
 
 -- (a part's hold is the state its K3 toggles, kept as a param so presets save it)
--- the five parts of the scene: brain = weather, voice = ground, color = light and
--- water, air = sky, drone = the bed under it all (aurora in the sky, roots in the earth)
+-- the five parts of the scene, named on screen for their place in it: brain = weather,
+-- voice = soil, color = water (pond and fog), air = air (the sky), drone = hum (the bed
+-- under it all: aurora in the sky, roots in the earth). The ids stay as they were.
 local LAYERS = {
-  { id = "brain", name = "brain", mods = { include("lib/scene/rain"), include("lib/scene/lightning") } },
-  { id = "voice", name = "voice", mods = { include("lib/scene/meadow"), include("lib/scene/crystals"), include("lib/scene/reeds"),
+  { id = "brain", name = "weather", mods = { include("lib/scene/rain"), include("lib/scene/lightning"),
+    include("lib/scene/snow") } },
+  { id = "voice", name = "soil", mods = { include("lib/scene/meadow"), include("lib/scene/crystals"), include("lib/scene/reeds"),
     include("lib/scene/visitors") } },
-  { id = "color", name = "color", mods = { include("lib/scene/pond"), include("lib/scene/fog") } },
+  { id = "color", name = "water", mods = { include("lib/scene/pond"), include("lib/scene/fog") } },
   { id = "air",   name = "air",   mods = { include("lib/scene/clouds"), include("lib/scene/fireflies"), include("lib/scene/mountains") },
     hold = { id = "air_freeze", name = "freeze", field = "frozen" } },
-  { id = "drone", name = "drone", mods = { include("lib/scene/aurora"), include("lib/scene/roots"), include("lib/scene/none") },
+  { id = "drone", name = "hum",   mods = { include("lib/scene/aurora"), include("lib/scene/roots"), include("lib/scene/none") },
     hold = { id = "drone_hush", name = "hush", field = "hushed" } },
 }
 local SLOT_SET = { nil, "voice_set", "color_set", "air_set", "drone_set" }
@@ -53,21 +55,21 @@ for i, L in ipairs(LAYERS) do
   for _, m in ipairs(L.mods) do m.part = i end
 end
 -- each sounding slot's level in PARAMS (dB), sent to its synth as vol
-local LEVELS = { { "level_voice", "voice level", 2, 0 }, { "level_color", "color level", 3, 0 },
-  { "level_air", "air level", 4, 0 }, { "level_drone", "drone level", 5, -12 } }
+local LEVELS = { { "level_voice", "soil level", 2, 0 }, { "level_color", "water level", 3, 0 },
+  { "level_air", "air level", 4, 0 }, { "level_drone", "hum level", 5, -4 } }
 
-local SETTINGS = { "t_root", "t_scale", "t_range", "t_length", "t_seasons", "t_climate", "t_drift", "t_day", "t_breath", "t_patina" }
-local SETTING_NAMES = { "key", "scale", "range", "length", "seasons", "climate", "drift", "day", "breath", "patina" }
+local SETTINGS = { "t_root", "t_scale", "t_range", "t_length", "t_seasons", "t_climate", "t_drift", "t_day", "t_breath", "t_erosion" }
+local SETTING_NAMES = { "key", "scale", "range", "length", "seasons", "climate", "drift", "day", "breath", "erosion" }
 
--- patina: the wear of an old recording on the whole output, the glue between the notes, the
+-- erosion: the wear of an old recording on the whole output, the glue between the notes, the
 -- drone and the sky (the engine's terrarium_tape; doc/SOUND.md). Each step's amounts, 0..1,
 -- in order of wear:
-local PATINA_NAMES = { "off", "faint", "worn", "aged", "ancient" }
-local PATINA = {
+local EROSION_NAMES = { "off", "faint", "worn", "deep", "ancient" }
+local EROSION = {
   nil,
   { wow = 0.3, flutter = 0.25, crackle = 0.25, hiss = 0.15, tone = 0.25, drive = 0.15 }, -- faint
   { wow = 0.5, flutter = 0.4, crackle = 0.4, hiss = 0.25, tone = 0.38, drive = 0.25 },   -- worn
-  { wow = 0.7, flutter = 0.55, crackle = 0.6, hiss = 0.35, tone = 0.5, drive = 0.35 },   -- aged
+  { wow = 0.7, flutter = 0.55, crackle = 0.6, hiss = 0.35, tone = 0.5, drive = 0.35 },   -- deep
   { wow = 1, flutter = 0.8, crackle = 0.9, hiss = 0.5, tone = 0.7, drive = 0.5 },        -- ancient
 }
 local LENGTHS = { 4, 8, 12, 16 }
@@ -79,8 +81,9 @@ local CV_SRC = { { 3, 1 }, { 1, 2 }, { 2, 3 }, { 3, 1 }, { 2, 3 } }
 local CV_DEFAULT = { { 0, 0.3 }, { 0.4, 0.3 }, { 0.35, 0.25 }, { 0.35, 0.3 }, { 0.3, 0.35 } }
 
 -- shared scene state handed to every module
-local sc = { t = 0, GY = GY, frozen = false, fly_t = 0, brain = Brain, nb = nb, breath = Breath,
-  activity = 0, lift = 0 } -- how busy the weather is lately, and how much it lights up the drone
+local sc = { t = 0, GY = GY, frozen = false, fly_t = 0, brain = Brain, nb = nb, breath = Breath, day = Day,
+  activity = 0, lift = 0, -- how busy the weather is lately, and how much it lights up the drone
+  cover = 0 }             -- snow on the ground, 0..1: it muffles the voice
 function sc.cur(i) return LAYERS[i].mods[params:get(LAYERS[i].id .. "_kind")] end
 function sc.kind(i) return sc.cur(i).id end
 -- a macro as you set it
@@ -146,10 +149,22 @@ local function focus() focus_t = 2.5 end
 
 local function db_amp(db) return db <= -59.5 and 0 or 10 ^ (db / 20) end
 
+-- snow muffles the voice: each key in its module's `muffle` is pulled toward 0 by that
+-- much at full cover (rounded, so a slow thaw doesn't flood the engine)
+local function muffle(mod, s)
+  local c = math.floor(sc.cover * 100 + 0.5) / 100
+  if c <= 0 or not mod.muffle then return end
+  for k, amt in pairs(mod.muffle) do
+    if s[k] then s[k] = math.floor(s[k] * (1 - amt * c) * 200 + 0.5) / 200 end
+  end
+end
+
 local function send_sound()
   for i = 2, #LAYERS do
     local fn = engine[SLOT_SET[i]]
-    local s = sc.cur(i):sound(sc)
+    local mod = sc.cur(i)
+    local s = mod:sound(sc)
+    if i == 2 then muffle(mod, s) end
     for _, l in ipairs(LEVELS) do if l[3] == i then s.vol = db_amp(params:get(l[1])) end end
     for k, v in pairs(s) do
       if sent[i][k] ~= v then
@@ -161,8 +176,9 @@ local function send_sound()
   dirty_sound = false
 end
 
-local function play(ev, fresh)
-  local voice, vel = sc.cur(2), fresh and 1 or 0.7
+local function play(ev, fresh, vel)
+  local voice = sc.cur(2)
+  vel = (vel or (fresh and 1 or 0.7)) * (1 - 0.35 * sc.cover) -- snow softens it
   if voice.play then voice:play(sc, Brain.pitch(ev.x), vel) else engine.note(Brain.pitch(ev.x), vel) end
   -- the drone answers the weather: each note makes it give way a little (it swells back in
   -- the gaps) and lights it up for a moment, a lightning strike much more than a raindrop
@@ -173,6 +189,7 @@ local function play(ev, fresh)
     if mod.on_note then mod:on_note(ev.x, sc) end
   end
 end
+sc.play = play -- snow's meltwater plays a note of its own
 
 -- the brain: wait (clock sync or random sleep), step the phrase, play
 local function brain_loop()
@@ -187,6 +204,15 @@ local function brain_loop()
       if pending then play(pending, pending_fresh) end
       pending, pending_fresh = ev, fresh
       if ev then mod:spawn(ev, dt, sc) end
+    elseif mod.drifts then -- snow: the flake falls at its own pace and plays where it lands
+      pending = nil
+      if ev then
+        local land = mod:spawn(ev, dt, sc)
+        clock.run(function()
+          clock.sleep(land)
+          play(ev, fresh)
+        end)
+      end
     else
       pending = nil
       if ev then
@@ -250,11 +276,11 @@ local function add_params()
     dirty_sound = true
   end)
   params:add_option("t_drift", "drift", Climate.DRIFTS, 2)
-  params:add_option("t_patina", "patina", PATINA_NAMES, 2)
-  params:set_action("t_patina", function(v)
-    sc.patina = PATINA[v] and PATINA[v].wow or 0 -- how worn, 0..1 (the glass's dust follows it)
-    if PATINA[v] then for k, x in pairs(PATINA[v]) do engine.tape_set(k, x) end end
-    engine.tape_set("on", PATINA[v] and 1 or 0)
+  params:add_option("t_erosion", "erosion", EROSION_NAMES, 2)
+  params:set_action("t_erosion", function(v)
+    sc.erosion = EROSION[v] and EROSION[v].wow or 0 -- how worn, 0..1 (the glass's dust follows it)
+    if EROSION[v] then for k, x in pairs(EROSION[v]) do engine.tape_set(k, x) end end
+    engine.tape_set("on", EROSION[v] and 1 or 0)
   end)
   params:add_option("t_breath", "breath", Breath.NAMES, 1)
   params:set_action("t_breath", function(v) Breath.set(v) end)
@@ -321,7 +347,7 @@ end
 -- ---------- a new terrarium ----------
 -- hold K1 + K3 (or PARAMS > randomize the jar): every part gets a random module,
 -- variety and knobs, kept away from the extremes, and the settings change too: key,
--- scale, range, length, seasons, climate, drift, breath. Never visitors (they need
+-- scale, range, length, seasons, climate, drift, breath, erosion. Never visitors (they need
 -- an outside voice) or none (silence), and never the day: it's about time, not texture.
 scramble = function()
   for i, L in ipairs(LAYERS) do
@@ -334,7 +360,7 @@ scramble = function()
     if mod.variant then params:set(mod.variant, math.random(#params:lookup_param(mod.variant).options)) end
     for _, mac in ipairs(mod.macros) do params:set(mod.id .. "_" .. mac.id, 0.15 + math.random() * 0.7) end
   end
-  for _, id in ipairs({ "t_root", "t_scale", "t_length", "t_seasons", "t_climate", "t_drift", "t_breath", "t_patina" }) do
+  for _, id in ipairs({ "t_root", "t_scale", "t_length", "t_seasons", "t_climate", "t_drift", "t_breath", "t_erosion" }) do
     params:set(id, math.random(#params:lookup_param(id).options))
   end
   params:set("t_range", math.random(1, 3))
@@ -421,13 +447,15 @@ local function peek_canvas()
 end
 
 local function peek_text()
+  local part_w = 0 -- the module names line up past the widest part name
+  for _, L in ipairs(LAYERS) do part_w = math.max(part_w, screen.text_extents(L.name) or 28) end
   for i, L in ipairs(LAYERS) do
     local y, on = 2 + (i - 1) * 8, i == sel
     screen.level(on and 15 or 6)
     screen.move(2, y + 5)
     screen.text(L.name)
     screen.level(on and 12 or 5)
-    screen.move(26, y + 5)
+    screen.move(2 + part_w + 4, y + 5)
     screen.text(sc.cur(i).name)
   end
   -- the value sits past the widest setting name, so no name runs into it
@@ -515,16 +543,17 @@ function redraw()
     end
   end
   cv.mul = dim(2); sc.cur(2):draw(cv, sc)  -- voice (ground)
-  cv.mul = 1
   local brain = sc.cur(1)
+  if brain.draw_front then cv.mul = dim(1); brain:draw_front(cv, sc) end -- snow lying on the soil
+  cv.mul = 1
   if brain.flash then                      -- a strike lights the land; fog, drawn next, muffles it
     local f = brain:flash()
     if f > 0 then cv.add(f) end
   end
-  cv.mul = dim(3); sc.cur(3):draw(cv, sc)  -- color (light, water)
+  cv.mul = dim(3); sc.cur(3):draw(cv, sc)  -- color (water)
   if drone.in_front then cv.mul = dim(5); drone:draw(cv, sc) end      -- roots glow up through water and soil
   cv.mul = 1
-  glass.draw(cv, sc)                       -- frost, condensation, patina's dust, the jar's rim
+  glass.draw(cv, sc)                       -- frost, condensation, erosion's dust, the jar's rim
   for i = 1, #LAYERS do
     cv.rect(102 + (i - 1) * 4, 1, 2, 2, i == sel and (focus_t > 0 and 13 or 5) or (focus_t > 0 and 3 or 1))
   end
@@ -563,6 +592,8 @@ local function tick()
       if mod.update then mod:update(dt, sc) end
     end
     glass.update(dt, sc)
+    if not sc.cur(1).covers then sc.cover = sc.cover * math.exp(-dt / 20) end -- the snow thaws away
+    if sc.cover < 0.001 then sc.cover = 0 else dirty_sound = true end
     sc.activity = sc.activity * math.exp(-dt / 1.8) -- the drone swells back over a couple of seconds
     sc.lift = sc.lift * math.exp(-dt / 3)
     if sc.kind(5) ~= "none" and (sc.activity > 0.01 or sc.lift > 0.01) then dirty_sound = true end

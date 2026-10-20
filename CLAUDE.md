@@ -1,8 +1,9 @@
 # terrarium
 
-A norns script: a landscape scene where five parts (brain = weather, voice = ground,
-color = light/water, air = sky, drone = the bed under it all) are swappable modules driving
-Mutable Instruments mi-UGens. Two macros per part, no numbers on screen. See README.md for the user view and
+A norns script: a landscape scene where five parts are swappable modules driving
+Mutable Instruments mi-UGens. The code calls the parts brain, voice, color, air and drone (param
+ids, `tune()`, `sc.cur(i)`); the screen, PARAMS names and the player docs call them weather,
+soil, water, air and hum (`name` in `LAYERS`). Two macros per part, no numbers on screen. See README.md for the user view and
 doc/DESIGN.md for why things are the way they are.
 
 **Status:** v0.1, never run on a norns (the user's norns hadn't arrived when it was written).
@@ -63,6 +64,11 @@ copyright footer come from `norns-web.json`.
 - `tools/norns-web` must stay generic: nothing terrarium-specific in it. The browser runs Lua 5.4,
   so it won't catch 5.4-only code that would fail on norns (5.3).
 - A brain module must define `wind(sc)` (the sky drifts with it); `flash()` is optional.
+  `lookahead` (rain) plays each note a step after its spawn; `drifts` (snow) makes `spawn()`
+  return the seconds until it lands, and the note plays then. `covers` (snow) means it owns
+  `sc.cover`; under any other brain the cover thaws away. `draw_front` (optional) draws after
+  the voice (snow lying on the soil).
+- A voice module can set `muffle` (engine key -> how far snow's full cover pulls it toward 0).
 
 ## Related repo
 

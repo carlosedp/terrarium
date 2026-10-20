@@ -46,6 +46,8 @@ crystals.map = {
   decay  = { "brain", 1, 0.8, 0.5 },
   lpg    = 0.6,
 }
+-- under snow (at full cover): duller, shorter, and the low-pass gate closes in
+crystals.muffle = { timbre = 0.5, decay = 0.45, lpg = 0.7 }
 
 function crystals:sound(sc)
   local s = sc.mapped(self)

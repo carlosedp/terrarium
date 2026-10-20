@@ -15,9 +15,10 @@ _generative music in a jar, for monome norns_
 <!-- PHOTO: your norns on a table, running terrarium -->
 
 terrarium is a small world in a jar that makes music. Weather falls on a landscape, and wherever
-it lands, a note plays: rain on a meadow blooms flowers, lightning strikes crystals, ripples
-spread across a pond, and the sound drifts up into the clouds. You don't patch anything. You
-choose what lives in each part of the jar, and you shape it with two knobs.
+it lands, a note plays: rain on a meadow blooms flowers, lightning strikes crystals, snow
+settles and hushes the ground, ripples spread across a pond, and the sound drifts up into the
+clouds. You don't patch anything. You choose what lives in each part of the jar, and you shape
+it with two knobs.
 
 It's built for long, slow listening. Leave it running and it keeps changing: the phrase drifts,
 the key turns with the seasons, the weather comes and goes, and day turns into night.
@@ -79,18 +80,18 @@ The drops aren't random. The weather keeps a short **phrase** of notes, and play
 over, changing a note now and then. You can see the phrase as small puddles along the ground,
 one for each note. When a note changes, its puddle glows for a moment.
 
-Above it all, a quiet **drone** holds everything together, shown as an aurora across the top of
+Above it all, a quiet **hum** holds everything together, shown as an aurora across the top of
 the sky.
 
 ---
 
 ## Playing it
 
-Terrarium has **five parts**, from the weather down to the drone. You pick a part, then shape it.
+Terrarium has **five parts**: weather, soil, water, air and hum. You pick a part, then shape it.
 
 |                       |                                                                                                         |
 | --------------------- | ------------------------------------------------------------------------------------------------------- |
-| **E1**                | choose a part: brain (the weather), voice (the ground), color (light and water), air (the sky) or drone |
+| **E1**                | choose a part: weather, soil (what grows), water (pond or fog), air (the sky) or hum (always there)       |
 | **E2, E3**            | shape that part (each part has two knobs)                                                               |
 | **K2**                | swap what lives in that part (meadow → crystals → reeds…)                                               |
 | **hold K2 + turn E2** | choose its variety (which flowers, which kind of resonance, which NB voice…)                            |
@@ -103,7 +104,7 @@ Terrarium has **five parts**, from the weather down to the drone. You pick a par
 Turn **E1**. The part you choose stays bright while the rest of the jar dims for a moment, and
 its name appears at the top, along with what its two knobs do.
 
-![After turning E1: "voice meadow" at the top, "harmonics" and "timbre" at the bottom](img/touch_e1.png)
+![After turning E1: "soil meadow" at the top, "harmonics" and "timbre" at the bottom](img/touch_e1.png)
 
 <!-- retake on norns -->
 
@@ -134,10 +135,10 @@ meadow, a different resonance in the pond. Its name appears as you turn.
 
 | Part         | K3                                                                  |
 | ------------ | ------------------------------------------------------------------- |
-| brain        | a new phrase: the weather forgets its notes and starts another      |
-| voice, color | strike: play a note right now                                       |
+| weather      | a new phrase: the weather forgets its notes and starts another      |
+| soil, water  | strike: play a note right now                                       |
 | air          | freeze: hold the sky still (and the jar frosts over); again to thaw |
-| drone        | hush: the drone fades out; again to let it rise                     |
+| hum          | hush: the hum fades out; again to let it rise                       |
 
 ### Peeking (hold K1)
 
@@ -155,16 +156,16 @@ A quick _tap_ of K1 opens the norns menu, as usual. Terrarium only uses K1 while
 
 Hold **K1** and press **K3**, and the jar fills with something new: every part gets a random
 module, variety and knob settings, the settings change too (key, scale, range, length, seasons,
-climate, drift and breath), and a light sweeps along the ground as the new key appears. Press
+climate, drift, breath and erosion), and a light sweeps along the ground as the new key appears. Press
 again until something catches your ear, then shape it from there. (It never picks visitors or an
-empty drone, and leaves the day alone: that one is about your time, not the music. It's also in
+empty hum, and leaves the day alone: that one is about your time, not the music. It's also in
 **PARAMS > randomize the jar**.)
 
 ---
 
 ## A field guide to the jar
 
-### brain: the weather
+### weather
 
 The weather decides **when** notes happen and **which** ones.
 
@@ -192,9 +193,41 @@ The same note always strikes with the same bolt.
 - **E2 rate**: how often it strikes.
 - **E3 change**: how often the phrase changes; more change, a wilder storm.
 
-### voice: the ground
+#### snow
 
-The voice is **what plays** the notes.
+![Snow falling slowly, and a layer of it settled on the meadow](img/snow.png)
+
+Snow falls slower than rain, and looser. The flakes set off in time with the norns clock, but
+each one drifts down at its own pace and plays where it lands, so the notes come a little early
+or late, and sometimes out of order: somewhere between the rain's steady beat and the lightning's
+surprises.
+
+It also **settles**. Every flake adds to a layer of snow on the ground, and the snow muffles the
+soil, as real snow hushes a landscape: the sound grows darker, the notes shorter and softer. The
+longer it snows, the deeper the hush. The snow slowly thaws, and when it shrinks the meltwater
+drips a few soft notes from the phrase. Switch to other weather and the rest of it thaws away.
+
+- **E2 rate**: from a few flakes to a flurry, and the more it snows, the deeper it settles.
+- **E3 change**: how often the phrase changes, and how much the wind gusts: the flakes swirl,
+  and the notes land further from the beat.
+
+With the **day** on, the snow lives with it: the night lets it pile up and glow faintly, and the
+sun thaws it, with most of the dripping in the morning.
+
+Some things to try:
+
+- **Snow through a whole day.** Snow on the meadow, _day: 20 min_, and leave it. The night grows
+  hushed and close, the morning drips and opens up, and noon is the clearest it gets.
+- **Change the weather after a long snowfall.** Let it snow for a few minutes, then swap to rain:
+  the muffled soil slowly comes back to life as the snow thaws.
+- **Snow with no change.** E3 all the way down: the flakes land on the beat and the phrase
+  repeats, and all that changes is the slow hush.
+- **A flurry, then a few flakes.** Turn the rate up for a while, then down: the snow thaws back to
+  where the lighter fall keeps it, and the meltwater drips along the way.
+
+### soil: what grows
+
+The soil is **what plays** the notes.
 
 #### meadow
 
@@ -250,9 +283,9 @@ pitch-bend range are in **PARAMS**, under its name.
 
 Visitors bring their own sound: the pond, the fog and the sky don't change it.
 
-### color: light and water
+### water: the pond and the fog
 
-Color is **what shapes** the voice's sound.
+Water is **what shapes** the soil's sound: on the ground or in the air.
 
 #### pond
 
@@ -310,10 +343,11 @@ The bigger the room, the bigger the mountains. Each note echoes back off the far
 - **E2 size**: taller, more distant ranges; a longer reverb.
 - **E3 echo**: more of the sound goes into the mountains.
 
-### drone: the bed under it all
+### hum: always there
 
-A soft, sustained sound on the key's root and fifth. It holds the music together between notes,
-follows the key, and glides when the key changes. **K3** hushes it and lets it rise again.
+A soft drone on the key's root and fifth, under everything else. It holds the music together
+between notes, follows the key, and glides when the key changes. **K3** hushes it and lets it
+rise again.
 
 #### aurora
 
@@ -321,16 +355,16 @@ follows the key, and glides when the key changes. **K3** hushes it and lets it r
 
 Curtains of light across the top of the sky. They flare when a season turns.
 
-The drone listens to the weather. Each note makes it step back a little, so the melody has
+The hum listens to the weather. Each note makes it step back a little, so the melody has
 room, and it swells again in the quiet between notes: busy rain keeps it low, a calm spell lets
 it fill the jar. Each note also lights it up for a moment, a lightning strike most of all, and
 the curtains glow with it. Now and then, at the end of a phrase, its upper note moves to one the
 melody has been leaning on (a third, a fourth, a sixth, or back to the fifth); the more the
 weather **changes**, the more often.
 
-- **E2 glow**: a warmer or brighter drone, and brighter curtains.
-- **E3 motion**: how much the drone and the curtains drift.
-- **Varieties:** seven drone sounds.
+- **E2 glow**: a warmer or brighter hum, and brighter curtains.
+- **E3 motion**: how much the hum and the curtains drift.
+- **Varieties:** seven sounds.
 
 #### roots
 
@@ -345,7 +379,7 @@ aurora, it steps back for the notes and lights up with them.
 
 #### none
 
-No drone at all, for when you'd rather have silence between the notes.
+No hum at all, for when you'd rather have silence between the notes.
 
 ---
 
@@ -364,7 +398,7 @@ too.
 | **drift**          | how fast the climate moves                                                  |
 | **day**            | a day and night                                                             |
 | **breath**         | moments of calm                                                             |
-| **patina**         | the wear of an old recording over everything: wow, crackle, hiss            |
+| **erosion**        | the wear of an old recording over everything: wow, crackle, hiss            |
 
 ### seasons
 
@@ -401,7 +435,8 @@ pushed that knob right now. On the climate setting, you can see the climate's pa
 
 A day and a night pass in the jar: in **20 min**, **1 hour**, or following your norns' **clock**,
 so that night in the jar is night outside. By night the weather slows, the sound darkens, the
-sky opens up and the drone comes forward. By day, the reverse.
+sky opens up and the hum comes forward. By day, the reverse. Snow piles up by night and thaws
+by day.
 
 |                                                                   |                                                        |
 | ----------------------------------------------------------------- | ------------------------------------------------------ |
@@ -414,16 +449,16 @@ Music needs space. With breath on, the weather sometimes calms for a phrase or t
 rest, their puddles dim, and then it breathes in again. The phrase isn't lost; the notes come
 back when the calm passes. _gentle_ calms now and then; _deep_ calms more often, and deeper.
 
-### patina
+### erosion
 
-Everything the jar plays gathers the wear of an old recording on its way out: a slow wow and a
-fine flutter in the pitch, a little crackle and hiss, the top gently rolled off, a touch of
-warmth. It's the glue that makes the notes, the drone and the sky sound like one recording.
+Everything the jar plays wears away a little on its way out, like an old recording: a slow wow
+and a fine flutter in the pitch, a little crackle and hiss, the top gently rolled off, a touch of
+warmth. It's the glue that makes the notes, the hum and the sky sound like one recording.
 
-_faint_ (how terrarium starts) is just a hint; _worn_ and _aged_ have more and more character;
-_ancient_ sounds like a reel found in the attic; _off_ leaves the sound clean. As the patina
+_faint_ (how terrarium starts) is just a hint; _worn_ and _deep_ have more and more character;
+_ancient_ sounds like a reel found in the attic; _off_ leaves the sound clean. As the erosion
 deepens, more dust settles on the jar's glass, and now and then a speck pops with the crackle.
-(Visitors play outside the jar, so the patina doesn't touch them.)
+(Visitors play outside the jar, so the erosion doesn't touch them.)
 
 ---
 
@@ -432,7 +467,7 @@ deepens, more dust settles on the jar's glass, and now and then a speck pops wit
 norns keeps presets for you. In the norns menu (a quick tap of K1), go to **PARAMS**, and
 **PSET** is at the top: _save_, _load_, _delete_. A preset remembers everything: which modules
 live in each part, their varieties, every knob, the settings, and even whether the air is frozen
-or the drone hushed.
+or the hum hushed.
 
 ---
 
@@ -451,10 +486,14 @@ with a big size, roots. Settings: _day: clock_, _breath: deep_. Best late at nig
 glow, aurora. _climate: tides_, _drift: slow_.
 
 **Still air**: anything you like, then freeze the clouds (K3 on air) and let the frost come in.
-Swap the voice while the sky stays frozen.
+Swap what grows in the soil while the sky stays frozen.
 
-**A visitor**: install an nb voice, choose visitors on the voice, pick the voice (hold K2 + E2),
-and watch the creatures come in. Try it with the drone hushed.
+**First snow**: snow with a low rate and a little change, meadow, fog with some clarity, mountains,
+roots. Settings: _day: 1 hour_, _erosion: worn_. Listen to it close in through the night and
+open up as the morning thaws it.
+
+**A visitor**: install an nb voice, choose visitors on the soil, pick the voice (hold K2 + E2),
+and watch the creatures come in. Try it with the hum hushed.
 
 <!-- These will get specific values once the sound has been tuned on the norns. -->
 
@@ -475,7 +514,10 @@ synth before opening terrarium.
 so the pond, the fog and the sky don't change it.
 
 **Crackles or dropouts.** Some combinations are heavier than others: reeds with the pond and
-roots is the heaviest. Swap one of them, or choose _none_ for the drone.
+roots is the heaviest. Swap one of them, or choose _none_ for the hum.
+
+**The sound got darker and duller, all by itself.** If the weather is snow, that's the snow
+settling: it muffles the soil. Turn the rate down, let the day thaw it, or switch to rain.
 
 **I tapped K1 and the norns menu opened.** Terrarium only uses K1 while it's _held_. A tap is
 the norns menu, as usual.
@@ -494,35 +536,38 @@ ranges. The scene is the only readout.
 ### The signal path
 
 ```
-brain (rain | lightning)          when and which notes; no sound of its own
-   │ notes (pitch = where they land)
+weather (rain | lightning | snow)   when and which notes; no sound of its own
+   │ notes (pitch = where they land)   (snow's cover muffles the soil)
    ▼
-voice (meadow | crystals | reeds)    visitors play outside, through nb
+soil (meadow | crystals | reeds)    visitors play outside, through nb
    ▼
-color (pond | fog)
+water (pond | fog)
    ▼
-air (clouds | fireflies | mountains)  ◄── drone (aurora | roots)
+air (clouds | fireflies | mountains)  ◄── hum (aurora | roots)
+   ▼
+erosion
    ▼
 output
 ```
 
 ### What's inside
 
-| Part  | Module    | Mutable Instruments module  | E2        | E3         | hold K2 + E2   |
-| ----- | --------- | --------------------------- | --------- | ---------- | -------------- |
-| brain | rain      | (norns clock)               | rate      | change     | —              |
-| brain | lightning | (random timing)             | rate      | change     | —              |
-| voice | meadow    | Plaits (12 melodic engines) | harmonics | timbre     | Plaits engine  |
-| voice | crystals  | Plaits (6-op FM banks)      | ratio     | index      | FM bank        |
-| voice | reeds     | Rings (internal exciter)    | structure | brightness | resonator type |
-| voice | visitors  | any nb voice                | modulate  | length     | nb voice       |
-| color | pond      | Rings                       | structure | damping    | resonator type |
-| color | fog       | Ripples                     | clarity   | shimmer    | —              |
-| air   | clouds    | Clouds                      | density   | size       | mode           |
-| air   | fireflies | Beads                       | density   | glow       | —              |
-| air   | mountains | MiVerb (Clouds' reverb)     | size      | echo       | —              |
-| drone | aurora    | Plaits ×2 (root and fifth)  | glow      | motion     | Plaits engine  |
-| drone | roots     | Elements                    | breath    | depth      | resonator type |
+| Part    | Module    | Mutable Instruments module  | E2        | E3         | hold K2 + E2   |
+| ------- | --------- | --------------------------- | --------- | ---------- | -------------- |
+| weather | rain      | (norns clock)               | rate      | change     | —              |
+| weather | lightning | (random timing)             | rate      | change     | —              |
+| weather | snow      | (norns clock, drifting)     | rate      | change     | —              |
+| soil    | meadow    | Plaits (12 melodic engines) | harmonics | timbre     | Plaits engine  |
+| soil    | crystals  | Plaits (6-op FM banks)      | ratio     | index      | FM bank        |
+| soil    | reeds     | Rings (internal exciter)    | structure | brightness | resonator type |
+| soil    | visitors  | any nb voice                | modulate  | length     | nb voice       |
+| water   | pond      | Rings                       | structure | damping    | resonator type |
+| water   | fog       | Ripples                     | clarity   | shimmer    | —              |
+| air     | clouds    | Clouds                      | density   | size       | mode           |
+| air     | fireflies | Beads                       | density   | glow       | —              |
+| air     | mountains | MiVerb (Clouds' reverb)     | size      | echo       | —              |
+| hum     | aurora    | Plaits ×2 (root and fifth)  | glow      | motion     | Plaits engine  |
+| hum     | roots     | Elements                    | breath    | depth      | resonator type |
 
 The phrase works like a Turing Machine: a loop of notes and rests where **change** sets the
 chance that a step mutates as it plays. **Seasons** move between keys that share all but one or
@@ -543,7 +588,7 @@ tune("clouds")                          -- see clouds' table
 tune("clouds", "rvb", 2, 0.1, 0.6)      -- clouds' E3 (size) also opens its reverb
 ```
 
-**PARAMS > levels** sets the balance between the voice, color, air and drone. The full sound map
+**PARAMS > levels** sets the balance between the soil, water, air and hum. The full sound map
 and tuning notes are in [SOUND.md](SOUND.md); the design decisions are in [DESIGN.md](DESIGN.md).
 
 ### In a browser
