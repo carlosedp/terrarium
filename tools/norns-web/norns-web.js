@@ -337,6 +337,7 @@
       el.href = l.url;
       el.textContent = l.label;
       el.rel = "noopener";
+      el.target = "_blank";
       return el;
     };
     if (a.links && a.links.length) $("#links").append(...a.links.map(link)); // in the footer
