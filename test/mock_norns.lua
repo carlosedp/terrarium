@@ -11,6 +11,14 @@ function include(path) return dofile(ROOT .. "/" .. path .. ".lua") end
 M.ROOT = ROOT
 _path = { code = ROOT .. "/" } -- so nb finds its own files relative to the script
 
+-- ---------- the time of day ----------
+-- always noon, so a run doesn't depend on when it happens (the day's "clock" follows it)
+local real_date = os.date
+os.date = function(fmt, ...)
+  if fmt == "*t" then return { year = 2026, month = 10, day = 20, hour = 12, min = 0, sec = 0 } end
+  return real_date(fmt, ...)
+end
+
 -- ---------- screen ----------
 screen = setmetatable({}, {
   __index = function(_, k)
