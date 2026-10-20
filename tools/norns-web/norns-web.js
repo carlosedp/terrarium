@@ -303,11 +303,29 @@
   }
 
   // ---------- the script's own page text (norns-web.json): title, intro, links, footer ----------
-  function showAbout(a) {
+  // icon and touch_icon are paths in the script (root: where its files are served)
+  function showAbout(a, root) {
     if (a.title) {
       $("#script-name").textContent = a.title;
       document.title = a.title;
     }
+    const headLink = (rel, href, type) => {
+      const l = document.createElement("link");
+      l.rel = rel;
+      l.href = root + href;
+      if (type) l.type = type;
+      document.head.append(l);
+    };
+    if (a.icon) {
+      // the tab's icon, and the same mark beside the title
+      headLink("icon", a.icon, /\.svg$/i.test(a.icon) ? "image/svg+xml" : null);
+      const img = document.createElement("img");
+      img.className = "mark";
+      img.src = root + a.icon;
+      img.alt = "";
+      $("#script-name").prepend(img);
+    }
+    if (a.touch_icon) headLink("apple-touch-icon", a.touch_icon);
     if (a.subtitle) {
       const s = $("#subtitle");
       s.textContent = a.subtitle;
@@ -406,7 +424,7 @@
     storagePrefix = `norns-web:${name}:`;
     $("#script-name").textContent = name;
     $(".brand").textContent = name;
-    if (about) showAbout(about);
+    if (about) showAbout(about, root);
 
     // the engine stand-in, found from the script's engine.name before it runs
     const m = /engine\.name\s*=\s*["']([\w-]+)["']/.exec(files[main] || "");

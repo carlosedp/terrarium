@@ -21,7 +21,8 @@ const here = path.dirname(fileURLToPath(import.meta.url));
 const scriptDir = path.resolve(process.argv[2] || ".");
 const port = +(process.argv[3] || 8800);
 const TYPES = { ".html": "text/html", ".js": "text/javascript", ".mjs": "text/javascript", ".lua": "text/plain",
-  ".json": "application/json", ".wasm": "application/wasm", ".css": "text/css" };
+  ".json": "application/json", ".wasm": "application/wasm", ".css": "text/css", ".svg": "image/svg+xml",
+  ".png": "image/png" };
 
 function send(res, file) {
   fs.readFile(file, (err, data) => {

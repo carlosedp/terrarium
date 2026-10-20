@@ -1,4 +1,4 @@
-# terrarium
+# <img src="doc/img/icon.svg" alt="" width="40" height="40" align="top"> terrarium
 
 ![terrarium: rain falling on a meadow, a pond, clouds and an aurora, inside the glass of a jar](doc/img/hero.png)
 

@@ -6,7 +6,7 @@ DEST  ?= /home/we/dust/code/terrarium
 MIUGENS ?= ../norns-mi-UGens
 
 .DEFAULT_GOAL := help
-.PHONY: help web norns-web stop test soak build clean submodules deploy manual-images manual-pdf mi-wasm
+.PHONY: help web norns-web stop test soak build clean submodules deploy manual-images manual-pdf mi-wasm logo
 
 help: ## list the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{ printf "  make %-14s %s\n", $$1, $$2 }'
@@ -45,6 +45,11 @@ manual-images: ## re-render the manual's scene pictures (doc/img) from the Lua
 	@mkdir -p tools/manual/pgm
 	lua tools/manual/shots.lua . tools/manual/pgm > /dev/null
 	python3 tools/manual/topng.py tools/manual/pgm doc/img
+
+logo: ## draw the mark (doc/img/icon.svg, logo.svg, icon-touch.svg and its 180 px PNG)
+	python3 tools/manual/logo.py doc/img
+	@[ -d tools/manual/node_modules ] || npm --prefix tools/manual install --no-fund --no-audit
+	node tools/manual/svg2png.mjs doc/img/icon-touch.svg doc/img/icon-touch.png 180
 
 manual-pdf: ## build doc/terrarium-manual.pdf from doc/MANUAL.md (node + a Chromium)
 	@[ -d tools/manual/node_modules ] || npm --prefix tools/manual install --no-fund --no-audit

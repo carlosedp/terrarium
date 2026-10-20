@@ -41,12 +41,14 @@ loads the same pinned version from jsdelivr.
 
 ## The page's text
 
-An optional `norns-web.json` next to the script gives the page a title, subtitle and intro, and a
-footer with links, the maiden install line (with a copy button) and credits or license text:
+An optional `norns-web.json` next to the script gives the page a title, subtitle and intro, an
+icon (the tab's, and beside the title; `touch_icon` is a PNG for phones' home screens, paths in the
+script), and a footer with links, the maiden install line (with a copy button) and credits or
+license text:
 
 ```json
-{ "title": "…", "subtitle": "…", "about": "…", "install": ";install https://github.com/…",
-  "links": [{ "label": "…", "url": "…" }], "footer": "…" }
+{ "title": "…", "subtitle": "…", "about": "…", "icon": "doc/icon.svg", "touch_icon": "doc/icon.png",
+  "install": ";install https://github.com/…", "links": [{ "label": "…", "url": "…" }], "footer": "…" }
 ```
 
 ## The engine stand-in
