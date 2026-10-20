@@ -50,8 +50,8 @@ the code.
 2. Every slot sounds: each voice, color and air module, each variant.
 3. Levels: a balanced default with the default modules, then the loudest and quietest pairings.
    The drone should sit about 6 dB under the notes (the browser plays the same UGens and
-   gains, so check there first). Elements' output level is a guess (`amp` 0.3); check roots
-   against aurora.
+   gains, so check there first). Aurora's engines and roots' models are leveled to each other
+   from offline renders (see Drone); confirm by ear that switching the variety doesn't jump.
 4. CPU with the heaviest pairing: reeds + pond (two Rings) + fireflies.
 5. Tune each module's map by ear with `tune()`; paste the results back and update this file.
 
@@ -358,7 +358,8 @@ pitch arrives and must land on the key, not slide into it (roots does the same).
   ties and is the fallback, also when a season leaves the chosen interval out of key.
   `Brain.drone_follow` in `lib/brain.lua`. The chance is `0.2 + change × 0.6` per phrase end.
 - **Coupled:** `duck` and `lift` ← the weather's notes (aurora and roots). Each note adds
-  `0.3 × velocity` to an activity envelope (decays over ~1.8 s) and `0.25 × velocity` to a lift
+  `0.2 × velocity` to an activity envelope (it was 0.3, which held the drone 5 dB down in
+  ordinary rain) (decays over ~1.8 s) and `0.25 × velocity` to a lift
   envelope (0.7 for a lightning strike; decays over ~3 s). The drone's level is multiplied by
   `1 − 0.5 × duck` (it gives way to the notes, up to −6 dB, and swells back in the gaps), and
   lift brightens it (aurora: timbre +0.25 × lift; roots: brightness +0.3 × lift).
@@ -372,7 +373,14 @@ pitch arrives and must land on the key, not slide into it (roots does the same).
 
 - **Variant (hold K2 + E2):** `engine`: string machine 22 (default), chords 6, wavetable 5,
   additive 4, va filter 16, wave terrain 21, phase dist 17.
-- **Fixed:** `amp` 0.25.
+- **Fixed:** `amp` 0.25, times a gain per engine so all seven sit at one level: string machine
+  +4.8 dB, chords −4, wavetable +2.7, additive −5.7, va filter −3.3, wave terrain −5.2, phase
+  dist −6.9 (`GAIN_DB` in `lib/scene/aurora.lua`).
+- **Level:** measured offline with the browser's wasm (`MiUnit` in node, root voice, glow 0.5,
+  RMS over 6 s), against the meadow playing a note a beat at the default macros: the engines
+  ranged from 2.8 dB under the notes (string machine, the default) to 8.9 over (phase dist).
+  With the gains, each is about 2 dB over the notes before ducking, at hum level 0 dB; the
+  default hum level (−4 dB) and the duck put it a few dB under them.
 
 ### Roots → `MiElements` (gate held open)
 
@@ -385,7 +393,10 @@ pitch arrives and must land on the key, not slide into it (roots does the same).
 | E3 depth  | `space`             | 0.3 → 0.85 |
 
 - **Variant (hold K2 + E2):** `model`: modal, string (default), strings.
-- **Fixed:** `bright` 0.4, `damp` 0.7, `contour` 0.8 (sustaining), `strength` 0.6, `amp` 0.3.
+- **Fixed:** `bright` 0.4, `damp` 0.7, `contour` 0.8 (sustaining), `strength` 0.6, `amp` 0.3,
+  times a gain per model to aurora's level (measured the same way, at breath and depth 0.5:
+  modal was 2.7 dB under the notes, string 6.7, strings 9.9): modal +4.7 dB, string +8.7,
+  strings +11.9 (`GAIN_DB` in `lib/scene/roots.lua`).
 - Needs MiElements, part of the mi-UGens set terrarium installs (it requires the whole set).
 
 ## CPU budget (to measure on norns)

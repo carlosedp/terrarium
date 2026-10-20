@@ -7,6 +7,8 @@
 local H = include('lib/helpers')
 
 local KINDS = { "modal", "string", "strings" }
+-- each model's gain (dB), to the same level as aurora's engines (doc/SOUND.md)
+local GAIN_DB = { 4.7, 8.7, 11.9 }
 
 local roots = {
   id = "roots", name = "roots", about = "Elements drone",
@@ -41,7 +43,9 @@ roots.map = {
 
 function roots:sound(sc)
   local s = sc.mapped(self)
-  s.model = params:get("roots_model") - 1
+  local v = params:get("roots_model")
+  s.model = v - 1
+  s.amp = s.amp * 10 ^ (GAIN_DB[v] / 20)
   s.pitch = sc.brain.drone_root()
   s.hush = sc.hushed and 0 or 1
   s.duck = H.round(sc.activity * 50) / 50 -- as aurora: gives way to the notes, lights up with them

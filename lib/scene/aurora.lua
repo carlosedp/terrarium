@@ -9,6 +9,9 @@ local H = include('lib/helpers')
 
 local KINDS = { "string machine", "chords", "wavetable", "additive", "va filter", "wave terrain", "phase dist" }
 local ENGINE = { 22, 6, 5, 4, 16, 21, 17 } -- MiPlaits engine numbers
+-- each engine's gain (dB), so they all sit at the same level: rendered offline, string machine
+-- was 2.8 dB under the soil's notes and phase dist 8.9 over (doc/SOUND.md)
+local GAIN_DB = { 4.8, -4, 2.7, -5.7, -3.3, -5.2, -6.9 }
 
 local aurora = {
   id = "aurora", name = "aurora", about = "Plaits drone",
@@ -37,7 +40,9 @@ aurora.map = {
 
 function aurora:sound(sc)
   local s = sc.mapped(self)
-  s.engine = ENGINE[params:get("aurora_engine")]
+  local v = params:get("aurora_engine")
+  s.engine = ENGINE[v]
+  s.amp = s.amp * 10 ^ (GAIN_DB[v] / 20)
   s.pitch = sc.brain.drone_root()
   s.fifth = sc.brain.drone_interval() -- the upper voice, moved now and then by the weather
   s.hush = sc.hushed and 0 or 1

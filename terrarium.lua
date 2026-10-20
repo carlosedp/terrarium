@@ -197,7 +197,7 @@ local function play(ev, fresh, vel, step)
   if voice.play then voice:play(sc, note, vel) else engine.note(note, vel, pan) end
   -- the drone answers the weather: each note makes it give way a little (it swells back in
   -- the gaps) and lights it up for a moment, a lightning strike much more than a raindrop
-  sc.activity = math.min(1, sc.activity + 0.3 * vel)
+  sc.activity = math.min(1, sc.activity + 0.2 * vel)
   sc.lift = math.min(1, sc.lift + (sc.kind(1) == "lightning" and 0.7 or 0.25) * vel)
   for i = 2, #LAYERS do
     local mod = sc.cur(i)
