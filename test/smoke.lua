@@ -161,16 +161,21 @@ check("erosion (every step)")
 
 -- snow: flakes land loosely, settle into a cover that muffles the voice, the day thaws it
 -- (meltwater drips), and it thaws away under other weather
-params:set("voice_kind", 1); params:set("meadow_timbre", 0.5); params:set("t_day", 1)
-params:set("brain_kind", 3); params:set("snow_rate", 0.8); params:set("snow_change", 0)
+params:set("voice_kind", 1); params:set("meadow_timbre", 0.5); params:set("t_day", 1); params:set("air_kind", 1)
+params:set("brain_kind", 3); params:set("snow_rate", 0.8); params:set("snow_change", 1)
 M.run(0.5)
-local clear_timbre = M.sets.voice_set.timbre
+local clear_timbre, clear_jitter = M.sets.voice_set.timbre, M.sets.air_set.pit_jitter
+params:set("snow_change", 0)
 local before = M.engine_calls.note or 0
 M.run(90)
 local snowed = M.sets.voice_set.timbre
 assert((M.engine_calls.note or 0) > before + 20, "snow: too few flakes landed")
 assert(snowed < clear_timbre - 0.05, ("snow: the cover didn't muffle the voice (%.2f -> %.2f)"):format(clear_timbre, snowed))
 params:set("snow_change", 1); M.run(30) -- loose, gusty: still plays
+-- the cold follows the cover, slower, and stills the sky: clouds' grains hold their pitch
+assert(M.sets.air_set.pit_jitter < clear_jitter * 0.85,
+  ("snow: the cold didn't still the clouds (jitter %.3f -> %.3f)"):format(clear_jitter, M.sets.air_set.pit_jitter))
+local cold_jitter = M.sets.air_set.pit_jitter
 params:set("snow_rate", 0.1); params:set("t_day", 4) -- the day on the (mocked) clock: noon
 before = M.engine_calls.note or 0
 M.run(120)

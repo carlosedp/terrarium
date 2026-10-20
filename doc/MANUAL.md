@@ -204,8 +204,14 @@ surprises.
 
 It also **settles**. Every flake adds to a layer of snow on the ground, and the snow muffles the
 soil, as real snow hushes a landscape: the sound grows darker, the notes shorter and softer. The
-longer it snows, the deeper the hush. The snow slowly thaws, and when it shrinks the meltwater
-drips a few soft notes from the phrase. Switch to other weather and the rest of it thaws away.
+longer it snows, the deeper the hush. Even a light snow builds up, only more slowly. The snow
+slowly thaws, and when it shrinks the meltwater drips a few soft notes from the phrase. Switch to
+other weather and the rest of it thaws away.
+
+And slowly, the **cold** comes in. A minute or two behind the snow, the jar grows still: the
+clouds drift slower and their grains hold their pitch, the fireflies wander less, and frost
+creeps into the corners of the glass. It never freezes the air; that's still yours, on K3. When
+the snow thaws, the cold lifts after it.
 
 - **E2 rate**: from a few flakes to a flurry, and the more it snows, the deeper it settles.
 - **E3 change**: how often the phrase changes, and how much the wind gusts: the flakes swirl,
@@ -221,7 +227,9 @@ Some things to try:
 - **Change the weather after a long snowfall.** Let it snow for a few minutes, then swap to rain:
   the muffled soil slowly comes back to life as the snow thaws.
 - **Snow with no change.** E3 all the way down: the flakes land on the beat and the phrase
-  repeats, and all that changes is the slow hush.
+  repeats, and all that changes is the slow hush and the cold coming in.
+- **Snow with fireflies.** The cold calms them: watch them slow down and listen to the grains
+  settle, then freeze the air (K3) for the last step.
 - **A flurry, then a few flakes.** Turn the rate up for a while, then down: the snow thaws back to
   where the lighter fall keeps it, and the meltwater drips along the way.
 

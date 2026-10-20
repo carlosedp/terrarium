@@ -68,7 +68,8 @@ copyright footer come from `norns-web.json`.
   return the seconds until it lands, and the note plays then. `covers` (snow) means it owns
   `sc.cover`; under any other brain the cover thaws away. `draw_front` (optional) draws after
   the voice (snow lying on the soil).
-- A voice module can set `muffle` (engine key -> how far snow's full cover pulls it toward 0).
+- A voice module can set `muffle` (engine key -> how far snow's full cover pulls it toward 0),
+  an air module `chill` (the same, for `sc.cold`, which follows the cover more slowly).
 
 ## Related repo
 

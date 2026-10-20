@@ -83,7 +83,8 @@ local CV_DEFAULT = { { 0, 0.3 }, { 0.4, 0.3 }, { 0.35, 0.25 }, { 0.35, 0.3 }, { 
 -- shared scene state handed to every module
 local sc = { t = 0, GY = GY, frozen = false, fly_t = 0, brain = Brain, nb = nb, breath = Breath, day = Day,
   activity = 0, lift = 0, -- how busy the weather is lately, and how much it lights up the drone
-  cover = 0 }             -- snow on the ground, 0..1: it muffles the voice
+  cover = 0,              -- snow on the ground, 0..1: it muffles the voice
+  cold = 0 }              -- the cold it brings into the jar, slower: the sky slows and stills
 function sc.cur(i) return LAYERS[i].mods[params:get(LAYERS[i].id .. "_kind")] end
 function sc.kind(i) return sc.cur(i).id end
 -- a macro as you set it
@@ -149,12 +150,13 @@ local function focus() focus_t = 2.5 end
 
 local function db_amp(db) return db <= -59.5 and 0 or 10 ^ (db / 20) end
 
--- snow muffles the voice: each key in its module's `muffle` is pulled toward 0 by that
--- much at full cover (rounded, so a slow thaw doesn't flood the engine)
-local function muffle(mod, s)
-  local c = math.floor(sc.cover * 100 + 0.5) / 100
-  if c <= 0 or not mod.muffle then return end
-  for k, amt in pairs(mod.muffle) do
+-- snow muffles the voice and the cold stills the air: each key in the module's `muffle`
+-- (voice) or `chill` (air) table is pulled toward 0 by that much at full cover or cold
+-- (rounded, so a slow thaw doesn't flood the engine)
+local function soften(amounts, s, v)
+  local c = math.floor(v * 100 + 0.5) / 100
+  if c <= 0 or not amounts then return end
+  for k, amt in pairs(amounts) do
     if s[k] then s[k] = math.floor(s[k] * (1 - amt * c) * 200 + 0.5) / 200 end
   end
 end
@@ -164,7 +166,7 @@ local function send_sound()
     local fn = engine[SLOT_SET[i]]
     local mod = sc.cur(i)
     local s = mod:sound(sc)
-    if i == 2 then muffle(mod, s) end
+    if i == 2 then soften(mod.muffle, s, sc.cover) elseif i == 4 then soften(mod.chill, s, sc.cold) end
     for _, l in ipairs(LEVELS) do if l[3] == i then s.vol = db_amp(params:get(l[1])) end end
     for k, v in pairs(s) do
       if sent[i][k] ~= v then
@@ -578,7 +580,7 @@ end
 local function tick()
   local dt = 1 / FPS
   sc.t = sc.t + dt
-  if not sc.frozen then sc.fly_t = sc.fly_t + dt end
+  if not sc.frozen then sc.fly_t = sc.fly_t + dt * (1 - 0.5 * sc.cold) end -- the cold slows the sky
   focus_t = math.max(0, focus_t - dt)
   toast_t = toast_t - dt
   hud_t = hud_t - dt
@@ -594,6 +596,8 @@ local function tick()
     glass.update(dt, sc)
     if not sc.cur(1).covers then sc.cover = sc.cover * math.exp(-dt / 20) end -- the snow thaws away
     if sc.cover < 0.001 then sc.cover = 0 else dirty_sound = true end
+    sc.cold = sc.cold + (sc.cover - sc.cold) * math.min(1, dt / 40) -- it comes and goes over a minute or two
+    if sc.cold < 0.001 and sc.cover == 0 then sc.cold = 0 elseif sc.cold > 0 then dirty_sound = true end
     sc.activity = sc.activity * math.exp(-dt / 1.8) -- the drone swells back over a couple of seconds
     sc.lift = sc.lift * math.exp(-dt / 3)
     if sc.kind(5) ~= "none" and (sc.activity > 0.01 or sc.lift > 0.01) then dirty_sound = true end

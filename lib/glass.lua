@@ -16,7 +16,10 @@ for i, c in ipairs({ { 0, 0 }, { W - 1, 0 }, { 0, HT - 1 }, { W - 1, HT - 1 } })
 end
 
 function glass.update(dt, sc)
-  glass.frost = H.clamp(glass.frost + dt * (sc.frozen and 0.45 or -0.9), 0, 1)
+  -- frozen air frosts the glass over; the cold of a long snowfall rimes only its corners
+  local target = sc.frozen and 1 or (sc.cold or 0) * 0.5
+  if glass.frost < target then glass.frost = math.min(target, glass.frost + dt * 0.45)
+  else glass.frost = math.max(target, glass.frost - dt * 0.9) end
 
   local raining, rate = sc.kind(1) == "rain", sc.m(1, 1)
   local wet = 0

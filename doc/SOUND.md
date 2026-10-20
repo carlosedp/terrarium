@@ -70,10 +70,12 @@ lightning double strikes and new notes accent higher).
 ### Snow cover
 
 Snow (`lib/scene/snow.lua`) keeps `sc.cover`, 0..1, the snow on the ground. Each landing flake
-adds `0.025 × (1 − cover)`; it thaws by `exp(−dt / 90 s)`, times `4 ^ light` with the day on (×4
-at noon, ÷4 at midnight). Under other weather it thaws over ~20 s (`exp(−dt / 20 s)`). Measured
-in the headless test at 120 BPM: around 0.5 with no day at the default rate, about 0.25 at noon,
-0.85 at midnight.
+adds `0.018 × beats^0.6 × (1 − cover)`, where beats is the time between flakes (1 to 8), so
+sparse flakes settle more each and a light snow still builds up. It thaws by `exp(−dt / 90 s)`,
+times `4 ^ light` with the day on (×4 at noon, ÷4 at midnight). Under other weather it thaws over
+~20 s (`exp(−dt / 20 s)`). Measured in the headless test at 120 BPM with no day, after four
+minutes: 0.52 at the slowest rate, 0.64 at the default, 0.70 at the fastest (half of that within
+the first 30 to 60 s). Higher at night, lower by day.
 
 The cover muffles the voice. Each key in the voice module's `muffle` table is multiplied by
 `1 − amount × cover` (cover rounded to 1/100, results to 1/200), and every note's velocity by
@@ -89,6 +91,24 @@ The cover muffles the voice. Each key in the voice module's `muffle` table is mu
 When the cover shrinks (checked every 4 s), every 0.04 that melted becomes a drip: a note from
 the phrase at velocity 0.35, skipped in a deep calm (breath). Over a 20-minute day that's about
 twenty drips, most of them between dawn and noon.
+
+### Cold
+
+`sc.cold` follows the cover, slower (`cold += (cover − cold) × dt / 40 s`), so the cold builds
+and lifts over a minute or two after the snow does. It never freezes anything: the air's freeze
+(K3) stays the player's. The cold:
+
+- stills the air: each key in the air module's `chill` table is multiplied by `1 − amount × cold`
+  (same rounding as the muffle):
+
+  | Air       | `chill` at full cold                |
+  | --------- | ----------------------------------- |
+  | clouds    | `pit_jitter` 0.7                    |
+  | fireflies | `time_rnd` 0.6, `pitch_rnd` 0.6     |
+  | mountains | none                                |
+
+- slows the sky: clouds drift and flicker, and fireflies fly, at `1 − 0.5 × cold` speed
+- rimes the glass's corners: the frost goes to `0.5 × cold` (the freeze takes it to 1)
 
 ## Voice
 
@@ -367,7 +387,8 @@ Worst case is 2–3 Plaits + Rings + Beads, plus the drone: 2 more Plaits (auror
 - Climate defaults: which macros should move out of the box, and how far. Brain rate is left at
   0 so rain doesn't jump between clock divisions.
 - Snow: how fast the cover builds and thaws, and how deep the muffle goes; a hush you notice
-  after a few minutes, not a filter closing. The drips might want a quieter velocity or fewer
+  after a few minutes, not a filter closing. Whether the cold should also lengthen the
+  mountains' tail (stillness won over a bigger reverb for now: real snow deadens sound). The drips might want a quieter velocity or fewer
   of them.
 
 1. Default Plaits engine for the meadow. Modal (12) is the safe pick, string machine (22) the lush one.

@@ -25,9 +25,10 @@ local snow = {
 -- beats between flakes, slow to fast: slower than rain
 snow.DIVS = { 8, 6, 4, 3, 2, 3 / 2, 1 }
 
--- each flake's share of the cover, how fast it thaws (per second, with no day)
--- and how much has to melt for a drip
-local SETTLE, MELT, DRIP = 0.025, 1 / 90, 0.04
+-- a flake's share of the cover (at a flake a beat; sparser flakes settle more each, so a
+-- light snow still builds up), how fast it thaws (per second, with no day) and how much has
+-- to melt for a drip
+local SETTLE, MELT, DRIP = 0.018, 1 / 90, 0.04
 
 -- the snowfall around the flakes that play: silent specks, near (brighter, faster) and far,
 -- more of them as the rate goes up (their own random numbers, so they don't change the music's)
@@ -43,6 +44,7 @@ end
 
 function snow.wait(m)
   local div = snow.DIVS[H.round(m[1] * (#snow.DIVS - 1)) + 1]
+  snow.div = div
   clock.sync(div)
   return clock.get_beat_sec() * div
 end
@@ -54,7 +56,8 @@ function snow.wind(sc) return sc.m(1, 2) * (6 + 6 * math.sin(sc.t * 0.23)) end
 function snow:spawn(ev, dt, sc)
   local fall = dt * (1 + sc.m(1, 2) * math.random() * 1.5)
   local ph, r = math.random() * 6.283, math.random()
-  table.insert(self.flakes, { x = ev.x, t = 0, fall = fall, ph = ph, size = r < 0.35 and 0 or (r < 0.8 and 1 or 2) })
+  table.insert(self.flakes, { x = ev.x, t = 0, fall = fall, ph = ph, size = r < 0.35 and 0 or (r < 0.8 and 1 or 2),
+    settle = SETTLE * (snow.div or 1) ^ 0.6 })
   return fall
 end
 
@@ -76,7 +79,7 @@ function snow:update(dt, sc)
     local f = self.flakes[i]
     f.t = f.t + dt
     if f.t >= f.fall then
-      sc.cover = sc.cover + SETTLE * (1 - sc.cover)
+      sc.cover = sc.cover + f.settle * (1 - sc.cover)
       table.remove(self.flakes, i)
     end
   end

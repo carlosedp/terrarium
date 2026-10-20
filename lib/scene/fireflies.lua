@@ -39,6 +39,8 @@ fireflies.map = {
   time      = 0.5,
   pitch     = 0,
 }
+-- in the cold (snow, at full): the grains wander less, in time and pitch
+fireflies.chill = { time_rnd = 0.6, pitch_rnd = 0.6 }
 
 function fireflies:sound(sc)
   local s = sc.mapped(self)

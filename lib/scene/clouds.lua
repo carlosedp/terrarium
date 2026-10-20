@@ -40,6 +40,8 @@ clouds.map = {
   lofi       = 0,
   pit_jitter = { "brain", 2, 0, 0.3 }, -- windy weather wobbles the grains
 }
+-- in the cold (snow, at full): the grains hold their pitch
+clouds.chill = { pit_jitter = 0.7 }
 
 function clouds:sound(sc)
   local s = sc.mapped(self)
@@ -57,7 +59,7 @@ end
 function clouds:update(dt, sc)
   for _, c in ipairs(CLOUDS) do
     if not sc.frozen then
-      c.cx = c.cx + dt * (2.2 + sc.wind() * 0.35) -- the weather's wind pushes them
+      c.cx = c.cx + dt * (2.2 + sc.wind() * 0.35) * (1 - 0.5 * sc.cold) -- the wind pushes them; the cold slows them
       if c.cx > 152 then c.cx = -24 end
     end
     c.spark = math.max(0, c.spark - dt * 1.6)
@@ -65,7 +67,7 @@ function clouds:update(dt, sc)
 end
 
 function clouds:draw(cv, sc)
-  local n, R, t = 6 + H.round(sc.m(4, 1) * 36), 3 + sc.m(4, 2) * 10, sc.t
+  local n, R, t = 6 + H.round(sc.m(4, 1) * 36), 3 + sc.m(4, 2) * 10, sc.fly_t -- grains flicker slower in the cold
   for _, c in ipairs(CLOUDS) do
     for i = 1, math.min(n, #c.grains) do
       local g = c.grains[i]

@@ -206,6 +206,16 @@ E1 picks a part, and the others dim for a moment so it's clear which one you're 
   read as snow, so silent specks fall around them (more with rate), and the playing ones are
   little tumbling stars; the cover is drawn after the soil (`draw_front`), burying the foot of
   the grass. A flake barely stirs the pond: its rings are smaller and fainter than a drop's.
+  Sparse flakes settle more each (`beats^0.6`), so a slow snow builds up too, only slower.
+- **Cold, not a freeze (October 2026).** A long snowfall should feel like the jar getting cold,
+  and the air's freeze looked like the obvious tool. But it's the player's gesture, and binary
+  (Clouds and Beads freeze or don't), so snow tripping it would fight K3 and read as a glitch.
+  Instead `sc.cold` follows the cover a minute or two behind and works toward a freeze without
+  reaching it: the sky slows (`fly_t`), clouds' grains hold their pitch and fireflies' wander
+  less (each air module's `chill`, like the voices' `muffle`), and frost rimes the glass's
+  corners. Stillness rather than a longer reverb: snow deadens sound. Condensation freezing on
+  the glass was considered, but beads fade within seconds of the rain stopping, long before
+  the cold builds.
 
 ## Open questions
 
