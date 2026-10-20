@@ -6,7 +6,15 @@
 local M = dofile((arg[0]:match("^(.*)/[^/]+$") or ".") .. "/mock_norns.lua")
 math.randomseed(1)
 
+-- keep hold of the script's canvas, to look at the picture
+local real_include, cv = include, nil
+function include(p)
+  local m = real_include(p)
+  if p == "lib/canvas" then cv = m end
+  return m
+end
 dofile(M.ROOT .. "/terrarium.lua")
+include = real_include
 assert(engine.name == "Terrarium", "engine.name not set")
 init()
 params:check_groups()
@@ -212,6 +220,28 @@ do
   assert(nl > 5 and nh > 5 and high / nh < low / nl, "dynamics: high notes aren't softer")
   params:set("rain_rate", 0.45); params:set("rain_change", 0.2)
   check(("dynamics (%d notes, %d velocities, low %.2f vs high %.2f)"):format(#got, distinct, low / nl, high / nh))
+end
+
+-- care for the OLED: the picture drifts a pixel now and then, and left alone a minute the
+-- part dots fade out; a touch brings them back
+do
+  local spots = {}
+  for _ = 1, 17 do M.run(30); spots[cv.ox .. "," .. cv.oy] = true end
+  local n = 0; for _ in pairs(spots) do n = n + 1 end
+  assert(n >= 2, "screen: the picture never drifted")
+  -- a quiet sky, so nothing else crosses the dots' row
+  params:set("drone_kind", 3); params:set("air_kind", 3); params:set("t_erosion", 1); params:set("brain_kind", 1)
+  M.run(70)
+  local function dot(i) -- the brightest the part's dot got over a few frames
+    local hi = 0
+    for _ = 1, 6 do M.run(1 / 15); hi = math.max(hi, cv.get(102 + (i - 1) * 4, 1)) end
+    return hi
+  end
+  for i = 1, 5 do assert(dot(i) == 0, "screen: part dot " .. i .. " stayed lit with nobody touching") end
+  turn(1, -5)
+  assert(dot(1) >= 10, "screen: a touch didn't bring the part dots back")
+  params:set("drone_kind", 1); params:set("air_kind", 1); params:set("t_erosion", 2)
+  check(("screen care (%d spots)"):format(n))
 end
 
 -- tuning from maiden: tune() remaps a parameter live; levels reach the synths as vol

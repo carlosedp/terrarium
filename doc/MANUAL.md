@@ -529,6 +529,12 @@ roots is the heaviest. Swap one of them, or choose _none_ for the hum.
 **The sound got darker and duller, all by itself.** If the weather is snow, that's the snow
 settling: it muffles the soil. Turn the rate down, let the day thaw it, or switch to rain.
 
+**The little dots at the top right disappeared, or the picture moved a pixel.** That's on
+purpose, to look after the screen: the norns screen is an OLED, and anything that never moves can
+burn into it over hours. When you leave it alone for a minute, the dots fade out and the ground
+line dims; every few minutes, the whole picture shifts by a pixel. Touch any knob and the dots
+come back.
+
 **I tapped K1 and the norns menu opened.** Terrarium only uses K1 while it's _held_. A tap is
 the norns menu, as usual.
 

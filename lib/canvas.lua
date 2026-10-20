@@ -9,7 +9,8 @@
 local W, H = 128, 64
 local floor, ceil, max, abs = math.floor, math.ceil, math.max, math.abs
 
-local Canvas = { W = W, H = H, mul = 1 }
+-- ox, oy: where blit puts the picture, a pixel or so off (the screen's drift, against burn-in)
+local Canvas = { W = W, H = H, mul = 1, ox = 0, oy = 0 }
 local buf = {}
 for i = 1, W * H do buf[i] = 0 end
 
@@ -123,13 +124,13 @@ function Canvas.blit()
       end
     end
   end
-  local rects = 0
+  local rects, ox, oy = 0, Canvas.ox, Canvas.oy
   for l = 1, 15 do
     local n = counts[l]
     if n > 0 then
       screen.level(l)
       local r = runs[l]
-      for k = 1, n, 3 do screen.rect(r[k], r[k + 1], r[k + 2], 1) end
+      for k = 1, n, 3 do screen.rect(r[k] + ox, r[k + 1] + oy, r[k + 2], 1) end
       screen.fill()
       rects = rects + n // 3
     end

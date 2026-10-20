@@ -141,6 +141,15 @@ local redraw_metro
 local hud, hud_t = nil, 0 -- { part = i } after E1, { part = i, k = macro } after E2/E3
 local HUD_SEC, HUD_PART_SEC, HUD_BAR = 1.2, 2.5, 20 -- after E1 the names stay as long as the dimming
 
+-- the screen is an OLED, and what never moves can burn in over hours: the whole picture
+-- drifts a pixel every few minutes, around a small square, and after a minute without a
+-- touch the part dots fade out and the ground line dims
+local DRIFT = { { 0, 0 }, { 1, 0 }, { 1, 1 }, { 0, 1 }, { -1, 1 }, { -1, 0 }, { -1, -1 }, { 0, -1 }, { 1, -1 } }
+local DRIFT_SEC, IDLE_SEC = 240, 60
+local touch_t = 0 -- when an encoder or key was last touched
+-- text goes where the picture is
+local function at(x, y) screen.move(x + cv.ox, y + cv.oy) end
+
 local function say(text) toast, toast_t, hud_t = text, 1.8, 0 end
 local function touched(t) hud, hud_t, toast_t = t, t.k and HUD_SEC or HUD_PART_SEC, 0 end
 local scramble -- a new terrarium (below)
@@ -470,20 +479,20 @@ local function peek_text()
   for i, L in ipairs(LAYERS) do
     local y, on = 2 + (i - 1) * 8, i == sel
     screen.level(on and 15 or 6)
-    screen.move(2, y + 5)
+    at(2, y + 5)
     screen.text(L.name)
     screen.level(on and 12 or 5)
-    screen.move(2 + part_w + 4, y + 5)
+    at(2 + part_w + 4, y + 5)
     screen.text(sc.cur(i).name)
   end
   -- the value sits past the widest setting name, so no name runs into it
   local col = 0
   for _, name in ipairs(SETTING_NAMES) do col = math.max(col, screen.text_extents(name) or 28) end
   screen.level(6)
-  screen.move(2, 46)
+  at(2, 46)
   screen.text(SETTING_NAMES[set_cursor])
   screen.level(13)
-  screen.move(2 + col + 5, 46)
+  at(2 + col + 5, 46)
   screen.text(params:string(SETTINGS[set_cursor]))
 end
 
@@ -528,7 +537,7 @@ end
 local function hud_text(labels)
   for _, l in ipairs(labels) do
     screen.level(math.max(1, math.floor(l.level)))
-    screen.move(l.x, l.y)
+    at(l.x, l.y)
     screen.text(l.text)
   end
 end
@@ -552,7 +561,8 @@ function redraw()
   cv.mul = dim(4); sc.cur(4):draw(cv, sc)  -- air (sky)
   cv.mul = dim(1); sc.cur(1):draw(cv, sc)  -- brain (weather)
   cv.mul = 1
-  cv.line(0, GY, 127, GY, 3)               -- ground
+  local idle = H.clamp((sc.t - touch_t - IDLE_SEC) / 3, 0, 1) -- 0 while in use, 1 when left alone
+  cv.line(0, GY, 127, GY, 3 - idle)        -- ground
   local sw = (sc.t - Brain.season_t) / 1.4 -- a light sweeps along it as the season turns
   if sw >= 0 and sw < 1 then
     local sx = sw * 152 - 12
@@ -573,7 +583,8 @@ function redraw()
   cv.mul = 1
   glass.draw(cv, sc)                       -- frost, condensation, erosion's dust, the jar's rim
   for i = 1, #LAYERS do
-    cv.rect(102 + (i - 1) * 4, 1, 2, 2, i == sel and (focus_t > 0 and 13 or 5) or (focus_t > 0 and 3 or 1))
+    local l = i == sel and (focus_t > 0 and 13 or 5) or (focus_t > 0 and 3 or 1)
+    if l * (1 - idle) >= 0.5 then cv.rect(102 + (i - 1) * 4, 1, 2, 2, l * (1 - idle)) end
   end
   screen.font_face(1)
   screen.font_size(8)
@@ -587,7 +598,7 @@ function redraw()
     hud_text(labels)
   elseif toast_t > 0 then
     screen.level(math.floor(14 * math.min(1, toast_t / 0.6)))
-    screen.move(2, 62)
+    at(2, 62)
     screen.text(toast)
   end
   screen.update()
@@ -598,6 +609,8 @@ local function tick()
   sc.t = sc.t + dt
   if not sc.frozen then sc.fly_t = sc.fly_t + dt * (1 - 0.5 * sc.cold) end -- the cold slows the sky
   focus_t = math.max(0, focus_t - dt)
+  local d = DRIFT[math.floor(sc.t / DRIFT_SEC) % #DRIFT + 1]
+  cv.ox, cv.oy = d[1], d[2]
   toast_t = toast_t - dt
   hud_t = hud_t - dt
   if not installer.active then
@@ -626,6 +639,7 @@ end
 
 function enc(n, d)
   if installer.active then return end
+  touch_t = sc.t
   if k1 and n > 1 then -- holding K1: settings
     if n == 2 then set_cursor = H.clamp(set_cursor + d, 1, #SETTINGS)
     else params:delta(SETTINGS[set_cursor], d) end
@@ -663,6 +677,7 @@ function key(n, z)
     installer.key(n, z)
     return
   end
+  touch_t = sc.t
   if n == 1 then
     k1 = z == 1
     return

@@ -41,7 +41,9 @@ copyright footer come from `norns-web.json`.
   `sc.mapped()`, plus its `sound()` for option params and conditional couplings); the
   engine only exposes raw parameters per slot. Keep `doc/SOUND.md` in sync when tuning.
 - **Draw through `lib/canvas.lua`** (framebuffer, later layers can erase/dim earlier ones), then
-  `cv.blit()`; native `screen.text` overlays go after the blit.
+  `cv.blit()`; native `screen.text` overlays go after the blit, positioned with `at(x, y)`, not
+  `screen.move`: the picture drifts a pixel now and then (against OLED burn-in) and text must
+  follow it.
 - **K1 is hold-only.** A quick K1 tap opens the norns system menu.
 - `lib/scene/none.lua` is an empty module (no macros, silent, draws nothing); enc() skips
   macros a module doesn't have.

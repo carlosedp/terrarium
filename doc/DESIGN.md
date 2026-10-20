@@ -227,6 +227,10 @@ E1 picks a part, and the others dim for a moment so it's clear which one you're 
   played the same key and the same density for hours: seasons, breath and climate all started
   off. Seasons now start on _slow_ and breath on _gentle_, so the default already turns and
   pauses. Climate stays off: it moves every macro, which is a bigger thing to find on by surprise.
+- **Care for the OLED (October 2026).** The ground line, the jar's rim and the part dots never
+  move, and a norns left running all evening could burn them in. The whole picture drifts a
+  pixel every four minutes around a small square (text moves with it), and after a minute with
+  no touch the part dots fade out and the ground line dims a step.
 
 ## Open questions
 
