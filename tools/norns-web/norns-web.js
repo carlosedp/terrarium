@@ -581,6 +581,16 @@
   const KEYS = { a: 1, s: 2, d: 3 };
   const typing = (e) =>
     e.target.closest && e.target.closest("input, select, textarea");
+  // keys pressed on the keyboard, so only those get released: a letter typed into the REPL
+  // has its keyup too, and a K2 release swaps the module in some scripts
+  const held = new Set();
+  const release = (k) => {
+    if (!held.delete(k)) return;
+    document
+      .querySelector(`.key[data-k="${KEYS[k]}"]`)
+      ?.classList.remove("down");
+    key(KEYS[k], 0);
+  };
   window.addEventListener("keydown", (e) => {
     if (e.metaKey || e.ctrlKey || e.altKey || typing(e)) return;
     const k = e.key.toLowerCase();
@@ -588,6 +598,7 @@
       enc(...KEYMAP[k]);
       e.preventDefault();
     } else if (KEYS[k] && !e.repeat) {
+      held.add(k);
       document
         .querySelector(`.key[data-k="${KEYS[k]}"]`)
         ?.classList.add("down");
@@ -595,14 +606,11 @@
       e.preventDefault();
     }
   });
-  window.addEventListener("keyup", (e) => {
-    const k = e.key.toLowerCase();
-    if (KEYS[k]) {
-      document
-        .querySelector(`.key[data-k="${KEYS[k]}"]`)
-        ?.classList.remove("down");
-      key(KEYS[k], 0);
-    }
+  window.addEventListener("keyup", (e) => release(e.key.toLowerCase()));
+  // leaving the window (or clicking into the REPL) while holding a key lets it go
+  window.addEventListener("blur", () => held.forEach(release));
+  document.addEventListener("focusin", (e) => {
+    if (typing(e)) held.forEach(release);
   });
 
   // ---------- PSET ----------
