@@ -6,7 +6,7 @@ DEST  ?= /home/we/dust/code/terrarium
 MIUGENS ?= ../norns-mi-UGens
 
 .DEFAULT_GOAL := help
-.PHONY: help web norns-web stop test build clean submodules deploy manual-images manual-pdf mi-wasm
+.PHONY: help web norns-web stop test soak build clean submodules deploy manual-images manual-pdf mi-wasm
 
 help: ## list the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{ printf "  make %-14s %s\n", $$1, $$2 }'
@@ -22,6 +22,9 @@ stop: ## stop a running norns-web server
 
 test: ## headless smoke test of the Lua side
 	lua test/smoke.lua
+
+soak: ## hours of jar time headless, looking for leaks and stuck states (HOURS=8, ~1.5 min each)
+	lua test/soak.lua $(or $(HOURS),8)
 
 build: ## static copy of norns-web in tools/norns-web/dist (to publish)
 	node tools/norns-web/build.mjs --cdn

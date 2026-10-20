@@ -15,6 +15,7 @@ The Lua side passes a headless smoke test; `lib/Engine_Terrarium.sc` has never b
 
 ```
 lua test/smoke.lua                    # headless run against test/mock_norns.lua: all modules, gestures, settings, installer
+lua test/soak.lua [hours]             # hours of jar time, for leaks and stuck states (make soak; ~1.5 min an hour)
 node tools/norns-web/serve.mjs        # the real script in a browser at http://localhost:8800/
 node tools/norns-web/build.mjs --cdn  # static copy in tools/norns-web/dist/, to publish
 make mi-wasm                          # rebuild the browser's mi-UGens (lib/Engine_Terrarium/)

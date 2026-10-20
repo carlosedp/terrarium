@@ -136,6 +136,11 @@ It loads the script against `test/mock_norns.lua`, plays every module, gesture a
 exercises the installer path, and prints screen calls per frame. It checks the Lua logic only:
 no sound, no real screen.
 
+`lua test/soak.lua [hours]` (`make soak`) runs the jar for hours of jar time (8 by default, about
+1.5 minutes each) with climate, a day, seasons and breath on and a new terrarium every 20
+minutes, and fails on what only shows up over hours: growing memory or lists, values out of range
+or NaN, silence, a hum stuck hushed.
+
 To see and play the real script in a browser, run [norns-web](tools/norns-web/README.md):
 
 ```

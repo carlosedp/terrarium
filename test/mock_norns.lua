@@ -143,6 +143,10 @@ function M.advance_clocks()
       e.wake = e.wake + (delay or 0)
     end
   end
+  -- finished clocks go, as on norns (snow runs one per flake, so hours would pile them up)
+  for i = #M.coroutines, 1, -1 do
+    if coroutine.status(M.coroutines[i].co) == "dead" then table.remove(M.coroutines, i) end
+  end
 end
 
 -- ---------- metro ----------
