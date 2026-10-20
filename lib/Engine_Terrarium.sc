@@ -9,7 +9,7 @@
 // The Lua side owns every mapping from macros to parameters (see doc/SOUND.md);
 // this engine only exposes the slots and their raw parameters:
 //
-//   note(pitch, accent)            play a note on the next voice (and strum Rings)
+//   note(pitch, accent, pan)       play a note on the next voice (and strum Rings)
 //   voice_kind(name)               plaits | rings | none (nb plays the notes)
 //   voice_set(key, value)          set a parameter on the voice synths
 //   color_kind(name)               pond | fog
@@ -183,7 +183,7 @@ Engine_Terrarium : CroneEngine {
 	}
 
 	addCommands {
-		this.addCommand(\note, "ff", { |msg| this.note(msg[1], msg[2]) });
+		this.addCommand(\note, "fff", { |msg| this.note(msg[1], msg[2], msg[3]) });
 		this.addCommand(\voice_kind, "s", { |msg| this.setVoice(msg[1].asSymbol) });
 		this.addCommand(\voice_set, "sf", { |msg| this.voiceSet(msg[1].asSymbol, msg[2]) });
 		this.addCommand(\color_kind, "s", { |msg| this.setColor(msg[1].asSymbol) });
@@ -195,12 +195,13 @@ Engine_Terrarium : CroneEngine {
 		this.addCommand(\tape_set, "sf", { |msg| this.tapeSet(msg[1].asSymbol, msg[2]) });
 	}
 
-	note { |pitch, accent|
+	// pan: where the note landed, -1 left .. 1 right (the Rings voice is stereo by itself)
+	note { |pitch, accent, pan = 0|
 		var v;
 		if (ready.not or: { voices.isNil }) { ^this };
 		v = voices[nextVoice];
 		nextVoice = (nextVoice + 1) % voices.size;
-		v.set(\pitch, pitch, \level, 0.5 + (0.5 * accent), \pan, 0.3.rand2, \t_trig, 1);
+		v.set(\pitch, pitch, \level, 0.5 + (0.5 * accent), \pan, pan, \t_trig, 1);
 		if (colorKind == \pond) { colorSynth !? { colorSynth.set(\pitch, pitch, \t_trig, 1) } };
 	}
 

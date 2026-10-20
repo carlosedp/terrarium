@@ -207,6 +207,12 @@ E1 picks a part, and the others dim for a moment so it's clear which one you're 
   little tumbling stars; the cover is drawn after the soil (`draw_front`), burying the foot of
   the grass. A flake barely stirs the pond: its rings are smaller and fainter than a drop's.
   Sparse flakes settle more each (`beats^0.6`), so a slow snow builds up too, only slower.
+- **Notes played like a hand, heard from where they land (October 2026).** For hours of
+  listening, two fixed loudnesses (new note, repeat) and random panning started to sound
+  mechanical. Now each note varies a little, each phrase comes forward or steps back (a slow
+  random walk), the first step leans in, and high notes are softer (as on an acoustic
+  instrument; three octaves at one level made the top pierce). The pan follows the note's place,
+  so the stereo field mirrors the picture: "every note is a place", for the ears too.
 - **Cold, not a freeze (October 2026).** A long snowfall should feel like the jar getting cold,
   and the air's freeze looked like the obvious tool. But it's the player's gesture, and binary
   (Clouds and Beads freeze or don't), so snow tripping it would fight K3 and read as a glitch.

@@ -178,10 +178,23 @@ local function send_sound()
   dirty_sound = false
 end
 
-local function play(ev, fresh, vel)
-  local voice = sc.cur(2)
-  vel = (vel or (fresh and 1 or 0.7)) * (1 - 0.35 * sc.cover) -- snow softens it
-  if voice.play then voice:play(sc, Brain.pitch(ev.x), vel) else engine.note(Brain.pitch(ev.x), vel) end
+-- how a note is played: each a little different, like a hand; with the phrase's swell (some
+-- phrases come forward, some recede) and its first step leaning in; high notes softer, as on
+-- an acoustic instrument, so the top of the range never pierces
+local swell = 0.9
+local function dynamics(note, step)
+  local v = swell * (1 + (math.random() - 0.5) * 0.16)
+  if step == 1 then v = v * 1.1 end
+  return v * (1 - 0.3 * H.clamp((note - 57) / 27, 0, 1))
+end
+
+-- step: where in the phrase it is (nil for a strike or a drip)
+local function play(ev, fresh, vel, step)
+  local voice, note = sc.cur(2), Brain.pitch(ev.x)
+  vel = (vel or (fresh and 1 or 0.75)) * dynamics(note, step) * (1 - 0.35 * sc.cover) -- snow softens it
+  vel = H.clamp(vel, 0, 1)
+  local pan = (ev.x / 127 * 2 - 1) * 0.6 -- you hear a note from where it lands
+  if voice.play then voice:play(sc, note, vel) else engine.note(note, vel, pan) end
   -- the drone answers the weather: each note makes it give way a little (it swells back in
   -- the gaps) and lights it up for a moment, a lightning strike much more than a raindrop
   sc.activity = math.min(1, sc.activity + 0.3 * vel)
@@ -195,16 +208,17 @@ sc.play = play -- snow's meltwater plays a note of its own
 
 -- the brain: wait (clock sync or random sleep), step the phrase, play
 local function brain_loop()
-  local pending, pending_fresh
+  local pending, pending_fresh, pending_step
   while true do
     local mod = sc.cur(1)
     local m = { sc.m(1, 1), sc.m(1, 2) }
     local dt = mod.wait(m)
     local ev, fresh = Brain.step(m[2], sc.t)
+    local step = Brain.last_step
     if ev and Breath.rest() then ev = nil end -- a calm spell: the note rests, the phrase keeps it
     if mod.lookahead then -- rain: the drop spawned last step lands now
-      if pending then play(pending, pending_fresh) end
-      pending, pending_fresh = ev, fresh
+      if pending then play(pending, pending_fresh, nil, pending_step) end
+      pending, pending_fresh, pending_step = ev, fresh, step
       if ev then mod:spawn(ev, dt, sc) end
     elseif mod.drifts then -- snow: the flake falls at its own pace and plays where it lands
       pending = nil
@@ -212,14 +226,14 @@ local function brain_loop()
         local land = mod:spawn(ev, dt, sc)
         clock.run(function()
           clock.sleep(land)
-          play(ev, fresh)
+          play(ev, fresh, nil, step)
         end)
       end
     else
       pending = nil
       if ev then
         mod:spawn(ev, dt, sc)
-        play(ev, fresh)
+        play(ev, fresh, nil, step)
       end
     end
   end
@@ -333,6 +347,8 @@ end
 -- the season turned: show it in the settings without moving home
 -- at each phrase end: breath may calm the weather, and the drone may follow it
 Brain.on_phrase = function(change, t)
+  -- the next phrase comes a little forward or steps back, wandering around 0.9
+  swell = H.clamp(swell + (math.random() - 0.5) * 0.16 + (0.9 - swell) * 0.2, 0.72, 1)
   Breath.phrase()
   Brain.drone_follow(change, t)
   dirty_sound = true

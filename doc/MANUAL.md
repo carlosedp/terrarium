@@ -73,7 +73,7 @@ Beads.
 Open terrarium and just listen for a while.
 
 Rain falls on the meadow. Each drop lands somewhere along the ground, and **that place is the
-note**: further left is lower, further right is higher. Where it lands, a flower blooms and the
+note**: further left is lower, further right is higher, and you hear it from that side too. Where it lands, a flower blooms and the
 pond ripples. The sound rises into the clouds.
 
 The drops aren't random. The weather keeps a short **phrase** of notes, and plays it over and

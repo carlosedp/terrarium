@@ -184,7 +184,35 @@ local thaw_notes = (M.engine_calls.note or 0) - before
 params:set("t_day", 1); params:set("brain_kind", 1); M.run(120)
 assert(math.abs(M.sets.voice_set.timbre - clear_timbre) < 0.02, "snow: the cover didn't thaw away under rain")
 params:set("snow_rate", 0.5); params:set("snow_change", 0.3)
-check(("snow (timbre %.2f under cover, %d notes in the thaw)"):format(snowed, thaw_notes))
+check(("snow (timbre %.2f under cover, clouds jitter %.2f in the cold, %d notes in the thaw)"):format(snowed, cold_jitter, thaw_notes))
+
+-- how notes play: velocities vary (a hand, the phrase's swell, the first step), a note is
+-- heard from where it lands (pan follows pitch, both from x), and high notes are softer
+do
+  params:set("brain_kind", 1); params:set("voice_kind", 1); params:set("rain_rate", 1); params:set("rain_change", 0.5)
+  params:set("t_breath", 1); params:set("t_range", 3)
+  local orig, got = engine.note, {}
+  rawset(engine, "note", function(pitch, vel, pan) got[#got + 1] = { pitch, vel, pan }; orig(pitch, vel, pan) end)
+  M.run(120)
+  rawset(engine, "note", nil)
+  assert(#got > 100, "dynamics: too few notes")
+  local vels, low, high, nl, nh, sxy, sx, sy, sxx = {}, 0, 0, 0, 0, 0, 0, 0, 0
+  for _, n in ipairs(got) do
+    local p, v, pan = n[1], n[2], n[3]
+    assert(pan and pan >= -0.6 and pan <= 0.6, "dynamics: pan missing or out of range")
+    assert(v > 0 and v <= 1, "dynamics: velocity out of 0..1")
+    vels[math.floor(v * 100)] = true
+    if p < 60 then low, nl = low + v, nl + 1 elseif p > 72 then high, nh = high + v, nh + 1 end
+    sx, sy, sxy, sxx = sx + p, sy + pan, sxy + p * pan, sxx + p * p
+  end
+  local distinct = 0; for _ in pairs(vels) do distinct = distinct + 1 end
+  assert(distinct > 10, "dynamics: velocities barely vary")
+  local cov = sxy / #got - (sx / #got) * (sy / #got)
+  assert(cov > 0, "dynamics: higher notes don't sound further right")
+  assert(nl > 5 and nh > 5 and high / nh < low / nl, "dynamics: high notes aren't softer")
+  params:set("rain_rate", 0.45); params:set("rain_change", 0.2)
+  check(("dynamics (%d notes, %d velocities, low %.2f vs high %.2f)"):format(#got, distinct, low / nl, high / nh))
+end
 
 -- tuning from maiden: tune() remaps a parameter live; levels reach the synths as vol
 params:set("air_kind", 1) -- clouds

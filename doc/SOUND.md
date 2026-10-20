@@ -64,8 +64,20 @@ the code.
 | K3        | new phrase                                                                                                                                                                                                                          |                                               |
 | Settings  | key, scale, range (1–3 octaves), length (4–16), seasons                                                                                                                                                                             | also in PARAMS; grid later                    |
 
-Each note sends `pitch` (MIDI note) and a velocity-like `accent` (0..1, from the brain: e.g.
-lightning double strikes and new notes accent higher).
+Each note sends `pitch` (MIDI note), a velocity-like `accent` (0..1) and `pan`:
+
+- **accent** = base × swell × hand × tilt × snow, clamped to 0..1 (`play()` in `terrarium.lua`):
+  - base: 1 for a new note, 0.75 for one the phrase repeats (0.35 for a meltwater drip)
+  - swell: per phrase, a random walk around 0.9 (±0.08 a phrase, pulled back 20%, kept in
+    0.72..1), so some phrases come forward and some recede
+  - hand: ±8% per note, and ×1.1 on the phrase's first step
+  - tilt: 1 up to A3 (57), down to 0.7 at C6 (84), so the top of the range never pierces
+  - snow: `1 − 0.35 × cover`
+- **pan** = `(x / 127 × 2 − 1) × 0.6`: a note is heard from where it lands, left to right (it was
+  a random ±0.3). The Plaits voices pan; the Rings voice is stereo by itself; visitors play
+  through nb, which pans them its own way.
+
+The engine maps accent to Plaits' `level` (`0.5 + 0.5 × accent`), which opens the LPG.
 
 ### Snow cover
 
