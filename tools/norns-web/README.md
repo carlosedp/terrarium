@@ -23,7 +23,7 @@ encoders take the scroll wheel and dragging.
 
 ## The device
 
-Two shells, under the screen: **shield** (the default: compact, K1 and E1 top right, K2 K3 E2 E3
+Two shells, under the screen: **shield** (the default: compact, K1 top left and E1 top right, K2 K3 E2 E3
 along the bottom) or **norns**, and the screen's color: **white** or **yellow** (the amber some
 shields have). They're remembered by the browser, and the URL can set them:
 `?shell=norns&screen=yellow`. On a phone the page is touch-first: drag the encoders up and down,

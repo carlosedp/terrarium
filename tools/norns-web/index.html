@@ -175,19 +175,19 @@
       justify-self: end;
     }
 
-    /* shield: squarer; K1 and E1 top right, the screen in the middle, K2 K3 E2 E3 along the bottom */
+    /* shield: squarer; K1 top left and E1 top right, the screen in the middle, K2 K3 E2 E3 along the bottom */
     .norns[data-shell="shield"] {
       max-width: 540px;
       border-radius: 12px;
       padding: 20px 22px 24px;
       gap: 16px 12px;
       grid-template-columns: repeat(4, minmax(0, 1fr));
-      grid-template-areas: "brand brand k1 e1" "screen screen screen screen" "k2 k3 e2 e3";
+      grid-template-areas: "k1 brand brand e1" "screen screen screen screen" "k2 k3 e2 e3";
       justify-items: center;
     }
 
     .norns[data-shell="shield"] .brand {
-      justify-self: start;
+      justify-self: center;
     }
 
     .norns[data-shell="shield"] .screen {
