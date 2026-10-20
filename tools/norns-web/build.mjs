@@ -3,7 +3,8 @@
 //   node tools/norns-web/build.mjs [--cdn] [script dir, default .] [out dir, default tools/norns-web/dist]
 //
 // The out dir gets the page, the runtime, files.json (every .lua file of the
-// script), the script's lib/Engine_*.js stand-ins, and vendored wasmoon; with
+// script), the script's lib/Engine_*.js stand-ins (each with its lib/Engine_*/
+// folder of files, if it has one), and vendored wasmoon; with
 // --cdn the page loads the same pinned wasmoon from jsdelivr instead.
 import fs from "node:fs";
 import path from "node:path";
@@ -35,6 +36,9 @@ fs.writeFileSync(path.join(out, "index.html"), page);
 const libDir = path.join(scriptDir, "lib");
 for (const f of fs.existsSync(libDir) ? fs.readdirSync(libDir) : []) {
   if (/^Engine_.*\.js$/.test(f)) fs.copyFileSync(path.join(libDir, f), path.join(out, "script/lib", f));
+  const files = path.join(libDir, f.replace(/\.js$/, ""));   // the stand-in's own files (wasm, workers...)
+  if (/^Engine_.*\.js$/.test(f) && fs.existsSync(files) && fs.statSync(files).isDirectory())
+    fs.cpSync(files, path.join(out, "script/lib", path.basename(files)), { recursive: true });
 }
 const m = manifest(scriptDir, "script/");
 fs.writeFileSync(path.join(out, "files.json"), JSON.stringify(m));

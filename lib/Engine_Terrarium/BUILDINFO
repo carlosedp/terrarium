@@ -1,0 +1,6 @@
+repo:       https://github.com/v7b1/mi-UGens
+ref:        main
+commit:     ea71c18750a414f705a0dcad1d5e172f181bee0c
+prs:        24
+wrapper:    norns-mi-UGens v1.0.0-1-g8b71060-dirty (wasm/)
+built:      2026-10-19T23:04:06Z (wasm, docker.io/emscripten/emsdk:4.0.10)

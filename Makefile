@@ -3,9 +3,10 @@
 PORT  ?= 8800
 NORNS ?= we@norns.local
 DEST  ?= /home/we/dust/code/terrarium
+MIUGENS ?= ../norns-mi-UGens
 
 .DEFAULT_GOAL := help
-.PHONY: help web norns-web stop test build clean submodules deploy manual-images manual-pdf
+.PHONY: help web norns-web stop test build clean submodules deploy manual-images manual-pdf mi-wasm
 
 help: ## list the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{ printf "  make %-14s %s\n", $$1, $$2 }'
@@ -35,7 +36,7 @@ submodules: ## fetch lib/nb after a clone without --recurse-submodules
 # then load it from the norns menu or maiden
 deploy: test ## copy the script to the norns (needs ssh access)
 	rsync -av --delete --exclude '.*' --exclude tools --exclude test --exclude doc --exclude '*.js' \
-		--exclude Makefile ./ $(NORNS):$(DEST)/
+		--exclude Makefile --exclude 'Engine_Terrarium/' ./ $(NORNS):$(DEST)/
 
 manual-images: ## re-render the manual's scene pictures (doc/img) from the Lua
 	@mkdir -p tools/manual/pgm
@@ -45,3 +46,10 @@ manual-images: ## re-render the manual's scene pictures (doc/img) from the Lua
 manual-pdf: ## build doc/terrarium-manual.pdf from doc/MANUAL.md (node + a Chromium)
 	@[ -d tools/manual/node_modules ] || npm --prefix tools/manual install --no-fund --no-audit
 	node tools/manual/pdf.mjs
+
+# the browser's engine plays mi-UGens built as WebAssembly by norns-mi-UGens (podman or docker)
+mi-wasm: ## rebuild lib/Engine_Terrarium/ (the browser's mi-UGens) from norns-mi-UGens (MIUGENS=...)
+	cd $(MIUGENS) && ./build.sh --wasm --pr 24
+	cp $(MIUGENS)/work/out-wasm/*.wasm $(MIUGENS)/work/out-wasm/mi-ugens.js \
+		$(MIUGENS)/work/out-wasm/mi-ugens-node.js $(MIUGENS)/work/out-wasm/BUILDINFO lib/Engine_Terrarium/
+	chmod -x lib/Engine_Terrarium/*

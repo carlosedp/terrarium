@@ -16,6 +16,7 @@ The Lua side passes a headless smoke test; `lib/Engine_Terrarium.sc` has never b
 lua test/smoke.lua                    # headless run against test/mock_norns.lua: all modules, gestures, settings, installer
 node tools/norns-web/serve.mjs        # the real script in a browser at http://localhost:8800/
 node tools/norns-web/build.mjs --cdn  # static copy in tools/norns-web/dist/, to publish
+make mi-wasm                          # rebuild the browser's mi-UGens (lib/Engine_Terrarium/)
 ```
 
 Run the smoke test after every Lua change. It also asserts that params group counts match.
@@ -54,7 +55,11 @@ copyright footer come from `norns-web.json`.
 - A voice module can define `play(sc, note, vel)` to play notes itself instead of the engine
   (visitors does, through nb). `lib/nb` is a git submodule (sixolet/nb); don't edit it.
 - **Engine command changes go in three places:** `lib/Engine_Terrarium.sc`, the Lua that sends
-  them, and `lib/Engine_Terrarium.js` (the browser stand-in), or norns-web logs them as unknown.
+  them, and `lib/Engine_Terrarium.js` (the browser engine), or norns-web logs them as unknown.
+- **A SynthDef change goes in `Engine_Terrarium.js` too** (its `DEFS`, one function per SynthDef):
+  it plays the same mi-UGens, built as WebAssembly in `lib/Engine_Terrarium/` (don't edit those;
+  `make mi-wasm` rebuilds them from `~/projects/norns-mi-UGens`, `./build.sh --wasm`). Scalar vs
+  control rate matters as in the SynthDef: a literal is a scalar, a SynthDef argument a control.
 - `tools/norns-web` must stay generic: nothing terrarium-specific in it. The browser runs Lua 5.4,
   so it won't catch 5.4-only code that would fail on norns (5.3).
 - A brain module must define `wind(sc)` (the sky drifts with it); `flash()` is optional.
@@ -66,7 +71,9 @@ mi-UGens for norns: `./build.sh --pr 24` cross-compiles in a Debian Buster armhf
 (upstream v7b1/mi-UGens + PR 24 = MiBeads), `./deploy.sh` installs over ssh. Its GitHub release
 asset `mi-UGens-norns.tar.gz` (fixed name, latest release) is what `lib/installer.lua` downloads;
 the tarball carries `install.sh`, which moves older mi-UGens installs aside (duplicate classes
-break sclang).
+break sclang). `./build.sh --wasm --pr 24` builds seven of them as WebAssembly for the browser
+(`wasm/`: a stand-in `SC_PlugIn.h` so the wrappers compile unchanged, `mi-ugens.js` runs them in
+an AudioWorklet, `test.mjs` renders each in node); that output is `lib/Engine_Terrarium/` here.
 
 ## Environment
 

@@ -6,7 +6,7 @@ A small world of Mutable Instruments for [monome norns](https://monome.org/docs/
 
 **[Read the manual](doc/MANUAL.md)** for how to play it (also as a [PDF](doc/terrarium-manual.pdf)),
 or **[try it in your browser](https://carlosedp.github.io/terrarium/)**, phones included: the real
-script, with rough stand-ins for the sound.
+script, playing the real Mutable Instruments code.
 
 The patch is a landscape. Five parts each draw one piece of the scene and play one part of
 the sound. Swap a module and that piece of the scene changes; turn a macro and the scene moves
@@ -100,7 +100,8 @@ lib/nb/                  the nb library (git submodule), for visitors
 lib/scene/*.lua          one file per module: its drawing, macros and sound mapping
 lib/installer.lua        mi-UGens check and installer
 doc/SOUND.md             macro -> mi-UGen parameter map (the tuning reference)
-lib/Engine_Terrarium.js  Web Audio stand-in for the engine, for norns-web (norns ignores it)
+lib/Engine_Terrarium.js  the engine for norns-web: the same graphs, in Web Audio (norns ignores it)
+lib/Engine_Terrarium/    the mi-UGens it plays, built as WebAssembly (`make mi-wasm`)
 tools/norns-web/         runs the script's real Lua in a browser
 test/                    mocked norns runtime and a smoke test
 ```
@@ -134,8 +135,10 @@ To see and play the real script in a browser, run [norns-web](tools/norns-web/RE
 node tools/norns-web/serve.mjs     # then open http://localhost:8800/
 ```
 
-It runs this Lua as is (screen, controls, clocks, PARAMS), with rough Web Audio stand-ins for the
-engine (`lib/Engine_Terrarium.js`), not the MI engines. Every push to main publishes it to
+It runs this Lua as is (screen, controls, clocks, PARAMS). The engine is `lib/Engine_Terrarium.js`:
+each SynthDef rebuilt in Web Audio around the same mi-UGens, compiled to WebAssembly by
+[norns-mi-UGens](https://github.com/carlosedp/norns-mi-UGens) (`./build.sh --wasm`) and kept in
+`lib/Engine_Terrarium/` (`make mi-wasm` rebuilds them). Every push to main publishes it to
 <https://carlosedp.github.io/terrarium/> (`.github/workflows/pages.yml`).
 
 ## Tuning
@@ -163,7 +166,10 @@ terrarium is made by [Voltage Foundry Modular](https://vfmod.com). © 2026 Volta
   reserved.
 - **Built on others' work:** the sound is Émilie Gillet's
   [Mutable Instruments code](https://github.com/pichenettes/eurorack), via Volker Böhm's
-  [mi-UGens](https://github.com/v7b1/mi-UGens) (installed separately, not part of this repository).
+  [mi-UGens](https://github.com/v7b1/mi-UGens) (GPL-3.0), installed separately on the norns. The
+  browser version carries WebAssembly builds of seven of them in `lib/Engine_Terrarium/`, built
+  from [norns-mi-UGens](https://github.com/carlosedp/norns-mi-UGens) (`BUILDINFO` there records
+  the source).
   [nb](https://github.com/sixolet/nb) by sixolet is a git submodule;
   [wasmoon](https://github.com/ceifa/wasmoon) (MIT) is vendored in `tools/norns-web`.
 - Mutable Instruments, monome, norns and all other product names are trademarks of their

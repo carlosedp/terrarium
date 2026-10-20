@@ -1,7 +1,7 @@
 {
   "title": "terrarium",
   "subtitle": "generative music in a jar, for monome norns",
-  "about": "The real terrarium script, running in your browser. Weather falls on a landscape and plays where it lands; you choose what lives in each part of the jar and shape it with two knobs. Press Start sound, then turn E1 to pick a part and E2/E3 to shape it. The sound here is a sketch: on a norns, it's Mutable Instruments' modules.",
+  "about": "The real terrarium script, running in your browser. Weather falls on a landscape and plays where it lands; you choose what lives in each part of the jar and shape it with two knobs. Press Start sound, then turn E1 to pick a part and E2/E3 to shape it. The sound is Mutable Instruments' code, the same a norns plays, compiled for the browser.",
   "install": ";install https://github.com/carlosedp/terrarium",
   "links": [
     {

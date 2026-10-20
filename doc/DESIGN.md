@@ -166,6 +166,16 @@ E1 picks a part, and the others dim for a moment so it's clear which one you're 
   `tools/norns-web` runs the actual Lua in the browser instead (wasmoon, Lua compiled to
   WebAssembly, a third of native speed; a pure-JS Lua was 28× slower). It's generic, so other
   scripts can use it. The prototype's "scene details" toggles were dropped: the details stay on.
+- **The browser plays the real mi-UGens (October 2026).** The browser engine was a Web Audio
+  sketch (FM pairs, biquads, a convolver): fine for checking the routing, useless for judging a
+  sound or tuning a map. norns-mi-UGens now builds mi-UGens as WebAssembly: the SuperCollider
+  wrappers compile unchanged against a small stand-in for SC's plugin header, and run in an
+  AudioWorklet the way scsynth runs them (64-sample blocks, input rates, `t_trig`, `.lag`).
+  `lib/Engine_Terrarium.js` rebuilds each SynthDef from those nodes, so the browser and the norns
+  run the same DSP code with the same parameters; what differs is the glue (Web Audio gains and
+  panners for `Pan2`, `Out` and the fades) and the tape. The sketch is gone rather than kept as a
+  fallback: one more copy of every SynthDef to keep in step. Browsers without AudioWorklet or
+  wasm SIMD (Safari before 16.4) get no sound, like a norns without mi-UGens.
 - **nb voices are visitors, a fourth voice module (October 2026).** nb voices each define their
   own parameters, so the scene can only promise E2 → the voice's generic `modulate`, E3 → note
   length; the voice itself is the variant (hold K2 + E2). They're drawn as creatures from outside

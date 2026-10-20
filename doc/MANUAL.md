@@ -549,8 +549,9 @@ and tuning notes are in [SOUND.md](SOUND.md); the design decisions are in [DESIG
 ### In a browser
 
 terrarium can run in a web browser for development: `make web` in the repository, then open
-<http://localhost:8800/>. It's the same Lua code with rough sound stand-ins, not the Mutable
-Instruments modules. In the browser, visitors come with one simple built-in voice ("web synth").
+<http://localhost:8800/>. It's the same Lua code, and the same Mutable Instruments code makes
+the sound, compiled for the browser. In the browser, visitors come with one simple built-in voice
+("web synth").
 See [tools/norns-web](../tools/norns-web/README.md).
 
 ---

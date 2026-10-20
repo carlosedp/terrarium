@@ -2,7 +2,10 @@
 
 How each macro on the screen drives the real mi-UGens. This is the starting point for
 tuning: ranges and curves are first guesses, to be adjusted by ear on the real engines.
-In the browser (norns-web), `lib/Engine_Terrarium.js` plays rough Web Audio stand-ins.
+In the browser (norns-web), `lib/Engine_Terrarium.js` plays the same mi-UGens, built as
+WebAssembly, in the same graphs; only the tape is an approximation (it's plain SuperCollider
+UGens in the engine). Levels and timbres heard there are worth tuning from, then confirming on
+the norns.
 
 Conventions:
 
@@ -44,8 +47,9 @@ the code.
 1. The engine compiles (it never has). Fix whatever SuperCollider complains about.
 2. Every slot sounds: each voice, color and air module, each variant.
 3. Levels: a balanced default with the default modules, then the loudest and quietest pairings.
-   The drone should sit about 6 dB under the notes (in the browser stand-in: notes -14 dBFS,
-   drone -20). Elements' output level is a guess (`amp` 0.3); check roots against aurora.
+   The drone should sit about 6 dB under the notes (the browser plays the same UGens and
+   gains, so check there first). Elements' output level is a guess (`amp` 0.3); check roots
+   against aurora.
 4. CPU with the heaviest pairing: reeds + pond (two Rings) + fireflies.
 5. Tune each module's map by ear with `tune()`; paste the results back and update this file.
 

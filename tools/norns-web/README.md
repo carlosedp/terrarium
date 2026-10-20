@@ -2,7 +2,8 @@
 
 Runs a norns script's real Lua in a browser: the screen, encoders, keys, clocks, metros and
 PARAMS are emulated, and engine commands go to a Web Audio stand-in for the SuperCollider
-engine. It's for checking behavior and the scene while working on a script, not for its sound.
+engine. How close the sound is depends on the stand-in: a sketch, or the real DSP code compiled
+to WebAssembly.
 
 It knows nothing about terrarium. Any script that sticks to `screen`, `params`, `clock`, `metro`
 and engine commands should run; midi, grid, arc, softcut, crow and poll are silent stubs.
@@ -35,7 +36,7 @@ node tools/norns-web/build.mjs [--cdn] [script dir] [out dir, default tools/norn
 ```
 
 The out dir holds the page, the runtime, `files.json` (every `.lua` file of the script) and the
-script's engine stand-ins. Without `--cdn` it also copies the vendored wasmoon; with it, the page
+script's engine stand-ins, with their folders of files. Without `--cdn` it also copies the vendored wasmoon; with it, the page
 loads the same pinned version from jsdelivr.
 
 ## The page's text
@@ -62,6 +63,10 @@ NornsWeb.engines.X = () => ({
   note(pitch, accent) { /* ... */ },
 });
 ```
+
+A stand-in that needs files of its own (an AudioWorklet module, WebAssembly) keeps them in a
+folder next to it, `lib/Engine_X/`; `build.mjs` copies it along. The stand-in finds it from its
+own URL: `document.currentScript.src.replace(/\.js$/, "/")`, read when the script loads.
 
 Without a stand-in, engine commands are only logged (tick "engine commands" under the log).
 
@@ -94,5 +99,5 @@ value (`params:get("x")`), a statement just runs. Up and down recall history.
   `screen.text_extents` is only approximately right.
 - **PARAMS:** PSETs live in the browser's storage (8 slots next to the panel, or `params:write(n)` /
   `params:read(n)` from the REPL), not in files; no MIDI mapping, no clock params.
-- **Audio:** only what the stand-in sketches.
+- **Audio:** only what the stand-in plays.
 - `norns.system_cmd` is logged, not run.
