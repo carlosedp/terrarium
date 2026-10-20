@@ -34,9 +34,9 @@ clouds.map = {
   fb         = { 1, 0.05, 0.4 },
   size       = { 2, 0.1, 0.85 },
   tex        = { 2, 0.3, 0.7 },
-  drywet     = 0.45,
+  drywet     = { 1, 0.35, 0.55 },
   spread     = 0.7,
-  rvb        = 0.3,
+  rvb        = { 2, 0.25, 0.75 },
   lofi       = 0,
   pit_jitter = { "brain", 2, 0, 0.3 }, -- windy weather wobbles the grains
 }
