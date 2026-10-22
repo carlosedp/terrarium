@@ -14,20 +14,33 @@
 
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#121513">
   <title>norns-web</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link rel="stylesheet"
     href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&family=JetBrains+Mono:wght@400;600&family=Silkscreen&display=swap">
   <style>
-    /* Layout: an instrument on a bench. The device is the hero; PARAMS and the log sit beside it and stack under it on phones. */
+    /* Layout: a norns standing on the ground at night (the hero, always dark, like a pixel-art banner),
+       then a page of paper: what's in the script and how to play it; the workbench (PARAMS, log, REPL)
+       is a drawer at the bottom of the window, so it can be open with the device in view. */
     :root {
       --paper: #e9ebe6;
+      --surface: #f4f5f1;
       --ink: #1b1f1c;
       --muted: #5a625c;
       --rule: #cdd2cb;
       --accent: #9a6b16;
       --accent-soft: #f1e3c4;
+      /* the night: the same in both themes */
+      --night: #121513;
+      --night-2: #181c19;
+      --night-ink: #e3e6e1;
+      --night-muted: #9aa29b;
+      --night-rule: #2e3530;
+      --amber: #d9a441;
+      --amber-hi: #f0c96e;
+      --amber-lo: #a8741a;
       /* hardware: the same object in both themes */
       --alu-hi: #d6d8d4;
       --alu-lo: #a8aca7;
@@ -35,6 +48,7 @@
       --cap: #262827;
       --cap-hi: #4a4d4b;
       --oled: #030303;
+      --well: #050706;
       --font-display: "Silkscreen", "JetBrains Mono", ui-monospace, monospace;
       --font-body: "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
       --font-mono: "JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
@@ -42,11 +56,13 @@
       --step-0: 1rem;
       --step-1: 1.25rem;
       --step-2: 1.75rem;
+      --gutter: max(16px, env(safe-area-inset-left, 0px));
     }
 
     @media (prefers-color-scheme: dark) {
       :root:not([data-theme="light"]) {
         --paper: #121513;
+        --surface: #181c19;
         --ink: #e3e6e1;
         --muted: #9aa29b;
         --rule: #2a302c;
@@ -58,6 +74,7 @@
 
     :root[data-theme="dark"] {
       --paper: #121513;
+      --surface: #181c19;
       --ink: #e3e6e1;
       --muted: #9aa29b;
       --rule: #2a302c;
@@ -71,72 +88,149 @@
     }
 
     body {
+      margin: 0;
       background: var(--paper);
       color: var(--ink);
       font-family: var(--font-body);
       font-size: var(--step-0);
-      line-height: 1.5;
-      padding-left: max(16px, env(safe-area-inset-left, 0px));
-      padding-right: max(16px, env(safe-area-inset-right, 0px));
-      padding-block: 28px 48px;
+      line-height: 1.55;
+      padding-bottom: var(--hood-space, 48px);
     }
 
     .wrap {
-      max-width: 1120px;
+      max-width: 1080px;
       margin: 0 auto;
-      display: grid;
-      gap: 28px;
+      padding-inline: var(--gutter);
     }
 
-    header {
-      display: grid;
-      gap: 6px;
+    a {
+      color: var(--accent);
+      text-underline-offset: 3px;
     }
 
-    h1 {
+    h1,
+    h2,
+    h3 {
       font-family: var(--font-display);
       font-weight: 400;
-      font-size: var(--step-2);
-      letter-spacing: 0.04em;
+      letter-spacing: 0.03em;
+      line-height: 1.15;
       margin: 0;
       text-wrap: balance;
     }
 
-    /* the script's icon (norns-web.json), beside its name */
-    h1 .mark {
-      height: 32px; /* whole pixels for pixel art: an icon drawn on a 32 grid stays crisp */
-      width: auto;
-      vertical-align: -7px;
-      margin-right: 0.35em;
+    h2 {
+      font-size: clamp(20px, 4vw, 26px);
+    }
+
+    h3 {
+      font-size: 15px;
+    }
+
+    p {
+      margin: 0;
+    }
+
+    kbd {
+      font-family: var(--font-mono);
+      font-size: 0.85em;
+      border: 1px solid var(--rule);
+      border-bottom-width: 2px;
+      border-radius: 4px;
+      padding: 0 5px;
+      color: var(--ink);
+      background: var(--surface);
+    }
+
+    .visually-hidden {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      overflow: hidden;
+      clip: rect(0 0 0 0);
+      white-space: nowrap;
+    }
+
+    /* ---------- the night: sky, the device on the ground, the main controls ---------- */
+    .night {
+      position: relative;
+      background: var(--night);
+      color: var(--night-ink);
+      padding: 36px 0 28px;
+      overflow: hidden;
+      isolation: isolate;
+    }
+
+    #sky {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
       image-rendering: pixelated;
     }
 
-    .lede {
-      margin: 0;
-      max-width: 62ch;
-      color: var(--muted);
-    }
-
-    .stage {
+    .night .wrap {
       display: grid;
-      grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr);
-      gap: 32px;
-      align-items: start;
+      justify-items: center;
+      text-align: center;
+      gap: 22px;
     }
 
-    @media (max-width: 860px) {
-      .stage {
-        grid-template-columns: minmax(0, 1fr);
+    .night header {
+      display: grid;
+      justify-items: center;
+      gap: 8px;
+    }
+
+    h1 {
+      font-size: clamp(30px, 7vw, 46px);
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35em;
+    }
+
+    /* the script's icon (norns-web.json), beside its name: whole pixels, so a 32-grid icon stays crisp */
+    h1 .mark {
+      height: 64px;
+      width: auto;
+      image-rendering: pixelated;
+    }
+
+    @media (max-width: 560px) {
+      h1 .mark {
+        height: 48px;
       }
     }
 
+    .subtitle {
+      font-family: var(--font-mono);
+      color: var(--amber);
+      font-size: var(--step--1);
+      letter-spacing: 0.06em;
+    }
+
+    .lede {
+      max-width: 58ch;
+      color: var(--night-muted);
+      text-wrap: pretty;
+    }
+
     /* --- the device: a norns or a shield (data-shell), the same parts arranged differently --- */
+    .frame {
+      width: 100%;
+      display: grid;
+      justify-items: center;
+    }
+
     .norns {
+      width: 100%;
       background: linear-gradient(160deg, var(--alu-hi), var(--alu-lo));
       border: 1px solid var(--alu-edge);
-      box-shadow: 0 1px 0 rgba(255, 255, 255, 0.6) inset, 0 18px 40px -18px rgba(0, 0, 0, 0.55);
+      box-shadow: 0 1px 0 rgba(255, 255, 255, 0.6) inset, 0 24px 40px -22px rgba(0, 0, 0, 0.9);
       display: grid;
       align-items: center;
+      text-align: left;
       user-select: none;
       -webkit-user-select: none;
       -webkit-touch-callout: none;
@@ -173,6 +267,7 @@
 
     /* norns: K1 and the name on top, E1 top right; K2 K3 over E2 E3 beside the screen */
     .norns[data-shell="norns"] {
+      max-width: 720px;
       border-radius: 18px;
       padding: 18px 20px 22px;
       gap: 14px 18px;
@@ -316,7 +411,7 @@
 
     .key:focus-visible,
     .enc:focus-visible {
-      outline: 2px solid var(--accent);
+      outline: 2px solid var(--amber);
       outline-offset: 4px;
     }
 
@@ -333,55 +428,210 @@
       letter-spacing: 0.08em;
     }
 
-    .bench {
-      display: grid;
-      gap: 14px;
-    }
-
-    .toolbar {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 10px 16px;
-    }
-
+    /* --- buttons: amber for the one that matters, outlines for the rest --- */
     .btn {
       font: 600 var(--step--1) var(--font-mono);
       color: var(--ink);
       background: transparent;
-      border: 1.5px solid var(--ink);
-      border-radius: 999px;
-      padding: 8px 16px;
+      border: 1.5px solid var(--rule);
+      border-radius: 6px;
+      padding: 8px 14px;
       cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      text-decoration: none;
+      -webkit-tap-highlight-color: transparent;
     }
 
-    .btn[aria-pressed="true"] {
-      background: var(--ink);
-      color: var(--paper);
+    .btn:hover {
+      border-color: var(--ink);
     }
 
-    .btn:focus-visible {
+    .btn:focus-visible,
+    summary:focus-visible,
+    a:focus-visible {
       outline: 2px solid var(--accent);
       outline-offset: 3px;
     }
 
-    .keys {
-      font-family: var(--font-mono);
-      font-size: var(--step--1);
-      color: var(--muted);
-      display: flex;
-      flex-wrap: wrap;
-      gap: 4px 14px;
+    .btn svg {
+      flex: none;
     }
 
-    kbd {
+    .btn.small {
+      padding: 3px 10px;
+      font-size: 12px;
+    }
+
+    .night .btn,
+    .frame.full .btn {
+      color: var(--night-ink);
+      border-color: var(--night-rule);
+      background: rgba(18, 21, 19, 0.6);
+    }
+
+    .night .btn:hover,
+    .frame.full .btn:hover {
+      border-color: var(--night-muted);
+    }
+
+    .night .btn:focus-visible,
+    .frame.full .btn:focus-visible {
+      outline-color: var(--amber);
+    }
+
+    .night .btn.primary,
+    .frame.full .btn.primary {
+      background: var(--amber);
+      border-color: var(--amber);
+      color: var(--night);
+      box-shadow: 0 3px 0 var(--amber-lo);
+      font-size: var(--step-0);
+      padding: 10px 22px;
+    }
+
+    .frame.full .btn.primary {
+      font-size: var(--step--1);
+      padding: 6px 14px;
+    }
+
+    .night .btn.primary:hover,
+    .frame.full .btn.primary:hover {
+      background: var(--amber-hi);
+      border-color: var(--amber-hi);
+    }
+
+    .night .btn.primary:active {
+      transform: translateY(2px);
+      box-shadow: 0 1px 0 var(--amber-lo);
+    }
+
+    /* once the sound is on, the button steps back */
+    .night .btn.primary[aria-pressed="true"],
+    .frame.full .btn.primary[aria-pressed="true"] {
+      background: transparent;
+      color: var(--amber);
+      border-color: var(--amber-lo);
+      box-shadow: none;
+    }
+
+    @media (prefers-reduced-motion: no-preference) {
+      .night .btn.primary[aria-pressed="false"] {
+        animation: glow 2.4s ease-in-out infinite;
+      }
+
+      @keyframes glow {
+
+        0%,
+        100% {
+          box-shadow: 0 3px 0 var(--amber-lo), 0 0 0 0 rgba(217, 164, 65, 0);
+        }
+
+        50% {
+          box-shadow: 0 3px 0 var(--amber-lo), 0 0 22px 2px rgba(217, 164, 65, 0.35);
+        }
+      }
+    }
+
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .controls .group {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .hint {
+      font-size: var(--step--1);
+      color: var(--night-muted);
+      max-width: 60ch;
+    }
+
+    .hint kbd {
+      color: var(--night-ink);
+      background: var(--night-2);
+      border-color: var(--night-rule);
+    }
+
+    @media (hover: none) and (pointer: coarse) {
+      .hint .kb {
+        display: none;
+      }
+    }
+
+    @media (hover: hover),
+    (pointer: fine) {
+      .hint .touch {
+        display: none;
+      }
+    }
+
+    /* the "look" menu: shell and screen color */
+    .menu {
+      position: relative;
+    }
+
+    .menu summary {
+      list-style: none;
+    }
+
+    .menu summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .menu .pop {
+      position: absolute;
+      z-index: 10;
+      bottom: calc(100% + 8px); /* upward, into the room above the buttons: the night clips what hangs below */
+      right: 0;
+      min-width: 210px;
+      display: grid;
+      gap: 12px;
+      padding: 14px;
+      text-align: left;
+      background: var(--night-2);
+      border: 1px solid var(--night-rule);
+      border-radius: 8px;
+      box-shadow: 0 14px 30px -12px rgba(0, 0, 0, 0.8);
+      font-size: var(--step--1);
+      color: var(--night-muted);
+    }
+
+    @media (max-width: 560px) {
+      .menu .pop {
+        right: auto;
+        left: 50%;
+        transform: translateX(-50%);
+      }
+    }
+
+    .pop label {
+      display: grid;
+      gap: 4px;
+    }
+
+    select {
+      font: inherit;
       font-family: var(--font-mono);
-      font-size: 0.85em;
-      border: 1px solid var(--rule);
-      border-bottom-width: 2px;
-      border-radius: 4px;
-      padding: 0 5px;
       color: var(--ink);
+      background: var(--paper);
+      border: 1px solid var(--rule);
+      border-radius: 6px;
+      padding: 4px 6px;
+    }
+
+    .pop select {
+      color: var(--night-ink);
+      background: var(--night);
+      border-color: var(--night-rule);
     }
 
     /* --- full screen: just the device, scaled to fit (norns-web.js sets its width and scale) --- */
@@ -393,7 +643,7 @@
       position: fixed;
       inset: 0;
       z-index: 50;
-      background: var(--paper);
+      background: var(--night);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -401,12 +651,29 @@
     }
 
     .frame.full .norns {
+      position: relative;
+      z-index: 1;
       flex: none;
       max-width: none;
       transform-origin: center;
     }
 
+    /* full screen's own night: stars, and the ground under the scaled device */
+    .full-sky {
+      display: none;
+    }
+
+    .frame.full .full-sky {
+      display: block;
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      image-rendering: pixelated;
+    }
+
     .frame.full .full-bar {
+      z-index: 2;
       display: flex;
       gap: 8px;
       position: absolute;
@@ -419,37 +686,428 @@
     }
 
     .btn.icon {
-      display: inline-grid;
-      place-items: center;
       padding: 7px;
     }
 
-    /* --- PARAMS and log --- */
-    .side {
+    /* ---------- the page: sections on paper ---------- */
+    main {
+      display: grid;
+      gap: 56px;
+      padding-block: 48px 40px;
+    }
+
+    section {
       display: grid;
       gap: 18px;
       min-width: 0;
     }
 
-    .side h2 {
+    .section-lede {
+      color: var(--muted);
+      max-width: 62ch;
+    }
+
+    /* what's in the script: pictures with a word each */
+    .gallery {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(auto-fill, minmax(min(150px, 40vw), 1fr));
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .gallery li {
+      display: grid;
+      gap: 8px;
+      align-content: start;
+    }
+
+    .gallery img {
+      width: 100%;
+      height: auto;
+      aspect-ratio: 540 / 284;
+      display: block;
+      border-radius: 6px;
+      background: var(--well);
+      border: 1px solid var(--rule);
+      image-rendering: pixelated;
+    }
+
+    .gallery b {
       font-family: var(--font-display);
       font-weight: 400;
-      font-size: var(--step-1);
+      letter-spacing: 0.03em;
+    }
+
+    .gallery p {
+      font-size: var(--step--1);
+      color: var(--muted);
+      text-wrap: pretty;
+    }
+
+    /* how to play: the script's controls, then the keyboard and touch */
+    .howto {
+      display: grid;
+      gap: 28px;
+      grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr);
+      align-items: start;
+    }
+
+    @media (max-width: 760px) {
+      .howto {
+        grid-template-columns: minmax(0, 1fr);
+      }
+    }
+
+    .moves {
+      list-style: none;
       margin: 0;
+      padding: 0;
+      display: grid;
+      gap: 0;
+      border: 1px solid var(--rule);
+      border-radius: 8px;
+      background: var(--surface);
+      overflow: hidden;
+    }
+
+    .moves li {
+      display: grid;
+      grid-template-columns: 9.5rem minmax(0, 1fr);
+      gap: 14px;
+      align-items: baseline;
+      padding: 10px 14px;
+      border-top: 1px solid var(--rule);
+    }
+
+    .moves li:first-child {
+      border-top: 0;
+    }
+
+    @media (max-width: 420px) {
+      .moves li {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 4px;
+      }
+    }
+
+    .chip {
+      justify-self: start;
+      font: 600 12px var(--font-mono);
       letter-spacing: 0.04em;
+      color: var(--amber);
+      background: var(--well);
+      border-radius: 4px;
+      padding: 3px 8px;
+      white-space: nowrap;
+    }
+
+    .moves span:last-child {
+      text-wrap: pretty;
+    }
+
+    .aside {
+      display: grid;
+      gap: 18px;
+    }
+
+    .aside div {
+      display: grid;
+      gap: 8px;
+    }
+
+    .aside p,
+    .aside li {
+      font-size: var(--step--1);
+      color: var(--muted);
+    }
+
+    .keymap {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 6px 12px;
+      align-items: center;
+      font-size: var(--step--1);
+      color: var(--muted);
+    }
+
+    .keymap dt {
+      white-space: nowrap;
+    }
+
+    .keymap dd {
+      margin: 0;
+    }
+
+    /* the help dialog: the same help, over the page or full screen */
+    dialog {
+      width: min(720px, calc(100vw - 24px));
+      max-height: calc(100dvh - 24px);
+      padding: 0;
+      border: 1px solid var(--rule);
+      border-radius: 10px;
+      background: var(--paper);
+      color: var(--ink);
+      box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.6);
+    }
+
+    dialog::backdrop {
+      background: rgba(5, 7, 6, 0.7);
+    }
+
+    .dialog-head {
+      position: sticky;
+      top: 0;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 18px;
+      background: var(--well);
+      color: var(--night-ink);
+      z-index: 1;
+    }
+
+    .dialog-head .btn {
+      color: var(--night-ink);
+      border-color: var(--night-rule);
+    }
+
+    .dialog-body {
+      padding: 18px;
+    }
+
+    dialog .howto {
+      grid-template-columns: minmax(0, 1fr);
+      gap: 22px;
+    }
+
+    /* about: the longer story, the install line, the links */
+    .about {
+      display: grid;
+      gap: 16px;
+    }
+
+    .about .more {
+      max-width: 68ch;
+      color: var(--muted);
+      text-wrap: pretty;
+    }
+
+    .links {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .install {
+      display: grid;
+      gap: 8px;
+      justify-items: start;
+      padding: 14px 16px;
+      background: var(--surface);
+      border: 1px solid var(--rule);
+      border-radius: 8px;
+      font-size: var(--step--1);
+      color: var(--muted);
+    }
+
+    .install .row {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      max-width: 100%;
+    }
+
+    .install code {
+      font-family: var(--font-mono);
+      color: var(--night-ink);
+      background: var(--well);
+      border-radius: 6px;
+      padding: 6px 10px;
+      overflow-wrap: anywhere;
+      user-select: all;
+    }
+
+    /* under the hood: PARAMS, presets, log, REPL in a drawer fixed to the bottom of the window; only its
+       bar shows until it's opened, and its height is dragged from the handle on its top edge */
+    .hood {
+      position: fixed;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 40;
+      background: var(--surface);
+      color: var(--ink);
+      box-shadow: 0 -12px 30px -14px rgba(0, 0, 0, 0.55);
+    }
+
+    .hood>summary {
+      cursor: pointer;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      gap: 6px 14px;
+      padding: 10px var(--gutter);
+      padding-bottom: max(10px, env(safe-area-inset-bottom));
+      background: var(--well);
+      color: var(--night-ink);
+      border-top: 1px solid var(--night-rule);
+    }
+
+    .hood[open]>summary {
+      padding-bottom: 10px;
+    }
+
+    .hood>summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .hood>summary::before {
+      content: "▴";
+      font-family: var(--font-mono);
+      color: var(--amber);
+      transition: transform 0.15s;
+    }
+
+    .hood[open]>summary::before {
+      transform: rotate(180deg);
+    }
+
+    .hood>summary h2 {
+      font-size: 15px;
+    }
+
+    .hood>summary small {
+      color: var(--night-muted);
+      font-size: var(--step--1);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      min-width: 0;
+    }
+
+    @media (max-width: 560px) {
+      .hood>summary small {
+        display: none;
+      }
+    }
+
+    .hood>summary:focus-visible {
+      outline-color: var(--amber);
+      outline-offset: -3px;
+    }
+
+    .hood-grip {
+      position: absolute;
+      left: 50%;
+      top: -9px;
+      width: 64px;
+      height: 18px;
+      margin-left: -32px;
+      cursor: ns-resize;
+      touch-action: none;
+      z-index: 1;
+      border-radius: 9px;
+      display: grid;
+      place-items: center;
+    }
+
+    .hood-grip::before {
+      content: "";
+      width: 44px;
+      height: 5px;
+      border-radius: 3px;
+      background: var(--night-muted);
+      box-shadow: 0 0 0 2px var(--well);
+    }
+
+    .hood-grip:hover::before,
+    .hood-grip:focus-visible::before {
+      background: var(--amber);
+    }
+
+    .hood-grip:focus-visible {
+      outline: none;
+    }
+
+    .badge {
+      font: 600 11px var(--font-mono);
+      color: #fff;
+      background: #b23b2a;
+      border-radius: 999px;
+      padding: 1px 8px;
+    }
+
+    .bench {
+      height: var(--drawer-h, 42vh);
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+      gap: 24px;
+      padding: 14px var(--gutter);
+      padding-bottom: max(14px, env(safe-area-inset-bottom));
+    }
+
+    /* side by side, PARAMS and the log fill the drawer's height */
+    .side {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      min-width: 0;
+      min-height: 0;
+    }
+
+    #params,
+    .logbox {
+      flex: 1;
+      min-height: 0;
+    }
+
+    .logbox {
+      display: flex;
+    }
+
+    #log {
+      flex: 1;
+    }
+
+    /* stacked on a narrow screen, the drawer scrolls */
+    @media (max-width: 760px) {
+      .bench {
+        grid-template-columns: minmax(0, 1fr);
+        grid-auto-rows: max-content;
+        overflow-y: auto;
+      }
+
+      #params {
+        flex: none;
+        max-height: 50vh;
+      }
+
+      .logbox {
+        flex: none;
+        height: 12rem;
+      }
+    }
+
+    .side h3 {
+      color: var(--muted);
     }
 
     .panel {
       border: 1px solid var(--rule);
-      border-radius: 10px;
+      border-radius: 8px;
       padding: 10px 12px;
       min-width: 0;
+      background: var(--paper);
     }
 
     #params {
       display: grid;
       gap: 2px;
-      max-height: 60vh;
+      align-content: start;
       overflow: auto;
       font-family: var(--font-mono);
       font-size: var(--step--1);
@@ -526,8 +1184,14 @@
       outline-offset: 2px;
     }
 
+    .param button.go {
+      width: auto;
+      padding: 0 10px;
+      grid-column: 2 / 5;
+      justify-self: start;
+    }
+
     #log {
-      height: 9.5rem;
       overflow: auto;
       font-family: var(--font-mono);
       font-size: 12px;
@@ -541,33 +1205,18 @@
       position: relative;
     }
 
-    /* the grip at the log's bottom-right corner: drag it to make the log taller or shorter */
-    .grip {
-      position: absolute;
-      right: 3px;
-      bottom: 3px;
-      width: 16px;
-      height: 16px;
-      cursor: ns-resize;
-      touch-action: none;
-      border-radius: 0 0 8px 0;
-      background: linear-gradient(135deg, transparent 0 50%, var(--muted) 50% 57%, transparent 57% 68%,
-          var(--muted) 68% 75%, transparent 75% 86%, var(--muted) 86% 93%, transparent 93%);
-      opacity: 0.7;
-    }
-
-    .grip:hover,
-    .grip:focus-visible {
-      opacity: 1;
-    }
-
-    .grip:focus-visible {
-      outline: 2px solid var(--accent);
-      outline-offset: 2px;
-    }
-
     #log .error {
       color: #b3261e;
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root:not([data-theme="light"]) #log .error {
+        color: #f08a6b;
+      }
+    }
+
+    :root[data-theme="dark"] #log .error {
+      color: #f08a6b;
     }
 
     #log .engine {
@@ -586,7 +1235,8 @@
       flex-wrap: wrap;
     }
 
-    .logbar label {
+    .logbar label,
+    .pset {
       font-family: var(--font-mono);
       font-size: var(--step--1);
       color: var(--muted);
@@ -595,18 +1245,19 @@
       align-items: center;
     }
 
+    .pset select {
+      padding: 2px 4px;
+    }
+
     .notes {
       font-size: var(--step--1);
       color: var(--muted);
-      margin: 0;
-      max-width: 62ch;
     }
 
     .repl {
       display: flex;
       align-items: center;
       gap: 8px;
-      margin-top: -10px;
       font-family: var(--font-mono);
       font-size: var(--step--1);
       color: var(--muted);
@@ -628,155 +1279,43 @@
       outline-offset: 1px;
     }
 
-    .pset {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-family: var(--font-mono);
+    footer {
+      border-top: 1px solid var(--rule);
+      padding-block: 18px 36px;
       font-size: var(--step--1);
       color: var(--muted);
     }
 
-    .pset select {
-      font: inherit;
-      color: var(--ink);
-      background: var(--paper);
-      border: 1px solid var(--rule);
-      border-radius: 6px;
-      padding: 2px 4px;
-    }
-
-    .btn.small {
-      padding: 3px 10px;
-      font-size: 12px;
-    }
-
-    .view {
-      display: flex;
-      gap: 10px;
-      font-family: var(--font-mono);
-      font-size: var(--step--1);
-      color: var(--muted);
-    }
-
-    .view select {
-      font: inherit;
-      color: var(--ink);
-      background: var(--paper);
-      border: 1px solid var(--rule);
-      border-radius: 6px;
-      padding: 2px 4px;
-    }
-
-    /* phones and tablets: no keyboard hints, a tighter page */
-    @media (hover: none) and (pointer: coarse) {
-      .keys {
-        display: none;
-      }
+    footer p {
+      max-width: 90ch;
     }
 
     @media (max-width: 560px) {
-      body {
-        padding-block: 16px 32px;
+      .night {
+        padding-top: 24px;
       }
 
-      .wrap {
-        gap: 18px;
+      main {
+        gap: 44px;
+        padding-top: 36px;
       }
-
-      .lede,
-      .keys {
-        display: none;
-      }
-
-      /* on a phone, the instrument comes first; no keyboard to hint at */
-    }
-
-    .param button.go {
-      width: auto;
-      padding: 0 10px;
-      grid-column: 2 / 5;
-      justify-self: start;
-    }
-
-    .subtitle {
-      margin: -4px 0 0;
-      font-style: italic;
-      color: var(--muted);
-    }
-
-    .about {
-      border-top: 1px solid var(--rule);
-      padding-top: 16px;
-      display: grid;
-      gap: 10px;
-      font-size: var(--step--1);
-      color: var(--muted);
-    }
-
-    .about p {
-      margin: 0;
-      max-width: 80ch;
-    }
-
-    .links {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px 18px;
-      font-family: var(--font-mono);
-    }
-
-    .links a {
-      color: var(--ink);
-      text-underline-offset: 3px;
-    }
-
-
-    .install {
-      margin: 0;
-      display: flex;
-      flex-wrap: wrap;
-      align-items: center;
-      gap: 6px 10px;
-      font-size: var(--step--1);
-      color: var(--muted);
-    }
-
-    .install code {
-      font-family: var(--font-mono);
-      color: var(--ink);
-      background: var(--accent-soft);
-      border-radius: 6px;
-      padding: 3px 8px;
-      overflow-wrap: anywhere;
-      user-select: all;
-    }
-
-    .visually-hidden {
-      position: absolute;
-      width: 1px;
-      height: 1px;
-      overflow: hidden;
-      clip: rect(0 0 0 0);
-      white-space: nowrap;
     }
   </style>
 </head>
 
 <body>
-  <div class="wrap">
-    <header>
-      <h1 id="script-name">norns-web</h1>
-      <p class="subtitle" id="subtitle" hidden></p>
-      <p class="lede">The script's real Lua, running in the browser against a stand-in for norns: the screen, encoders,
-        keys, clocks and PARAMS are emulated, and the SuperCollider engine is replaced by the script's Web Audio
-        stand-in: how close its sound is to the norns depends on the script.</p>
+  <div class="night" id="night">
+    <canvas id="sky" aria-hidden="true"></canvas>
+    <div class="wrap">
+      <header>
+        <h1 id="script-name">norns-web</h1>
+        <p class="subtitle" id="subtitle" hidden></p>
+        <p class="lede">A norns script, running in your browser. Press Start sound, then turn the knobs and press
+          the keys.</p>
+      </header>
 
-    </header>
-
-    <div class="stage">
-      <div class="bench">
-        <div class="frame" id="frame">
+      <div class="frame" id="frame">
+        <canvas class="full-sky" id="full-sky" aria-hidden="true"></canvas>
         <div class="norns" id="device" data-shell="shield">
           <span class="brand">norns</span>
           <div class="ctl c-k1"><button class="key" data-k="1" aria-label="K1"></button><small>K1</small></div>
@@ -787,87 +1326,145 @@
           <div class="ctl c-e2"><button class="enc" data-e="2" aria-label="E2"><i></i></button><small>E2</small></div>
           <div class="ctl c-e3"><button class="enc" data-e="3" aria-label="E3"><i></i></button><small>E3</small></div>
         </div>
-        <!-- in full screen, the toolbar is out of view: sound and a way back stay in the corner -->
+        <!-- in full screen, the controls below are out of view: sound, the script's actions, help and a way back stay in the corner -->
         <div class="full-bar">
-          <button type="button" class="btn small" id="full-sound" aria-pressed="false">Start sound</button>
-          <button type="button" class="btn small icon" id="full-exit" aria-label="Leave full screen" title="Leave full screen">
+          <button type="button" class="btn primary" id="full-sound" aria-pressed="false"><span class="lbl">Start
+              sound</span></button>
+          <span class="group" id="full-actions"></span>
+          <button type="button" class="btn icon" data-help aria-label="How to play" title="How to play">
+            <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><circle cx="8" cy="8" r="6.6" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6.1 6.2a2 2 0 1 1 2.6 1.9c-.5.2-.7.5-.7 1v.6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="8" cy="11.6" r=".9" fill="currentColor"/></svg>
+          </button>
+          <button type="button" class="btn icon" id="full-exit" aria-label="Leave full screen"
+            title="Leave full screen">
             <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M6 1v5H1M10 1v5h5M6 15v-5H1M10 15v-5h5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
           </button>
         </div>
-        </div>
-        <div class="toolbar">
-          <button class="btn" id="sound" aria-pressed="false">Start sound</button>
-          <button type="button" class="btn icon" id="full" aria-label="Full screen" title="Full screen: just the norns">
-            <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M1 6V1h5M15 6V1h-5M1 10v5h5M15 10v5h-5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
-          </button>
-          <div class="view">
-            <label>shell <select id="v-shell">
-                <option value="shield">shield</option>
-                <option value="norns">norns</option>
-              </select></label>
-            <label>screen <select id="v-screen">
-                <option value="white">white</option>
-                <option value="yellow">yellow</option>
-              </select></label>
-          </div>
-          <div class="keys">
-            <span><kbd>A</kbd> K1</span>
-            <span><kbd>S</kbd> K2</span>
-            <span><kbd>D</kbd> K3</span>
-            <span><kbd>Y</kbd><kbd>H</kbd> E1</span>
-            <span><kbd>U</kbd><kbd>J</kbd> E2</span>
-            <span><kbd>I</kbd><kbd>K</kbd> E3</span>
-          </div>
-        </div>
-        <div class="keys">Top key turns an encoder up, bottom key down. Keys can be held: hold <kbd>S</kbd> and press
-          <kbd>U</kbd> for K2 + E2. Encoders also take the scroll wheel and dragging up and down.
-        </div>
       </div>
 
-      <section class="side" aria-label="PARAMS and log">
-        <div class="logbar">
-          <h2>PARAMS</h2>
-          <div class="pset"><label for="pset-slot">PSET</label>
-            <select id="pset-slot">
-              <option>1</option>
-              <option>2</option>
-              <option>3</option>
-              <option>4</option>
-              <option>5</option>
-              <option>6</option>
-              <option>7</option>
-              <option>8</option>
-            </select>
-            <button type="button" class="btn small" id="pset-save">save</button><button type="button" class="btn small"
-              id="pset-load">load</button>
-          </div>
-        </div>
-        <div class="panel" id="params" aria-live="off"></div>
-        <div class="logbar">
-          <h2>Log</h2><label><input type="checkbox" id="show-engine"> engine commands</label>
-        </div>
-        <div class="logbox">
-          <div class="panel" id="log" role="log"></div>
-          <div class="grip" id="log-grip" role="separator" aria-orientation="horizontal" aria-label="Resize the log"
-            title="Drag to resize the log" tabindex="0"></div>
-        </div>
-        <form id="repl-form" class="repl" autocomplete="off">
-          <label for="repl" class="visually-hidden">Lua</label>
-          <span aria-hidden="true">&gt;&gt;</span><input id="repl" spellcheck="false"
-            placeholder="Lua, like the maiden REPL (↑ ↓ for history)">
-        </form>
-        <p class="notes">Scroll on a param or use − and +; hold Shift for bigger steps.</p>
-      </section>
-    </div>
-    <footer class="about" id="about-footer" hidden>
-      <nav class="links" id="links" aria-label="links"></nav>
-      <p class="install" id="install" hidden>
-        <span>Get it for your norns, in maiden:</span>
-        <code id="install-cmd"></code>
-        <button type="button" class="btn small" id="install-copy">copy</button>
+      <div class="controls">
+        <button type="button" class="btn primary" id="sound" aria-pressed="false">
+          <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M2 6h3l4-3.5v11L5 10H2z" fill="currentColor"/><path d="M11.3 5.2a4 4 0 0 1 0 5.6M13.2 3.3a6.7 6.7 0 0 1 0 9.4" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <span class="lbl">Start sound</span>
+        </button>
+        <span class="group" id="actions"></span>
+        <span class="group">
+          <button type="button" class="btn" data-help>
+            <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><circle cx="8" cy="8" r="6.6" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M6.1 6.2a2 2 0 1 1 2.6 1.9c-.5.2-.7.5-.7 1v.6" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/><circle cx="8" cy="11.6" r=".9" fill="currentColor"/></svg>
+            How to play
+          </button>
+          <button type="button" class="btn" id="full" title="Full screen: just the norns">
+            <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M1 6V1h5M15 6V1h-5M1 10v5h5M15 10v5h-5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+            Full screen
+          </button>
+          <details class="menu">
+            <summary class="btn" title="How the norns looks">
+              <svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><rect x="1.5" y="3" width="13" height="10" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><rect x="4" y="5.5" width="5" height="3" fill="currentColor"/><circle cx="11.5" cy="7" r="1.2" fill="currentColor"/></svg>
+              Look
+            </summary>
+            <div class="pop">
+              <label>the device <select id="v-shell">
+                  <option value="shield">shield (compact)</option>
+                  <option value="norns">norns</option>
+                </select></label>
+              <label>the screen <select id="v-screen">
+                  <option value="white">white</option>
+                  <option value="yellow">yellow</option>
+                </select></label>
+            </div>
+          </details>
+        </span>
+      </div>
+      <p class="hint">
+        <span class="kb">Turn a knob with the scroll wheel or by dragging it up and down, or play from the keyboard:
+          <kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> are the keys, <kbd>?</kbd> shows them all.</span>
+        <span class="touch">Drag a knob up and down to turn it. You can hold a key with one finger and turn a knob with
+          another.</span>
       </p>
-    </footer>
+    </div>
   </div>
+
+  <main class="wrap">
+    <section id="gallery-section" aria-labelledby="gallery-title" hidden>
+      <h2 id="gallery-title">What's inside</h2>
+      <p class="section-lede" id="gallery-lede" hidden></p>
+      <ul class="gallery" id="gallery"></ul>
+    </section>
+
+    <section aria-labelledby="howto-title">
+      <h2 id="howto-title">How to play</h2>
+      <div id="howto"></div>
+    </section>
+
+    <section class="about" id="about" aria-labelledby="about-title" hidden>
+      <h2 id="about-title">About</h2>
+      <p class="more" id="more" hidden></p>
+      <div class="install" id="install" hidden>
+        <span>Have a norns? Install it from maiden:</span>
+        <span class="row"><code id="install-cmd"></code><button type="button" class="btn small"
+            id="install-copy">copy</button></span>
+      </div>
+      <nav class="links" id="links" aria-label="links"></nav>
+    </section>
+
+  </main>
+
+  <footer class="wrap" id="about-footer" hidden></footer>
+
+  <!-- a drawer at the bottom of the window -->
+    <details class="hood" id="hood">
+      <summary>
+        <h2>Under the hood</h2>
+        <small>every parameter, presets, the log and a Lua console, for tinkering beside the norns</small>
+        <span class="badge" id="hood-badge" hidden></span>
+      </summary>
+      <div class="hood-grip" id="hood-grip" role="separator" aria-orientation="horizontal" tabindex="0"
+        aria-label="Resize the drawer" title="Drag to resize"></div>
+      <div class="bench">
+        <section class="side" aria-label="PARAMS">
+          <div class="logbar">
+            <h3>PARAMS</h3>
+            <div class="pset"><label for="pset-slot">PSET</label>
+              <select id="pset-slot">
+                <option>1</option>
+                <option>2</option>
+                <option>3</option>
+                <option>4</option>
+                <option>5</option>
+                <option>6</option>
+                <option>7</option>
+                <option>8</option>
+              </select>
+              <button type="button" class="btn small" id="pset-save">save</button><button type="button"
+                class="btn small" id="pset-load">load</button>
+            </div>
+          </div>
+          <div class="panel" id="params" aria-live="off"></div>
+          <p class="notes">Scroll on a param or use − and +; hold Shift for bigger steps.</p>
+        </section>
+        <section class="side" aria-label="Log">
+          <div class="logbar">
+            <h3>Log</h3><label><input type="checkbox" id="show-engine"> engine commands</label>
+          </div>
+          <div class="logbox">
+            <div class="panel" id="log" role="log"></div>
+          </div>
+          <form id="repl-form" class="repl" autocomplete="off">
+            <label for="repl" class="visually-hidden">Lua</label>
+            <span aria-hidden="true">&gt;&gt;</span><input id="repl" spellcheck="false"
+              placeholder="Lua, like the maiden REPL (↑ ↓ for history)">
+          </form>
+        </section>
+      </div>
+    </details>
+
+  <dialog id="help" aria-labelledby="help-title">
+    <div class="dialog-head">
+      <h2 id="help-title">How to play</h2>
+      <form method="dialog"><button class="btn small" aria-label="Close">close</button></form>
+    </div>
+    <div class="dialog-body" id="help-body"></div>
+  </dialog>
+
   <script>window.NORNS_WEB_WASMOON = "vendor/wasmoon/"; /* the build can point this at a CDN */</script>
   <script src="vendor/wasmoon/index.js"></script>
   <script src="norns-web.js"></script>

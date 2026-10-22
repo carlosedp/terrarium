@@ -6,12 +6,82 @@
 // animation frame, the screen drawn to a canvas, encoders and keys from the
 // page, a PARAMS panel, and engine commands sent to a JS stand-in for the
 // SuperCollider engine (script/lib/Engine_<name>.js, if the script has one).
+// The workbench (PARAMS, log, REPL) sits folded "under the hood"; up front are
+// the device, Start sound, the script's actions and how to play it.
 (() => {
   "use strict";
 
   const W = 128,
     H = 64;
   const $ = (sel) => document.querySelector(sel);
+
+  // ---------- under the hood: a drawer at the bottom of the window, closed until asked for ----------
+  // Open, it shares the window with the device (opening it scrolls the device into view above it);
+  // its height is dragged from the handle on its top edge. Open or closed and the height are remembered.
+  const hood = $("#hood"),
+    badge = $("#hood-badge"),
+    HOOD = "norns-web:hood",
+    HOOD_H = "norns-web:hood-height";
+  const setDrawer = (px, save) => {
+    const h = Math.max(160, Math.min(Math.round(px), Math.round(window.innerHeight * 0.85)));
+    document.documentElement.style.setProperty("--drawer-h", h + "px");
+    if (save)
+      try {
+        localStorage.setItem(HOOD_H, h);
+      } catch (e) {}
+  };
+  try {
+    const h = +localStorage.getItem(HOOD_H);
+    if (h) setDrawer(h);
+    hood.open = localStorage.getItem(HOOD) === "open";
+  } catch (e) {}
+  // the page keeps room for the drawer at its bottom, so nothing hides behind it
+  new ResizeObserver(() =>
+    document.documentElement.style.setProperty("--hood-space", hood.offsetHeight + "px"),
+  ).observe(hood);
+  let restoring = hood.open;
+  hood.addEventListener("toggle", () => {
+    if (hood.open) {
+      badge.hidden = true;
+      badge.dataset.n = "0";
+      logEl.scrollTop = logEl.scrollHeight;
+      if (!restoring)
+        requestAnimationFrame(() => {
+          // the device's bottom just above the drawer, or its top at the window's if it doesn't fit
+          const r = $("#device").getBoundingClientRect(),
+            free = window.innerHeight - hood.offsetHeight;
+          let dy = r.bottom - free + 12;
+          if (r.top - dy < 8) dy = r.top - 8;
+          if (dy > 0 || r.top < 0) window.scrollBy({ top: dy, behavior: "smooth" });
+        });
+    }
+    restoring = false;
+    try {
+      localStorage.setItem(HOOD, hood.open ? "open" : "closed");
+    } catch (e) {}
+  });
+  {
+    const grip = $("#hood-grip");
+    let startY = 0,
+      startH = 0;
+    const height = () => $("#hood .bench").getBoundingClientRect().height;
+    grip.addEventListener("pointerdown", (e) => {
+      startY = e.clientY;
+      startH = height();
+      grip.setPointerCapture(e.pointerId);
+      e.preventDefault();
+    });
+    grip.addEventListener("pointermove", (e) => {
+      if (grip.hasPointerCapture(e.pointerId)) setDrawer(startH - (e.clientY - startY), true);
+    });
+    grip.addEventListener("keydown", (e) => {
+      const d = { ArrowUp: 24, ArrowDown: -24 }[e.key];
+      if (d) {
+        setDrawer(height() + d, true);
+        e.preventDefault();
+      }
+    });
+  }
 
   // ---------- log ----------
   const logEl = $("#log");
@@ -24,49 +94,18 @@
     logEl.appendChild(line);
     while (logEl.childNodes.length > 300) logEl.removeChild(logEl.firstChild);
     logEl.scrollTop = logEl.scrollHeight;
+    if (kind === "error" && !hood.open) {
+      // the log is folded away: its cover counts what it missed
+      const n = (+badge.dataset.n || 0) + 1;
+      badge.dataset.n = n;
+      badge.textContent = n === 1 ? "1 error" : `${n} errors`;
+      badge.hidden = false;
+    }
   }
   $("#show-engine").addEventListener("change", (e) => {
     showEngine = e.target.checked;
   });
 
-  // the grip at its bottom-right corner makes the log taller or shorter (arrow keys too); remembered
-  {
-    const grip = $("#log-grip"),
-      KEY = "norns-web:log-height";
-    const setHeight = (px) => {
-      const h = Math.max(
-        64,
-        Math.min(Math.round(px), Math.round(window.innerHeight * 0.9)),
-      );
-      logEl.style.height = h + "px";
-      try {
-        localStorage.setItem(KEY, h);
-      } catch (e) {}
-    };
-    try {
-      const h = +localStorage.getItem(KEY);
-      if (h) logEl.style.height = h + "px";
-    } catch (e) {}
-    let startY = 0,
-      startH = 0;
-    grip.addEventListener("pointerdown", (e) => {
-      startY = e.clientY;
-      startH = logEl.getBoundingClientRect().height;
-      grip.setPointerCapture(e.pointerId);
-      e.preventDefault();
-    });
-    grip.addEventListener("pointermove", (e) => {
-      if (grip.hasPointerCapture(e.pointerId))
-        setHeight(startH + e.clientY - startY);
-    });
-    grip.addEventListener("keydown", (e) => {
-      const d = { ArrowDown: 24, ArrowUp: -24 }[e.key];
-      if (d) {
-        setHeight(logEl.getBoundingClientRect().height + d);
-        e.preventDefault();
-      }
-    });
-  }
 
   // ---------- screen ----------
   const cvs = $("#oled"),
@@ -128,6 +167,86 @@
     applyView();
   });
   applyView();
+  // the Look menu closes when you click elsewhere
+  document.addEventListener("click", (e) => {
+    document.querySelectorAll("details.menu[open]").forEach((d) => {
+      if (!d.contains(e.target)) d.open = false;
+    });
+  });
+
+  // ---------- the night sky behind the device: chunky pixel stars and the ground it stands on ----------
+  // Two of them: the page's, behind the device and the buttons, and full screen's, filling the
+  // frame. relayoutSky() puts the ground back under the device after it moves or scales.
+  const PX = 4; // one sky pixel, in CSS pixels
+  const still = matchMedia("(prefers-reduced-motion: reduce)");
+  // seeded (Park-Miller), so the sky is the same on every visit
+  const rand = (seed) => () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+  function makeSky(box, sky) {
+    const sg = sky.getContext("2d");
+    let stars = [],
+      ground = 0,
+      cols = 0,
+      rows = 0;
+    const draw = (t) => {
+      sg.clearRect(0, 0, cols, rows);
+      for (const s of stars) {
+        const a = s.tw && !still.matches ? s.l * (0.55 + 0.45 * Math.sin((t / 1000) * s.tw + s.ph)) : s.l;
+        sg.fillStyle = `rgba(201, 208, 202, ${a.toFixed(2)})`;
+        sg.fillRect(s.x, s.y, 1, 1);
+      }
+      if (ground <= 0 || ground >= rows) return;
+      // a line of ground with grass along it and dashes of earth below, like the r/norns banner
+      const rnd = rand(3);
+      sg.fillStyle = "#8a938c";
+      sg.fillRect(0, ground, cols, 1);
+      sg.fillStyle = "#525a54";
+      for (let x = 1; x < cols; x += 2 + Math.floor(rnd() * 4)) {
+        const tall = rnd() < 0.3;
+        sg.fillRect(x, ground - (tall ? 2 : 1), 1, tall ? 2 : 1);
+      }
+      sg.fillStyle = "#2a302c";
+      for (let y = ground + 3; y < Math.min(rows, ground + 10); y += 3) // a few rows, clear of the buttons
+        for (let x = Math.floor(rnd() * 20) - 10; x < cols; x += 24 + Math.floor(rnd() * 30))
+          sg.fillRect(x, y, 10 + Math.floor(rnd() * 14), 1);
+    };
+    const layout = () => {
+      const r = box.getBoundingClientRect(),
+        d = $("#device").getBoundingClientRect();
+      if (!r.width || !r.height) return;
+      cols = Math.ceil(r.width / PX);
+      rows = Math.ceil(r.height / PX);
+      sky.width = cols;
+      sky.height = rows;
+      ground = Math.round((d.bottom - r.top) / PX); // the device stands on it
+      const rnd = rand(7);
+      stars = [];
+      for (let i = 0; i < (cols * ground) / 260; i++)
+        stars.push({
+          x: Math.floor(rnd() * cols),
+          y: Math.floor(rnd() * (ground - 4)),
+          l: 0.2 + rnd() * 0.6,
+          tw: rnd() < 0.25 ? 0.4 + rnd() * 1.2 : 0, // a quarter of them twinkle
+          ph: rnd() * 6.28,
+        });
+      draw(performance.now());
+    };
+    new ResizeObserver(layout).observe(box);
+    return { layout, draw };
+  }
+  const pageSky = makeSky($("#night"), $("#sky")),
+    fullSky = makeSky($("#frame"), $("#full-sky"));
+  const relayoutSky = () => (document.body.classList.contains("full") ? fullSky : pageSky).layout();
+  {
+    let last = 0;
+    const loop = (t) => {
+      if (t - last > 120 && !still.matches) {
+        (document.body.classList.contains("full") ? fullSky : pageSky).draw(t);
+        last = t;
+      }
+      requestAnimationFrame(loop);
+    };
+    requestAnimationFrame(loop);
+  }
 
   // ---------- engine stand-ins ----------
   // A script's lib/Engine_<name>.js registers itself here; it gets every engine
@@ -170,7 +289,7 @@
     const on = !!audio && audio.ctx.state === "running";
     for (const b of [soundBtn, $("#full-sound")]) {
       b.setAttribute("aria-pressed", on ? "true" : "false");
-      b.textContent = on ? "Mute" : "Start sound";
+      b.querySelector(".lbl").textContent = on ? "Mute" : "Start sound";
     }
   }
   soundBtn.addEventListener("click", async () => {
@@ -217,6 +336,7 @@
         (vh - 2 * pad - bar) / r.height,
       );
       device.style.transform = `scale(${s})`;
+      relayoutSky();
     };
     const enter = () => {
       full = true;
@@ -238,6 +358,7 @@
       fullBtn.setAttribute("aria-pressed", "false");
       device.style.transform = "";
       device.style.width = "";
+      relayoutSky();
       const fsEl =
         document.fullscreenElement || document.webkitFullscreenElement;
       if (fsEl)
@@ -256,10 +377,10 @@
     document.addEventListener("fullscreenchange", onFsChange);
     document.addEventListener("webkitfullscreenchange", onFsChange);
     window.addEventListener("keydown", (e) => {
-      if (e.key === "Escape" && full) exit();
+      if (e.key === "Escape" && full && !$("#help").open) exit(); // Esc in the help only closes it
     });
     window.addEventListener("resize", fit);
-    $("#v-shell").addEventListener("change", fit);
+    $("#v-shell").addEventListener("change", () => (full ? fit() : relayoutSky()));
   }
 
   // ---------- the built-in nb voice ("web synth" in norns.lua) ----------
@@ -332,15 +453,23 @@
       s.hidden = false;
     }
     if (a.about) $(".lede").textContent = a.about;
+    if (a.more) {
+      $("#more").textContent = a.more;
+      $("#more").hidden = false;
+    }
+    if (a.actions) showActions(a.actions);
+    if (a.gallery && a.gallery.length) showGallery(a.gallery, a.gallery_intro, root);
+    if (a.controls) showHelp(a.controls);
     const link = (l) => {
       const el = document.createElement("a");
+      el.className = "btn";
       el.href = l.url;
       el.textContent = l.label;
       el.rel = "noopener";
       el.target = "_blank";
       return el;
     };
-    if (a.links && a.links.length) $("#links").append(...a.links.map(link)); // in the footer
+    if (a.links && a.links.length) $("#links").append(...a.links.map(link));
     if (a.install) {
       // how to get the script onto a norns, with a copy button
       $("#install-cmd").textContent = a.install;
@@ -357,16 +486,122 @@
         }, 1500);
       });
     }
-    if (a.footer || a.install || (a.links && a.links.length)) {
-      const f = $("#about-footer");
-      if (a.footer) {
-        const p = document.createElement("p");
-        p.textContent = a.footer;
-        f.append(p);
-      }
-      f.hidden = false;
+    if (a.more || a.install || (a.links && a.links.length)) $("#about").hidden = false;
+    if (a.footer) {
+      const p = document.createElement("p");
+      p.textContent = a.footer;
+      $("#about-footer").append(p);
+      $("#about-footer").hidden = false;
     }
   }
+
+  // the script's actions (norns-web.json "actions"): buttons beside Start sound that step a
+  // param, like pressing a trigger in PARAMS ("randomize"); icon-only in the full screen corner
+  const ICONS = {
+    shuffle:
+      '<svg viewBox="0 0 16 16" width="16" height="16" aria-hidden="true"><path d="M1 4h3l6 8h4M1 12h3l6-8h4M12 2l2 2-2 2M12 10l2 2-2 2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/></svg>',
+  };
+  function showActions(actions) {
+    for (const act of actions) {
+      for (const full of [false, true]) {
+        const b = document.createElement("button");
+        b.type = "button";
+        b.className = "btn";
+        b.title = act.title || act.label;
+        b.innerHTML = ICONS[act.icon] || "";
+        if (full && ICONS[act.icon]) {
+          b.classList.add("icon");
+          b.setAttribute("aria-label", act.label);
+        } else b.append(act.label);
+        b.addEventListener("click", () => {
+          if (!paramDelta) return;
+          try {
+            paramDelta(act.param, act.delta || 1);
+          } catch (e) {
+            log(`${act.label}: ${e.message || e}`, "error");
+          }
+          renderParams();
+        });
+        $(full ? "#full-actions" : "#actions").append(b);
+      }
+    }
+  }
+
+  // what's in the script (norns-web.json "gallery"): pictures, each with a name and a line
+  function showGallery(items, intro, root) {
+    for (const it of items) {
+      const li = document.createElement("li");
+      const img = document.createElement("img");
+      img.src = root + it.img;
+      img.alt = it.alt || "";
+      img.loading = "lazy";
+      const b = document.createElement("b");
+      b.textContent = it.title || "";
+      const p = document.createElement("p");
+      p.textContent = it.text || "";
+      li.append(img, b, p);
+      $("#gallery").append(li);
+    }
+    if (intro) {
+      $("#gallery-lede").textContent = intro;
+      $("#gallery-lede").hidden = false;
+    }
+    $("#gallery-section").hidden = false;
+  }
+
+  // how to play: the script's controls (norns-web.json "controls": [{ keys, does }]), then the
+  // keyboard and touch; on the page and in the help dialog (? or a How to play button)
+  const GENERIC_CONTROLS = [
+    { keys: "E1 E2 E3", does: "the three knobs (encoders): turn them to change things" },
+    { keys: "K1 K2 K3", does: "the three keys: press them, or hold one while you turn a knob" },
+  ];
+  function helpContent(controls) {
+    const wrap = document.createElement("div");
+    wrap.className = "howto";
+    const moves = document.createElement("ul");
+    moves.className = "moves";
+    for (const c of controls) {
+      const li = document.createElement("li");
+      const chip = document.createElement("span");
+      chip.className = "chip";
+      chip.textContent = c.keys;
+      const does = document.createElement("span");
+      does.textContent = c.does;
+      li.append(chip, does);
+      moves.append(li);
+    }
+    const aside = document.createElement("div");
+    aside.className = "aside";
+    aside.innerHTML = `
+      <div><h3>On a computer</h3>
+        <dl class="keymap">
+          <dt><kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd></dt><dd>K1, K2, K3 (hold them like the real keys)</dd>
+          <dt><kbd>Y</kbd> <kbd>H</kbd></dt><dd>turn E1 up, down</dd>
+          <dt><kbd>U</kbd> <kbd>J</kbd></dt><dd>turn E2 up, down</dd>
+          <dt><kbd>I</kbd> <kbd>K</kbd></dt><dd>turn E3 up, down</dd>
+          <dt><kbd>?</kbd></dt><dd>this help</dd>
+        </dl>
+        <p>Hold <kbd>S</kbd> and tap <kbd>U</kbd> for "hold K2 + turn E2". The knobs also follow the scroll
+          wheel and dragging up and down.</p></div>
+      <div><h3>On a phone</h3>
+        <p>Drag a knob up and down to turn it. Hold a key with one finger while you turn a knob with
+          another. Full screen makes the norns as big as it gets.</p></div>`;
+    wrap.append(moves, aside);
+    return wrap;
+  }
+  function showHelp(controls) {
+    $("#howto").replaceChildren(helpContent(controls));
+    $("#help-body").replaceChildren(helpContent(controls));
+  }
+  showHelp(GENERIC_CONTROLS);
+  const helpDlg = $("#help");
+  const openHelp = () => {
+    if (!helpDlg.open) helpDlg.showModal();
+  };
+  document.querySelectorAll("[data-help]").forEach((b) => b.addEventListener("click", openHelp));
+  helpDlg.addEventListener("click", (e) => {
+    if (e.target === helpDlg) helpDlg.close(); // a click on the backdrop
+  });
 
   // ---------- live reload (dev server only) ----------
   // The dev server says "reload" when a file changes: keep the params in a preset
@@ -612,6 +847,12 @@
   };
   window.addEventListener("keydown", (e) => {
     if (e.metaKey || e.ctrlKey || e.altKey || typing(e)) return;
+    if (e.key === "?") {
+      helpDlg.open ? helpDlg.close() : openHelp();
+      e.preventDefault();
+      return;
+    }
+    if (helpDlg.open) return; // the keys read the help, not play the norns
     const k = e.key.toLowerCase();
     if (KEYMAP[k]) {
       enc(...KEYMAP[k]);

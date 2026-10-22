@@ -4,7 +4,7 @@
 //
 // The out dir gets the page, the runtime, files.json (every .lua file of the
 // script), the script's lib/Engine_*.js stand-ins (each with its lib/Engine_*/
-// folder of files, if it has one), the icons named in its norns-web.json, and vendored wasmoon; with
+// folder of files, if it has one), the icons and gallery pictures named in its norns-web.json, and vendored wasmoon; with
 // --cdn the page loads the same pinned wasmoon from jsdelivr instead.
 import fs from "node:fs";
 import path from "node:path";
@@ -41,7 +41,7 @@ for (const f of fs.existsSync(libDir) ? fs.readdirSync(libDir) : []) {
     fs.cpSync(files, path.join(out, "script/lib", path.basename(files)), { recursive: true });
 }
 const m = manifest(scriptDir, "script/");
-for (const f of [m.about?.icon, m.about?.touch_icon].filter(Boolean)) {   // the page's icons (norns-web.json)
+for (const f of [m.about?.icon, m.about?.touch_icon, ...(m.about?.gallery || []).map(g => g.img)].filter(Boolean)) {   // the page's icons and pictures (norns-web.json)
   fs.mkdirSync(path.dirname(path.join(out, "script", f)), { recursive: true });
   fs.copyFileSync(path.join(scriptDir, f), path.join(out, "script", f));
 }

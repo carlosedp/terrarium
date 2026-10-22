@@ -3,7 +3,76 @@
   "subtitle": "generative music in a jar, for monome norns",
   "icon": "doc/img/icon.svg",
   "touch_icon": "doc/img/icon-touch.png",
-  "about": "The real terrarium script, running in your browser. Weather falls on a landscape and plays where it lands; you choose what lives in each part of the jar and shape it with two knobs. Press Start sound, then turn E1 to pick a part and E2/E3 to shape it. The sound is Mutable Instruments' code, the same a norns plays, compiled for the browser.",
+  "about": "A tiny world that makes music on its own. Weather falls on a landscape inside a jar, and every drop plays a note where it lands. Press Start sound and just listen, or reach in and change what lives there. Nothing you do can break it.",
+  "more": "terrarium is a script for monome norns, a small computer for making sound. What plays here is the real script, running in your browser with the same Mutable Instruments sound code a norns plays. You don't need to know anything about music or synthesizers: each part of the jar has just two knobs, and the screen shows pictures, not numbers.",
+  "actions": [
+    {
+      "label": "Shuffle",
+      "icon": "shuffle",
+      "param": "t_randomize",
+      "title": "A whole new terrarium: random parts, knobs and settings"
+    }
+  ],
+  "gallery_intro": "Five parts, each a piece of the scene relating to the sound. Turn E1 to pick the part, press K2 to swap what lives there.",
+  "gallery": [
+    {
+      "img": "doc/img/rain.png",
+      "title": "weather",
+      "text": "When notes happen: rain, lightning or snow. Where a drop lands sets its pitch.",
+      "alt": "Rain falling over the scene"
+    },
+    {
+      "img": "doc/img/meadow.png",
+      "title": "soil",
+      "text": "What grows from the ground plays the notes: a meadow, crystals or reeds.",
+      "alt": "A meadow of flowers growing along the ground"
+    },
+    {
+      "img": "doc/img/pond.png",
+      "title": "water",
+      "text": "A pond or a fog that colors the sound as it passes through.",
+      "alt": "A pond rippling below the ground line"
+    },
+    {
+      "img": "doc/img/clouds.png",
+      "title": "air",
+      "text": "The sky, where the sound rings out: clouds, fireflies or mountains.",
+      "alt": "Clouds drifting across the sky"
+    },
+    {
+      "img": "doc/img/aurora.png",
+      "title": "hum",
+      "text": "A low drone under it all, always there: an aurora or deep roots.",
+      "alt": "An aurora shimmering at the top of the sky"
+    }
+  ],
+  "controls": [
+    {
+      "keys": "E1",
+      "does": "pick a part of the jar: weather, soil, water, air or hum"
+    },
+    {
+      "keys": "E2 · E3",
+      "does": "shape that part; the two knobs show their names while you turn them"
+    },
+    {
+      "keys": "K2",
+      "does": "swap what lives there (rain for snow, a meadow for crystals…)"
+    },
+    {
+      "keys": "K3",
+      "does": "a gesture: a new tune, a strike, freeze the sky, hush the hum"
+    },
+    { "keys": "hold K2 + E2", "does": "choose a variety of what lives there" },
+    {
+      "keys": "hold K1",
+      "does": "peek at the whole jar; E2 picks a setting and E3 changes it"
+    },
+    {
+      "keys": "hold K1 + K3",
+      "does": "a whole new terrarium, at random (the Shuffle button does it too)"
+    }
+  ],
   "install": ";install https://github.com/carlosedp/terrarium",
   "links": [
     {

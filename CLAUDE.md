@@ -24,8 +24,9 @@ make mi-wasm                          # rebuild the browser's mi-UGens (lib/Engi
 Run the smoke test after every Lua change. It also asserts that params group counts match.
 
 GitHub Pages (`.github/workflows/pages.yml`) runs the smoke test on Lua 5.3 and publishes norns-web on
-every push to main, at https://carlosedp.github.io/terrarium/. The page's title, intro, links and
-copyright footer come from `norns-web.json`.
+every push to main, at https://carlosedp.github.io/terrarium/. The page's text (title, intro, the
+Shuffle button, how-to-play controls, the gallery of parts, links, copyright footer) comes from
+`norns-web.json`; keep its `controls` in step with the Controls in README.md.
 
 ## Rules that are easy to break
 

@@ -41,15 +41,34 @@ loads the same pinned version from jsdelivr.
 
 ## The page's text
 
-An optional `norns-web.json` next to the script gives the page a title, subtitle and intro, an
-icon (the tab's, and beside the title; `touch_icon` is a PNG for phones' home screens, paths in the
-script), and a footer with links, the maiden install line (with a copy button) and credits or
-license text:
+The page puts the device up front, standing on the ground under a night sky, with Start sound, the
+script's actions, How to play (also <kbd>?</kbd>), Full screen and a Look menu (shell and screen
+color); full screen shows just the device, under its own night sky. PARAMS, PSETs, the log and the
+REPL are in "Under the hood", a drawer at the bottom of the window: opening it scrolls the device into
+view above it, the handle on its top edge resizes it, and a badge on its bar counts errors while it's
+closed (open or closed and its height are remembered).
+
+An optional `norns-web.json` next to the script fills in the rest:
 
 ```json
-{ "title": "…", "subtitle": "…", "about": "…", "icon": "doc/icon.svg", "touch_icon": "doc/icon.png",
+{ "title": "…", "subtitle": "…", "about": "…", "more": "…",
+  "icon": "doc/icon.svg", "touch_icon": "doc/icon.png",
+  "actions": [{ "label": "Shuffle", "icon": "shuffle", "param": "randomize", "title": "…" }],
+  "controls": [{ "keys": "E1", "does": "…" }, { "keys": "hold K1 + K3", "does": "…" }],
+  "gallery_intro": "…", "gallery": [{ "img": "doc/a.png", "title": "…", "text": "…", "alt": "…" }],
   "install": ";install https://github.com/…", "links": [{ "label": "…", "url": "…" }], "footer": "…" }
 ```
+
+- `title`, `subtitle`, `about`: the heading and intro over the device. `icon` is the tab's icon and
+  sits beside the title; `touch_icon` is a PNG for phones' home screens (paths in the script).
+- `actions`: buttons beside Start sound, each stepping a param by `delta` (default 1), like
+  pressing a trigger in PARAMS. `icon` is optional (`shuffle`); in full screen they're icon-only
+  when they have one.
+- `controls`: what each control does, for How to play and its dialog (without it, a generic note
+  about knobs and keys). The keyboard and touch help is added after it.
+- `gallery`: pictures of what's in the script, each with a name and a line; `build.mjs` copies them.
+- `more`, `install`, `links`: the About section (the install line has a copy button); `footer`:
+  credits or license text.
 
 ## The engine stand-in
 
