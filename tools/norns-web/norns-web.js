@@ -691,7 +691,7 @@
   async function boot() {
     const [manifest, nornsLua] = await Promise.all([
       fetch("files.json", { cache: "no-store" }).then((r) => r.json()),
-      fetch("norns.lua", { cache: "no-store" }).then((r) => r.text()),
+      fetch("lib/norns.lua", { cache: "no-store" }).then((r) => r.text()),
     ]);
     const { name, main, root, files, about, dev } = manifest;
     document.title = `${name} · norns-web`;

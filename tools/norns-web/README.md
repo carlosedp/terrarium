@@ -104,8 +104,9 @@ value (`params:get("x")`), a statement just runs. Up and down recall history.
 
 ## How it works
 
-- `norns.lua` is the norns API in Lua: the screen draws into a 128×64 framebuffer, params keep
-  their values and actions, clocks are coroutines and metros are timers, all driven by
+- `lib/norns.lua` is the norns API in Lua (in `lib/` because norns lists every other `.lua`
+  file in a script's folder as a script of its own): the screen draws into a 128×64
+  framebuffer, params keep their values and actions, clocks are coroutines and metros are timers, all driven by
   `norns_web.tick(t)`. The page calls it once per animation frame and draws the framebuffer when
   the script has called `screen.update()`.
 - `norns-web.js` loads the VM, mounts the script's files under `/code/<name>/`, and wires the

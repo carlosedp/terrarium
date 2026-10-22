@@ -40,7 +40,7 @@ deploy: test ## copy the script to the norns (needs ssh access)
 
 manual-images: ## re-render the manual's scene pictures (doc/img) from the Lua
 	@mkdir -p tools/manual/pgm
-	lua tools/manual/shots.lua . tools/manual/pgm > /dev/null
+	lua tools/manual/lib/shots.lua . tools/manual/pgm > /dev/null
 	python3 tools/manual/topng.py tools/manual/pgm doc/img
 
 logo: ## draw the mark (doc/img/icon.svg, logo.svg, icon-touch.svg and its 180 px PNG)

@@ -21,7 +21,8 @@ const WASMOON_CDN = "https://cdn.jsdelivr.net/npm/wasmoon@1.16.0/dist/";
 
 fs.rmSync(out, { recursive: true, force: true });
 fs.mkdirSync(path.join(out, "script/lib"), { recursive: true });
-for (const f of ["norns-web.js", "norns.lua"]) fs.copyFileSync(path.join(here, f), path.join(out, f));
+fs.mkdirSync(path.join(out, "lib"));
+for (const f of ["norns-web.js", "lib/norns.lua"]) fs.copyFileSync(path.join(here, f), path.join(out, f));
 let page = fs.readFileSync(path.join(here, "index.html"), "utf8");
 if (cdn) {
   page = page.replace('window.NORNS_WEB_WASMOON = "vendor/wasmoon/"', `window.NORNS_WEB_WASMOON = "${WASMOON_CDN}"`)

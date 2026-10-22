@@ -2,7 +2,7 @@
 -- against the test mock, stage each scene with params only (no keys, so nothing is
 -- dimmed or labelled), and dump the screen of the liveliest frame as a PGM.
 --
---   lua tools/manual/shots.lua <repo dir> <out dir>      (make manual-images does it all)
+--   lua tools/manual/lib/shots.lua <repo dir> <out dir>      (make manual-images does it all)
 --
 -- Text (labels, the peek view, toasts) is drawn by norns' font after this capture, so
 -- screens with text are taken separately (by hand on the norns, or from norns-web).

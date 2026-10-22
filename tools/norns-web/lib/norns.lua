@@ -417,12 +417,19 @@ function metro.init(arg, time, count)
 end
 function metro.free() end
 
+-- Each routine runs at its own wake time: while it runs, now (util.time) is the moment it
+-- asked for, not the tick that found it due, so what it does can be timed exactly by a host
+-- that schedules ahead (the plugin stamps engine commands with it).
 local function run_clocks()
+  local tick_now = now
   for id, r in pairs(routines) do
     local guard = 0
-    while routines[id] and r.wake <= now and guard < 64 do
+    while routines[id] and r.wake <= tick_now and guard < 64 do
       guard = guard + 1
+      local t = math.max(r.wake, tick_now - 1) -- a routine late by more than a second runs now
+      now = t
       local ok, kind, v = coroutine.resume(r.co)
+      now = tick_now
       if not ok then
         routines[id] = nil
         error("clock: " .. tostring(kind), 0)
@@ -431,11 +438,11 @@ local function run_clocks()
       elseif kind == "sync" then
         local beat_sec = 60 / tempo
         local beats = math.max(v or 1, 1 / 64)
-        local b = now / beat_sec
+        local b = t / beat_sec
         r.wake = (math.floor(b / beats + 1e-6) + 1) * beats * beat_sec
       else
-        r.wake = r.wake + (v or 0)
-        if r.wake < now - 1 then r.wake = now end -- don't try to catch up after a stall
+        r.wake = t + (v or 0)
+        if r.wake < tick_now - 1 then r.wake = tick_now end -- don't try to catch up after a stall
       end
     end
   end
