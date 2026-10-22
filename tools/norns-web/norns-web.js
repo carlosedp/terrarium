@@ -318,26 +318,57 @@
   {
     const frame = $("#frame"),
       device = $("#device"),
+      bar = frame.querySelector(".full-bar"),
       fullBtn = $("#full");
     let full = false;
+    // The bar sits in the top right corner. Where the device, centered, leaves it room
+    // beside it (a wide window), it takes none. Otherwise it goes above the device, or
+    // stacks down the right side (a phone on its side), whichever leaves the device bigger.
     const fit = () => {
       if (!full) return;
       const vw = window.innerWidth,
         vh = window.innerHeight,
         pad = 16,
-        bar = 48;
+        gap = 8;
+      if (vw > vh) hideHint();
       device.style.transform = "";
+      frame.style.padding = "";
+      bar.classList.remove("side");
       device.style.width =
         Math.min(device.dataset.shell === "norns" ? 720 : 540, vw - 2 * pad) +
         "px";
       const r = device.getBoundingClientRect();
-      const s = Math.min(
-        (vw - 2 * pad) / r.width,
-        (vh - 2 * pad - bar) / r.height,
-      );
+      const scale = (w, h) => Math.min(w / r.width, h / r.height);
+      let s = scale(vw - 2 * pad, vh - 2 * pad);
+      let b = bar.getBoundingClientRect();
+      if ((vw + r.width * s) / 2 > b.left - gap) {
+        const top = b.bottom + gap,
+          sTop = scale(vw - 2 * pad, vh - top - pad);
+        bar.classList.add("side");
+        b = bar.getBoundingClientRect();
+        const right = b.left - gap,
+          sSide = scale(right - pad, vh - 2 * pad);
+        if (b.bottom <= vh - pad && sSide >= sTop) {
+          s = sSide;
+          if ((vw + r.width * s) / 2 > right)
+            frame.style.padding = `0 ${vw - right}px 0 ${pad}px`;
+        } else {
+          bar.classList.remove("side");
+          s = sTop;
+          frame.style.paddingTop = top - pad + "px";
+        }
+      }
       device.style.transform = `scale(${s})`;
       relayoutSky();
     };
+    // a phone held upright gets a nudge to turn it: the norns is wider than tall
+    const hint = $("#full-hint");
+    let hintTimer;
+    const hideHint = () => {
+      clearTimeout(hintTimer);
+      hint.hidden = true;
+    };
+    hint.addEventListener("click", hideHint);
     const enter = () => {
       full = true;
       frame.classList.add("full");
@@ -349,6 +380,10 @@
           () => {},
         );
       fit();
+      if (matchMedia("(pointer: coarse)").matches && innerHeight > innerWidth) {
+        hint.hidden = false;
+        hintTimer = setTimeout(hideHint, 6000);
+      }
     };
     const exit = () => {
       if (!full) return;
@@ -358,6 +393,9 @@
       fullBtn.setAttribute("aria-pressed", "false");
       device.style.transform = "";
       device.style.width = "";
+      frame.style.padding = "";
+      bar.classList.remove("side");
+      hideHint();
       relayoutSky();
       const fsEl =
         document.fullscreenElement || document.webkitFullscreenElement;

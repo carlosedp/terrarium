@@ -43,7 +43,8 @@ loads the same pinned version from jsdelivr.
 
 The page puts the device up front, standing on the ground under a night sky, with Start sound, the
 script's actions, How to play (also <kbd>?</kbd>), Full screen and a Look menu (shell and screen
-color); full screen shows just the device, under its own night sky. PARAMS, PSETs, the log and the
+color); full screen shows just the device, under its own night sky (its buttons stack down the
+right side on a phone turned sideways, and a phone held upright is asked to turn). PARAMS, PSETs, the log and the
 REPL are in "Under the hood", a drawer at the bottom of the window: opening it scrolls the device into
 view above it, the handle on its top edge resizes it, and a badge on its bar counts errors while it's
 closed (open or closed and its height are remembered).
