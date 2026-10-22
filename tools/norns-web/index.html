@@ -1399,6 +1399,112 @@
     body.hosted h1 .mark {
       height: 32px;
     }
+
+    /* a plugin's window doesn't scroll: the device fits its height (the screen keeps 2:1) */
+    html:has(body.hosted),
+    body.hosted {
+      overflow: hidden;
+    }
+
+    body.hosted .hint {
+      display: none;
+    }
+
+    body.hosted .night .wrap {
+      gap: 16px;
+    }
+
+    /* norns-web.js zooms the device and its buttons to the window's height (--fit) */
+    body.hosted .frame,
+    body.hosted .controls {
+      zoom: var(--fit, 1);
+    }
+
+    /* the drawer at the right (a plugin with set_extra_width): a tab along the right edge, and
+       open, PARAMS above the log, as wide as dragged; the window grows wider by it */
+    body.side-drawer {
+      padding-bottom: 0;
+      padding-right: var(--hood-space-x, 40px);
+    }
+
+    body.side-drawer.hosted .night {
+      min-height: 100vh;
+    }
+
+    body.side-drawer .hood {
+      top: 0;
+      bottom: 0;
+      left: auto;
+      right: 0;
+      width: 40px;
+      box-shadow: -12px 0 30px -14px rgba(0, 0, 0, 0.55);
+    }
+
+    body.side-drawer .hood[open] {
+      width: calc(40px + var(--drawer-w, 440px));
+    }
+
+    body.side-drawer .hood>summary {
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 40px;
+      padding: 16px 0;
+      flex-direction: column;
+      align-items: center;
+      gap: 14px;
+      writing-mode: vertical-rl;
+      border-top: 0;
+      border-left: 1px solid var(--night-rule);
+    }
+
+    body.side-drawer .hood>summary::before {
+      content: "◂";
+      writing-mode: horizontal-tb;
+    }
+
+    body.side-drawer .hood>summary h2 {
+      font-size: 13px;
+      letter-spacing: 0.1em;
+    }
+
+    body.side-drawer .hood>summary small {
+      display: none;
+    }
+
+    body.side-drawer .bench {
+      margin-left: 40px;
+      width: var(--drawer-w, 440px);
+      height: 100vh;
+      grid-template-columns: minmax(0, 1fr);
+      grid-template-rows: minmax(0, 1.3fr) minmax(0, 1fr);
+      grid-auto-rows: unset;
+      gap: 18px;
+      padding: 16px;
+      overflow: hidden;
+    }
+
+    body.side-drawer #params,
+    body.side-drawer .logbox {
+      flex: 1;
+      height: auto;
+      max-height: none;
+    }
+
+    body.side-drawer .hood-grip {
+      left: 40px;
+      top: 50%;
+      width: 18px;
+      height: 64px;
+      margin: -32px 0 0 -9px;
+      cursor: ew-resize;
+    }
+
+    body.side-drawer .hood-grip::before {
+      width: 5px;
+      height: 44px;
+    }
   </style>
 </head>
 

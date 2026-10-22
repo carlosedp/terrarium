@@ -69,7 +69,8 @@ transport running, saves and restores its state, and checks it made sound. CI al
 - **The face** is norns-web's page, the same one the browser shows, in a WebView (WebView2 on
   Windows, WebKit on macOS and Linux), served from the bundle's `Resources/web/`. It sees it's
   hosted and runs no Lua or sound of its own: it calls the plugin (see "In a plugin" in
-  `tools/norns-web/README.md`). Opening the drawer grows the window, so the device stays whole.
+  `tools/norns-web/README.md`). The page never scrolls (the device zooms to fit), and the drawer is a tab at the right:
+  opening it grows the window wider, so the device stays whole.
 - **Host automation:** 16 parameters, "map 1" to "map 16". The drawer's **map** button binds any
   of terrarium's PARAMS to a free one; the slot takes that param's name ("map 3: rain change")
   and the two follow each other, the host's lane driving the param and the plugin's changes

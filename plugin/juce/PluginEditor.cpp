@@ -2,7 +2,7 @@
 
 namespace {
 const juce::Colour NIGHT(0xff121513);
-constexpr int W = 700, H = 760;
+constexpr int W = 740, H = 650;  // the device at full size, and the drawer's tab
 
 juce::String mimeType(const juce::String& path) {
     static const std::pair<const char*, const char*> types[] = {
@@ -27,7 +27,7 @@ TerrariumEditor::TerrariumEditor(TerrariumProcessor& p) : AudioProcessorEditor(&
     view_ = std::make_unique<juce::WebBrowserComponent>(options());
     addAndMakeVisible(*view_);
     setResizable(true, true);
-    setResizeLimits(480, 520, 2400, 2400);
+    setResizeLimits(420, 380, 3000, 2400);
     setSize(W, H);
     view_->goToURL(juce::WebBrowserComponent::getResourceProviderRoot());
     startTimerHz(30);
@@ -84,9 +84,9 @@ juce::WebBrowserComponent::Options TerrariumEditor::options() {
                             })
         .withNativeFunction("param_map", [this](Args a, Done done) { done(proc_.toggleMap(argInt(a, 0))); })
         .withNativeFunction("param_maps", [this](Args, Done done) { done(proc_.maps()); })
-        // the drawer opens below the device: the window grows by it, rather than covering it
-        .withNativeFunction("set_extra_height", [this](Args a, Done done) {
-            setExtraHeight(argInt(a, 0));
+        // the drawer opens at the right: the window grows wider by it, rather than covering the device
+        .withNativeFunction("set_extra_width", [this](Args a, Done done) {
+            setExtraWidth(argInt(a, 0));
             done(true);
         });
 }
@@ -135,13 +135,12 @@ void TerrariumEditor::paint(juce::Graphics& g) {
 
 void TerrariumEditor::resized() {
     if (view_) view_->setBounds(getLocalBounds());
-    // with the drawer shut, a resize by hand is the new natural height
-    if (extra_ == 0) baseHeight_ = getHeight();
 }
 
-void TerrariumEditor::setExtraHeight(int px) {
+void TerrariumEditor::setExtraWidth(int px) {
     px = juce::jmax(0, px);
     if (px == extra_) return;
+    int base = getWidth() - extra_;
     extra_ = px;
-    setSize(getWidth(), baseHeight_ + extra_);
+    setSize(base + extra_, getHeight());
 }

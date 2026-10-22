@@ -15,16 +15,54 @@
     H = 64;
   const $ = (sel) => document.querySelector(sel);
 
+  // ---------- hosted: the face of a plugin that runs the script itself ----------
+  // Inside JUCE's WebBrowserComponent (window.__JUCE__), the plugin has its own Lua and its
+  // own sound: the page starts neither, and becomes the plugin's face. Encoders, keys,
+  // PARAMS, presets and the REPL call the plugin's native functions (enc, key, params,
+  // param_delta, repl, pset); the screen and the log arrive as its "frame" and "log" events.
+  // A plugin that also registers param_map and param_maps offers its host-automation slots,
+  // and PARAMS gets a "map" button per param; set_extra_height (or _width) lets the drawer
+  // grow the plugin's window instead of covering the device. JUCE's wire protocol: an "__juce__invoke" event
+  // { name, params, resultId }, answered by "__juce__complete" { promiseId, result }.
+  const juceBackend = window.__JUCE__ && window.__JUCE__.backend;
+  const hosted = !!(juceBackend && typeof juceBackend.emitEvent === "function");
+  const hostFunctions = (window.__JUCE__ && window.__JUCE__.initialisationData &&
+    window.__JUCE__.initialisationData.__juce__functions) || [];
+  const calls = new Map();
+  let nextCall = 0;
+  if (hosted)
+    juceBackend.addEventListener("__juce__complete", (p) => {
+      const resolve = p && calls.get(p.promiseId);
+      if (resolve) {
+        calls.delete(p.promiseId);
+        resolve(p.result);
+      }
+    });
+  const native = (name, ...params) =>
+    new Promise((resolve) => {
+      const resultId = nextCall++;
+      calls.set(resultId, resolve);
+      juceBackend.emitEvent("__juce__invoke", { name, params, resultId });
+    });
+  const canMap = hosted && hostFunctions.includes("param_map") && hostFunctions.includes("param_maps");
+  const canGrow = hosted && hostFunctions.includes("set_extra_height");
+  // with set_extra_width, the drawer opens at the right instead, and the window grows wider
+  const side = hosted && hostFunctions.includes("set_extra_width");
+  if (side) document.body.classList.add("side-drawer");
+
+
   // ---------- under the hood: a drawer at the bottom of the window, closed until asked for ----------
   // Open, it shares the window with the device (opening it scrolls the device into view above it);
   // its height is dragged from the handle on its top edge. Open or closed and the height are remembered.
+  // In a plugin that offers set_extra_width (side), it's a drawer at the right, as wide as dragged.
   const hood = $("#hood"),
     badge = $("#hood-badge"),
     HOOD = "norns-web:hood",
-    HOOD_H = "norns-web:hood-height";
+    HOOD_H = side ? "norns-web:hood-width" : "norns-web:hood-height";
   const setDrawer = (px, save) => {
-    const h = Math.max(160, Math.min(Math.round(px), Math.round(window.innerHeight * 0.85)));
-    document.documentElement.style.setProperty("--drawer-h", h + "px");
+    const most = side ? 900 : window.innerHeight * 0.85;
+    const h = Math.max(side ? 300 : 160, Math.min(Math.round(px), Math.round(most)));
+    document.documentElement.style.setProperty(side ? "--drawer-w" : "--drawer-h", h + "px");
     if (save)
       try {
         localStorage.setItem(HOOD_H, h);
@@ -40,9 +78,16 @@
   // height instead (a plugin window can grow, a browser tab can't), so the device stays whole.
   let extraAsked = 0;
   new ResizeObserver(() => {
+    const summary = hood.querySelector("summary");
+    if (side) {
+      document.documentElement.style.setProperty("--hood-space-x", hood.offsetWidth + "px");
+      const extra = hood.open ? hood.offsetWidth - summary.offsetWidth : 0;
+      if (extra !== extraAsked) native("set_extra_width", (extraAsked = extra));
+      return;
+    }
     document.documentElement.style.setProperty("--hood-space", hood.offsetHeight + "px");
     if (canGrow) {
-      const extra = hood.open ? hood.offsetHeight - hood.querySelector("summary").offsetHeight : 0;
+      const extra = hood.open ? hood.offsetHeight - summary.offsetHeight : 0;
       if (extra !== extraAsked) native("set_extra_height", (extraAsked = extra));
     }
   }).observe(hood);
@@ -52,7 +97,7 @@
       badge.hidden = true;
       badge.dataset.n = "0";
       logEl.scrollTop = logEl.scrollHeight;
-      if (!restoring && !canGrow)
+      if (!restoring && !canGrow && !side)
         requestAnimationFrame(() => {
           // the device's bottom just above the drawer, or its top at the window's if it doesn't fit
           const r = $("#device").getBoundingClientRect(),
@@ -68,21 +113,27 @@
     } catch (e) {}
   });
   {
+    // dragged from its top edge (up opens it further), or at the side from its left edge
     const grip = $("#hood-grip");
+    if (side) grip.setAttribute("aria-orientation", "vertical");
     let startY = 0,
       startH = 0;
-    const height = () => $("#hood .bench").getBoundingClientRect().height;
+    const pos = (e) => (side ? e.clientX : e.clientY);
+    const height = () => {
+      const r = $("#hood .bench").getBoundingClientRect();
+      return side ? r.width : r.height;
+    };
     grip.addEventListener("pointerdown", (e) => {
-      startY = e.clientY;
+      startY = pos(e);
       startH = height();
       grip.setPointerCapture(e.pointerId);
       e.preventDefault();
     });
     grip.addEventListener("pointermove", (e) => {
-      if (grip.hasPointerCapture(e.pointerId)) setDrawer(startH - (e.clientY - startY), true);
+      if (grip.hasPointerCapture(e.pointerId)) setDrawer(startH - (pos(e) - startY), true);
     });
     grip.addEventListener("keydown", (e) => {
-      const d = { ArrowUp: 24, ArrowDown: -24 }[e.key];
+      const d = side ? { ArrowLeft: 24, ArrowRight: -24 }[e.key] : { ArrowUp: 24, ArrowDown: -24 }[e.key];
       if (d) {
         setDrawer(height() + d, true);
         e.preventDefault();
@@ -695,39 +746,24 @@
     },
   };
 
-  // ---------- hosted: the face of a plugin that runs the script itself ----------
-  // Inside JUCE's WebBrowserComponent (window.__JUCE__), the plugin has its own Lua and its
-  // own sound: the page starts neither, and becomes the plugin's face. Encoders, keys,
-  // PARAMS, presets and the REPL call the plugin's native functions (enc, key, params,
-  // param_delta, repl, pset); the screen and the log arrive as its "frame" and "log" events.
-  // A plugin that also registers param_map and param_maps offers its host-automation slots,
-  // and PARAMS gets a "map" button per param. JUCE's wire protocol: an "__juce__invoke" event
-  // { name, params, resultId }, answered by "__juce__complete" { promiseId, result }.
-  const juceBackend = window.__JUCE__ && window.__JUCE__.backend;
-  const hosted = !!(juceBackend && typeof juceBackend.emitEvent === "function");
-  const hostFunctions = (window.__JUCE__ && window.__JUCE__.initialisationData &&
-    window.__JUCE__.initialisationData.__juce__functions) || [];
-  const calls = new Map();
-  let nextCall = 0;
-  if (hosted)
-    juceBackend.addEventListener("__juce__complete", (p) => {
-      const resolve = p && calls.get(p.promiseId);
-      if (resolve) {
-        calls.delete(p.promiseId);
-        resolve(p.result);
-      }
-    });
-  const native = (name, ...params) =>
-    new Promise((resolve) => {
-      const resultId = nextCall++;
-      calls.set(resultId, resolve);
-      juceBackend.emitEvent("__juce__invoke", { name, params, resultId });
-    });
-  const canMap = hosted && hostFunctions.includes("param_map") && hostFunctions.includes("param_maps");
-  const canGrow = hosted && hostFunctions.includes("set_extra_height");
+
+  // A plugin's window doesn't scroll: the device and its buttons zoom down to fit its height
+  // (keys and encoders included, as in full screen), never up.
+  function fitHosted() {
+    const root = document.documentElement, night = $("#night");
+    root.style.setProperty("--fit", 1);
+    const over = night.scrollHeight - window.innerHeight;
+    if (over > 0) {
+      const zoomed = $("#frame").offsetHeight + $(".controls").offsetHeight;
+      root.style.setProperty("--fit", Math.max(0.3, (zoomed - over) / zoomed).toFixed(3));
+    }
+  }
 
   function bootHosted() {
     document.body.classList.add("hosted");
+    fitHosted();
+    window.addEventListener("resize", fitHosted);
+    $("#v-shell").addEventListener("change", () => requestAnimationFrame(fitHosted));
     encFn = (n, d) => native("enc", n, d);
     keyFn = (n, z) => native("key", n, z);
     paramsJson = () => native("params");

@@ -87,7 +87,10 @@ drawer stay.
 | `param_delta(index or id, d)`         | a step of one param                                         |
 | `repl(code)`, `pset(action, slot)`    | the REPL; save / load a PSET                                |
 | `param_map(index)`, `param_maps()`    | optional: bind a param to one of the plugin's host-automation slots (or free it), and `{ index: slot }`; with both, PARAMS gets a **map** button per param |
-| `set_extra_height(px)`                | optional: the drawer opened (or closed, 0): the plugin grows its window by it, so the device stays in view |
+| `set_extra_height(px)`                | optional: the drawer opened (or closed, 0): the plugin grows its window taller by it, so the device stays in view |
+| `set_extra_width(px)`                 | optional, instead: the drawer opens at the right (a tab along the edge, PARAMS above the log) and the plugin grows its window wider by it |
+
+Hosted, the page never scrolls: the device and its buttons zoom down to fit the window's height.
 
 | plugin → page (events) | carries                                                        |
 | ---------------------- | -------------------------------------------------------------- |
