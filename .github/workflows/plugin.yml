@@ -17,18 +17,21 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: linux
-            os: ubuntu-22.04
-            vst3: build/juce/terrarium_plugin_artefacts/Release/VST3/terrarium.vst3
-            host_test: build/juce/terrarium_host_test_artefacts/Release/terrarium_host_test
-          - name: macos
-            os: macos-14
-            vst3: build/juce/terrarium_plugin_artefacts/Release/VST3/terrarium.vst3
-            host_test: build/juce/terrarium_host_test_artefacts/Release/terrarium_host_test
           - name: windows
             os: windows-2022
             vst3: build/juce/terrarium_plugin_artefacts/Release/VST3/terrarium.vst3
+            standalone: terrarium.exe
             host_test: build/juce/terrarium_host_test_artefacts/Release/terrarium_host_test.exe
+          - name: macos
+            os: macos-14
+            vst3: build/juce/terrarium_plugin_artefacts/Release/VST3/terrarium.vst3
+            standalone: terrarium.app
+            host_test: build/juce/terrarium_host_test_artefacts/Release/terrarium_host_test
+          - name: linux
+            os: ubuntu-22.04
+            vst3: build/juce/terrarium_plugin_artefacts/Release/VST3/terrarium.vst3
+            standalone: terrarium
+            host_test: build/juce/terrarium_host_test_artefacts/Release/terrarium_host_test
     runs-on: ${{ matrix.os }}
     defaults:
       run:
@@ -42,6 +45,13 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y -qq libasound2-dev libfreetype-dev libfontconfig1-dev libx11-dev \
             libxrandr-dev libxinerama-dev libxcursor-dev libxext-dev libgl1-mesa-dev xvfb
+
+      # JUCE, Lua and the mi-UGens are downloaded by CMake: JUCE is ~100 MB, worth keeping
+      - name: Cache the downloads
+        uses: actions/cache@v4
+        with:
+          path: build/_deps
+          key: deps-${{ matrix.name }}-${{ hashFiles('plugin/CMakeLists.txt', 'plugin/juce/CMakeLists.txt') }}
 
       - name: Build
         run: |
@@ -65,11 +75,30 @@ jobs:
           cmake -E tar xf pv.zip
           xvfb-run -a ./pluginval --strictness-level 5 --timeout-ms 300000 --validate "${{ matrix.vst3 }}"
 
+      # Zipped here, with each OS's own archiver: upload-artifact's zip drops symlinks and the
+      # executable bit, which breaks macOS bundles and the Linux binaries. The products are
+      # named, not globbed: Visual Studio also leaves empty Debug/ bundle skeletons around.
+      - name: Package
+        env:
+          ART: build/juce/terrarium_plugin_artefacts/Release
+        run: |
+          pkg="terrarium-plugin-${{ matrix.name }}"
+          mkdir -p "_stage/$pkg" _dist
+          cp -R "$ART/VST3/terrarium.vst3" "_stage/$pkg/"
+          if [[ $RUNNER_OS == macOS ]]; then cp -R "$ART/AU/terrarium.component" "_stage/$pkg/"; fi
+          cp -R "$ART/Standalone/${{ matrix.standalone }}" "_stage/$pkg/"
+          if [[ $RUNNER_OS != macOS ]]; then cp -R "$ART/Standalone/terrarium-resources" "_stage/$pkg/"; fi
+          rm -f "_stage/$pkg/terrarium.vst3/desktop.ini"  # Windows' folder-icon hint: litter in a zip
+          cp render.wav "_stage/$pkg/"
+          case $RUNNER_OS in
+            Windows) (cd _stage && 7z a -tzip "../_dist/$pkg.zip" "$pkg" >/dev/null) ;;
+            macOS)   ditto -c -k --sequesterRsrc --keepParent "_stage/$pkg" "_dist/$pkg.zip" ;;
+            Linux)   (cd _stage && zip -qry "../_dist/$pkg.zip" "$pkg") ;;
+          esac
+          ls -l _dist
+
       - uses: actions/upload-artifact@v4
         with:
           name: terrarium-plugin-${{ matrix.name }}
-          path: |
-            build/juce/terrarium_plugin_artefacts/Release/VST3
-            build/juce/terrarium_plugin_artefacts/Release/AU
-            build/juce/terrarium_plugin_artefacts/Release/Standalone
-            render.wav
+          path: _dist/*.zip
+          if-no-files-found: error

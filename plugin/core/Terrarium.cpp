@@ -19,7 +19,7 @@ bool Terrarium::boot(std::string& err) {
     std::lock_guard<std::mutex> lock(lua_);
     host_ = std::make_unique<LuaHost>(LuaHost::Callbacks{
         [this](const Command& c) {
-            if (!queue_.push(c) && onLog) onLog("engine queue full, a command was dropped", true);
+            if (!queue_->push(c) && onLog) onLog("engine queue full, a command was dropped", true);
         },
         [this](const std::string& s, bool error) {
             if (onLog) onLog(s, error);
@@ -56,7 +56,7 @@ void Terrarium::renderBlock() {
     double end = t_ + BLOCK / sr_;
     // run what's due by the end of this block, in time order (they come mostly sorted)
     Command c;
-    while (npending_ < (int)(sizeof(pending_) / sizeof(pending_[0])) && queue_.pop(c)) pending_[npending_++] = c;
+    while (npending_ < (int)pending_.size() && queue_->pop(c)) pending_[npending_++] = c;
     for (;;) {
         int first = -1;
         for (int i = 0; i < npending_; ++i)

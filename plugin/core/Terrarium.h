@@ -22,6 +22,7 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include <vector>
 
 #include "Commands.h"
 #include "Engine.h"
@@ -76,14 +77,16 @@ private:
     std::mutex lua_;  // never taken by the audio thread unless offline
     std::unique_ptr<LuaHost> host_;
     Engine engine_;
-    CommandQueue queue_;
+    // the queue and the pending list are big (about 1.2 MB): on the heap, so a Terrarium can
+    // live anywhere (Windows gives a thread 1 MB of stack)
+    std::unique_ptr<CommandQueue> queue_ = std::make_unique<CommandQueue>();
 
     // audio thread
     double sr_ = 48000;
     double t_ = 0;               // the time of the next block to render
     float bufL_[BLOCK], bufR_[BLOCK];
     int bufPos_ = BLOCK;         // samples of buf already handed out
-    Command pending_[1024];
+    std::vector<Command> pending_ = std::vector<Command>(1024);
     int npending_ = 0;
     double nextOfflineTick_ = 0;
 
