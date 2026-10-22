@@ -2,11 +2,29 @@
 #
 # Each format's bundle gets a Resources/ folder (next to the binary, for the standalone
 # on Linux and Windows): the script's Lua (terrarium.lua and lib/), norns-web's norns.lua,
-# and the native mi-UGens. The plugin finds them from its own binary.
+# the native mi-UGens, and web/: norns-web's page, the plugin's face. The plugin finds them
+# from its own binary.
+#
+# JUCE 8.0.6: its WebView bridge (native functions, events) is new; pinned, as AlloyFlux's
+# plugin pins it.
 FetchContent_Declare(juce
-  URL https://github.com/juce-framework/JUCE/archive/refs/tags/8.0.4.tar.gz
-  URL_HASH SHA256=0effe9823a6fd8a4f98e5c08be7d308350e417b2d15dcf34011e778fefbbf005)
+  URL https://github.com/juce-framework/JUCE/archive/refs/tags/8.0.6.tar.gz
+  URL_HASH SHA256=95752f8e8b37d802b4c10182bc757de7d88f0c8899e879afa8798589be306a11)
 FetchContent_MakeAvailable(juce)
+
+# WebView2 (Windows): JUCE neither ships nor fetches its SDK, and its FindWebView2 looks
+# under a folder named *Microsoft.Web.WebView2*, so the NuGet package (a zip) goes there.
+# Under _deps/, so CI's cache of the downloads keeps it with FetchContent's own stamps.
+# Linked statically: nothing to ship or find at run time. (As AlloyFlux's plugin does.)
+if(WIN32)
+  set(WEBVIEW2_DIR "${CMAKE_BINARY_DIR}/_deps/webview2-pkg")
+  FetchContent_Declare(webview2
+    URL https://www.nuget.org/api/v2/package/Microsoft.Web.WebView2/1.0.1901.177
+    URL_HASH SHA256=464360d5eedcae0e95b0a3fe13c74b496bc9b542980ff8ecebd9ff7ea37ca39e
+    SOURCE_DIR "${WEBVIEW2_DIR}/Microsoft.Web.WebView2")
+  FetchContent_MakeAvailable(webview2)
+  set(JUCE_WEBVIEW2_PACKAGE_LOCATION "${WEBVIEW2_DIR}")
+endif()
 
 set(FORMATS VST3 Standalone)
 if(APPLE)
@@ -23,15 +41,23 @@ juce_add_plugin(terrarium_plugin
   NEEDS_MIDI_INPUT FALSE
   NEEDS_MIDI_OUTPUT FALSE
   EDITOR_WANTS_KEYBOARD_FOCUS TRUE
+  NEEDS_WEB_BROWSER TRUE
+  NEEDS_WEBVIEW2 TRUE
   VST3_CATEGORIES Instrument Generator
   AU_MAIN_TYPE kAudioUnitType_MusicDevice
   FORMATS ${FORMATS})
 
 target_sources(terrarium_plugin PRIVATE PluginProcessor.cpp PluginEditor.cpp)
+# JUCE_USE_WIN_WEBVIEW2_WITH_STATIC_LINKING pairs with NEEDS_WEBVIEW2 (not JUCE_USE_WIN_WEBVIEW2,
+# the DLL backend, which wants a loader DLL at run time)
 target_compile_definitions(terrarium_plugin PUBLIC
-  JUCE_WEB_BROWSER=0 JUCE_USE_CURL=0 JUCE_VST3_CAN_REPLACE_VST2=0 JUCE_DISPLAY_SPLASH_SCREEN=0)
+  JUCE_WEB_BROWSER=1 JUCE_USE_WIN_WEBVIEW2_WITH_STATIC_LINKING=1
+  JUCE_USE_CURL=0 JUCE_VST3_CAN_REPLACE_VST2=0 JUCE_DISPLAY_SPLASH_SCREEN=0)
+if(MSVC)
+  target_compile_options(terrarium_plugin PRIVATE /utf-8)  # the sources are UTF-8, not the system codepage
+endif()
 target_link_libraries(terrarium_plugin
-  PRIVATE terrarium_core juce::juce_audio_utils
+  PRIVATE terrarium_core juce::juce_audio_utils juce::juce_gui_extra
   PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_lto_flags juce::juce_recommended_warning_flags)
 
 # ---------- the resources, staged once and copied into each bundle ----------

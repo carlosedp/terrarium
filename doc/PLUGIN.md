@@ -74,7 +74,10 @@ lands on the grid, not on the UI timer's jitter. Screen frames go to the UI afte
 3. **The engine:** the rest of `Engine_Terrarium.js` in C++, every SynthDef; the sidechain input
    and MIDI out for visitors.
 4. **UI and automation:** norns-web's page as the editor, the drawer with map slots, state in the
-   project.
+   project. *Pulled ahead of phase 3, on the `plugin` branch: the page is the face
+   (norns-web's hosted mode), 16 map slots named after what they follow, both ways, saved with
+   the project. Still to do: the fixed layer (the ten macros, the modules, the settings as their
+   own parameters).*
 
 Later: CPU per instance (Clouds, Beads and Elements are heavy), sample rates other than 48 kHz
 (the mi-UGens are written for fixed rates), notarizing the macOS build.

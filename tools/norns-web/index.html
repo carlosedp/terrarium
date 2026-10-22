@@ -1349,6 +1349,56 @@
         padding-top: 36px;
       }
     }
+
+    /* "map": bind a param to one of a hosting plugin's automation slots */
+    .param.mappable {
+      grid-template-columns: minmax(0, 1fr) auto minmax(5.5rem, auto) auto auto;
+    }
+
+    .param button.map {
+      width: auto;
+      padding: 0 7px;
+      font-size: 11px;
+      color: var(--muted);
+    }
+
+    .param button.map.on {
+      color: var(--night);
+      background: var(--amber);
+      border-color: var(--amber);
+    }
+
+    /* hosted: the face of a plugin that runs the script and its sound itself. The device and
+       its controls, and the drawer; nothing about the web page (sound, gallery, about) */
+    body.hosted #sound,
+    body.hosted #full-sound,
+    body.hosted .lede,
+    body.hosted main > section,
+    body.hosted #about-footer,
+    body.hosted .logbar label:has(#show-engine) {
+      display: none !important;
+    }
+
+    body.hosted main {
+      padding: 0;
+    }
+
+    body.hosted .night {
+      min-height: calc(100vh - var(--hood-space, 48px));
+      padding-top: 20px;
+    }
+
+    body.hosted header {
+      gap: 2px;
+    }
+
+    body.hosted h1 {
+      font-size: 26px;
+    }
+
+    body.hosted h1 .mark {
+      height: 32px;
+    }
   </style>
 </head>
 

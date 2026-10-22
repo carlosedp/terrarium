@@ -12,6 +12,37 @@ namespace terrarium {
 
 static const char* SELF = "terrarium.host";
 
+// What the plugin needs of PARAMS beyond norns-web's panel: a param as 0..1 and back, for host
+// automation. norns.lua's kinds: control (a controlspec), number, option, binary, trigger.
+static const char* HOST_LUA = R"LUA(
+norns_web_host = {}
+local function find(id)
+  local ok, p = pcall(params.lookup_param, params, id)
+  if ok then return p end
+end
+function norns_web_host.norm(id)
+  local p = find(id)
+  if not p then return nil end
+  if p.kind == "control" then return p.spec:unmap(p.value)
+  elseif p.kind == "number" then return (p.value - p.min) / math.max(1, p.max - p.min)
+  elseif p.kind == "option" then return (p.value - 1) / math.max(1, #p.options - 1)
+  elseif p.kind == "binary" or p.kind == "trigger" then return p.value end
+end
+function norns_web_host.set_norm(id, v)
+  local p = find(id)
+  if not p then return end
+  v = math.max(0, math.min(1, v))
+  if p.kind == "control" then params:set(p.id, p.spec:map(v))
+  elseif p.kind == "number" then params:set(p.id, p.min + math.floor(v * (p.max - p.min) + 0.5))
+  elseif p.kind == "option" then params:set(p.id, 1 + math.floor(v * (#p.options - 1) + 0.5))
+  elseif p.kind == "binary" then params:set(p.id, v >= 0.5 and 1 or 0)
+  elseif p.kind == "trigger" then if v >= 0.5 then params:set(p.id, 1) end end
+end
+function norns_web_host.id(i) local p = find(i); return p and p.id or "" end
+function norns_web_host.index(id) return params.lookup[id] or 0 end
+function norns_web_host.name(id) local p = find(id); return p and (p.name or p.id) or "" end
+)LUA";
+
 LuaHost::LuaHost(Callbacks cb) : cb_(std::move(cb)) {}
 
 LuaHost::~LuaHost() {
@@ -121,6 +152,10 @@ bool LuaHost::boot(const std::string& nornsLua, const std::string& scriptDir, co
         if (cb_.log) cb_.log(std::string("norns.lua: ") + lua_tostring(L_, -1), true);
         return false;
     }
+    if (luaL_dostring(L_, HOST_LUA) != LUA_OK) {
+        if (cb_.log) cb_.log(std::string("host helpers: ") + lua_tostring(L_, -1), true);
+        return false;
+    }
     // the script's own folder, whatever it's called (norns.lua would look in _path.code/<name>/)
     std::string dir = scriptDir;
     if (!dir.empty() && dir.back() != '/' && dir.back() != '\\') dir += '/';
@@ -176,6 +211,87 @@ void LuaHost::pset(const std::string& action, const std::string& slot) {
     lua_pushstring(L_, action.c_str());
     lua_pushstring(L_, slot.c_str());
     call("pset", 2, 0);
+}
+
+// ---------- PARAMS ----------
+
+std::string LuaHost::paramsJson() {
+    if (!L_) return "[]";
+    if (!call("params_json", 0, 1)) return "[]";
+    std::string s = lua_tostring(L_, -1) ? lua_tostring(L_, -1) : "[]";
+    lua_pop(L_, 1);
+    return s;
+}
+
+void LuaHost::paramDelta(int index, double d) {
+    if (!L_) return;
+    lua_pushinteger(L_, index);
+    lua_pushnumber(L_, d);
+    call("param_delta", 2, 0);
+}
+
+void LuaHost::paramDelta(const std::string& id, double d) {
+    if (!L_) return;
+    lua_pushstring(L_, id.c_str());
+    lua_pushnumber(L_, d);
+    call("param_delta", 2, 0);
+}
+
+// norns_web_host.<fn>(arg): leaves its one result on the stack, or returns false
+static bool hostCall(lua_State* L, const char* fn, int nargs) {
+    lua_getglobal(L, "norns_web_host");
+    lua_getfield(L, -1, fn);
+    lua_remove(L, -2);
+    lua_insert(L, -(nargs + 1));
+    if (lua_pcall(L, nargs, 1, 0) != LUA_OK) {
+        lua_pop(L, 1);
+        return false;
+    }
+    return true;
+}
+
+bool LuaHost::getNorm(const std::string& id, double& out) {
+    if (!L_) return false;
+    lua_pushstring(L_, id.c_str());
+    if (!hostCall(L_, "norm", 1)) return false;
+    bool ok = lua_isnumber(L_, -1);
+    if (ok) out = lua_tonumber(L_, -1);
+    lua_pop(L_, 1);
+    return ok;
+}
+
+void LuaHost::setNorm(const std::string& id, double v) {
+    if (!L_) return;
+    lua_pushstring(L_, id.c_str());
+    lua_pushnumber(L_, v);
+    if (hostCall(L_, "set_norm", 2)) lua_pop(L_, 1);
+}
+
+std::string LuaHost::paramId(int index) {
+    if (!L_) return "";
+    lua_pushinteger(L_, index);
+    if (!hostCall(L_, "id", 1)) return "";
+    std::string s = lua_tostring(L_, -1) ? lua_tostring(L_, -1) : "";
+    lua_pop(L_, 1);
+    return s;
+}
+
+int LuaHost::paramIndex(const std::string& id) {
+    if (!L_) return 0;
+    lua_pushstring(L_, id.c_str());
+    if (!hostCall(L_, "index", 1)) return 0;
+    int i = (int)lua_tointeger(L_, -1);
+    lua_pop(L_, 1);
+    return i;
+}
+
+std::string LuaHost::paramName(const std::string& id) {
+    if (!L_) return "";
+    lua_pushstring(L_, id.c_str());
+    if (!hostCall(L_, "name", 1)) return "";
+    std::string s = lua_tostring(L_, -1) ? lua_tostring(L_, -1) : "";
+    lua_pop(L_, 1);
+    return s;
 }
 
 }  // namespace terrarium

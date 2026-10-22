@@ -1,9 +1,39 @@
 #include "PluginProcessor.h"
 
+#include <cmath>
+
 #include "PluginEditor.h"
+
+// A host automation slot: 0..1, named after the param it follows ("map 3: rain change")
+class TerrariumProcessor::Slot : public juce::AudioParameterFloat {
+public:
+    explicit Slot(int n)
+        : AudioParameterFloat(juce::ParameterID("map" + juce::String(n), 1), "map " + juce::String(n),
+                              juce::NormalisableRange<float>(0, 1), 0),
+          n_(n) {}
+
+    juce::String getName(int maximumStringLength) const override {
+        std::lock_guard<std::mutex> lock(m_);
+        auto s = "map " + juce::String(n_) + (label_.isEmpty() ? "" : ": " + label_);
+        return maximumStringLength > 0 ? s.substring(0, maximumStringLength) : s;
+    }
+    void setLabel(const juce::String& l) {
+        std::lock_guard<std::mutex> lock(m_);
+        label_ = l;
+    }
+
+private:
+    int n_;
+    mutable std::mutex m_;
+    juce::String label_;
+};
 
 TerrariumProcessor::TerrariumProcessor()
     : AudioProcessor(BusesProperties().withOutput("Output", juce::AudioChannelSet::stereo(), true)) {
+    for (int k = 0; k < SLOTS; ++k) {
+        slots_[(size_t)k] = new Slot(k + 1);
+        addParameter(slots_[(size_t)k]);
+    }
     auto res = resources();
     core_ = std::make_unique<terrarium::Terrarium>(terrarium::Terrarium::Paths{
         res.getChildFile("norns-web/norns.lua").getFullPathName().toStdString(),
@@ -12,8 +42,9 @@ TerrariumProcessor::TerrariumProcessor()
     });
     core_->onLog = [this](const std::string& s, bool error) {
         std::lock_guard<std::mutex> lock(logMutex_);
-        lastLog_ = (error ? "error: " : "") + juce::String(s);
-        DBG(lastLog_);
+        log_.push_back({juce::String::fromUTF8(s.c_str()), error});
+        if (log_.size() > 300) log_.erase(log_.begin());
+        ++logCount_;
     };
     std::string err;
     booted_ = res.isDirectory() && core_->boot(err);
@@ -33,10 +64,12 @@ juce::File TerrariumProcessor::resources() {
     return {};
 }
 
-juce::String TerrariumProcessor::status() {
-    if (!booted_) return "terrarium didn't start: " + bootError_;
+std::vector<TerrariumProcessor::LogLine> TerrariumProcessor::logSince(size_t& seen) {
     std::lock_guard<std::mutex> lock(logMutex_);
-    return lastLog_;
+    size_t missed = logCount_ - seen, have = log_.size();
+    size_t from = missed >= have ? 0 : have - missed;
+    seen = logCount_;
+    return {log_.begin() + (long)from, log_.end()};
 }
 
 bool TerrariumProcessor::isBusesLayoutSupported(const BusesLayout& layouts) const {
@@ -67,12 +100,81 @@ void TerrariumProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::Mi
                    isNonRealtime());
 }
 
-// Lua, ahead of the audio (when rendering offline, process() ticks it itself)
+// Lua, ahead of the audio (when rendering offline, process() ticks it itself), then the slots
 void TerrariumProcessor::timerCallback() {
-    if (booted_ && !isNonRealtime()) core_->tick();
+    if (!booted_) return;
+    if (!isNonRealtime()) core_->tick();
+    syncSlots();
 }
 
-// the state: what the script stored (the params as a PSET, via params:write) as XML
+// ---------- automation slots ----------
+
+// Each bound slot follows its param and the param follows it. The host moved the slot: the
+// param takes the value. Otherwise, if the param changed in the plugin (the face, an encoder,
+// the script), the slot takes it. Comparing each side with its own last value, not the two
+// with each other, keeps a stepped param (an option) from fighting an automation lane.
+void TerrariumProcessor::syncSlots() {
+    for (size_t k = 0; k < SLOTS; ++k) {
+        if (bound_[k].empty()) continue;
+        float hv = slots_[k]->get();
+        double lv = 0;
+        if (hv != lastHost_[k]) {
+            core_->setNorm(bound_[k], hv);
+            lastHost_[k] = hv;
+            if (core_->getNorm(bound_[k], lv)) lastLua_[k] = (float)lv;
+        } else if (core_->getNorm(bound_[k], lv) && std::fabs((float)lv - lastLua_[k]) > 1e-5f) {
+            lastLua_[k] = (float)lv;
+            slots_[k]->beginChangeGesture();
+            slots_[k]->setValueNotifyingHost((float)lv);
+            slots_[k]->endChangeGesture();
+            lastHost_[k] = slots_[k]->get();
+        }
+    }
+}
+
+void TerrariumProcessor::bind(int slot, const std::string& id) {
+    auto k = (size_t)slot;
+    bound_[k] = id;
+    slots_[k]->setLabel(id.empty() ? "" : juce::String(core_->paramName(id)));
+    if (!id.empty()) {
+        double lv = 0;
+        core_->getNorm(id, lv);
+        lastLua_[k] = (float)lv;
+        slots_[k]->setValueNotifyingHost((float)lv);  // the slot starts where the param is
+        lastHost_[k] = slots_[k]->get();
+    }
+    updateHostDisplay(ChangeDetails().withParameterInfoChanged(true));
+}
+
+int TerrariumProcessor::toggleMap(int paramIndex) {
+    if (!booted_) return 0;
+    auto id = core_->paramId(paramIndex);
+    if (id.empty()) return 0;
+    for (int k = 0; k < SLOTS; ++k)
+        if (bound_[(size_t)k] == id) {
+            bind(k, "");
+            return 0;
+        }
+    for (int k = 0; k < SLOTS; ++k)
+        if (bound_[(size_t)k].empty()) {
+            bind(k, id);
+            return k + 1;
+        }
+    return 0;
+}
+
+juce::var TerrariumProcessor::maps() {
+    auto* o = new juce::DynamicObject();
+    if (booted_)
+        for (int k = 0; k < SLOTS; ++k)
+            if (!bound_[(size_t)k].empty())
+                o->setProperty(juce::String(core_->paramIndex(bound_[(size_t)k])), k + 1);
+    return juce::var(o);
+}
+
+// ---------- state ----------
+// what the script stored (the params as a PSET, via params:write), and the slots' bindings
+
 void TerrariumProcessor::getStateInformation(juce::MemoryBlock& dest) {
     if (!booted_) return;
     juce::XmlElement xml("terrarium");
@@ -81,6 +183,12 @@ void TerrariumProcessor::getStateInformation(juce::MemoryBlock& dest) {
         e->setAttribute("key", juce::String(k));
         e->addTextElement(juce::String(v));
     }
+    for (int k = 0; k < SLOTS; ++k)
+        if (!bound_[(size_t)k].empty()) {
+            auto* e = xml.createNewChildElement("map");
+            e->setAttribute("slot", k + 1);
+            e->setAttribute("param", juce::String(bound_[(size_t)k]));
+        }
     copyXmlToBinary(xml, dest);
 }
 
@@ -92,6 +200,11 @@ void TerrariumProcessor::setStateInformation(const void* data, int size) {
     for (auto* e : xml->getChildWithTagNameIterator("store"))
         s[e->getStringAttribute("key").toStdString()] = e->getAllSubText().toStdString();
     core_->loadState(s);
+    for (int k = 0; k < SLOTS; ++k) bind(k, "");
+    for (auto* e : xml->getChildWithTagNameIterator("map")) {
+        int k = e->getIntAttribute("slot") - 1;
+        if (k >= 0 && k < SLOTS) bind(k, e->getStringAttribute("param").toStdString());
+    }
 }
 
 juce::AudioProcessorEditor* TerrariumProcessor::createEditor() { return new TerrariumEditor(*this); }

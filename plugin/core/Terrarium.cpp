@@ -156,4 +156,22 @@ void Terrarium::loadState(const std::map<std::string, std::string>& s) {
     if (s.count("pset:daw")) host_->pset("load", "daw");
 }
 
+// ---------- PARAMS ----------
+
+#define WITH_LUA(dflt) \
+    std::lock_guard<std::mutex> lock(lua_); \
+    if (!host_) return dflt
+
+std::string Terrarium::paramsJson() { WITH_LUA("[]"); return host_->paramsJson(); }
+void Terrarium::paramDelta(int index, double d) { WITH_LUA(); host_->paramDelta(index, d); }
+void Terrarium::paramDelta(const std::string& id, double d) { WITH_LUA(); host_->paramDelta(id, d); }
+void Terrarium::pset(const std::string& action, const std::string& slot) { WITH_LUA(); host_->pset(action, slot); }
+bool Terrarium::getNorm(const std::string& id, double& out) { WITH_LUA(false); return host_->getNorm(id, out); }
+void Terrarium::setNorm(const std::string& id, double v) { WITH_LUA(); host_->setNorm(id, v); }
+std::string Terrarium::paramId(int index) { WITH_LUA(""); return host_->paramId(index); }
+int Terrarium::paramIndex(const std::string& id) { WITH_LUA(0); return host_->paramIndex(id); }
+std::string Terrarium::paramName(const std::string& id) { WITH_LUA(""); return host_->paramName(id); }
+
+#undef WITH_LUA
+
 }  // namespace terrarium

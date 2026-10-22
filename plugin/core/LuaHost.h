@@ -39,6 +39,18 @@ public:
     void repl(const std::string& code);
     void pset(const std::string& action, const std::string& slot);  // "save" | "load"
 
+    // PARAMS, for the plugin's face: the list as norns-web's panel wants it (JSON), and a step
+    // of one param, by index or id
+    std::string paramsJson();
+    void paramDelta(int index, double d);
+    void paramDelta(const std::string& id, double d);
+    // a param as 0..1 (for host automation): nothing for kinds that have no such value
+    bool getNorm(const std::string& id, double& out);
+    void setNorm(const std::string& id, double v);
+    std::string paramId(int index);   // "" if there's none
+    int paramIndex(const std::string& id);  // 0 if there's none
+    std::string paramName(const std::string& id);
+
     // the screen: 128x64 levels 0..15, the last frame the script drew
     const unsigned char* frame() const { return frame_; }
 

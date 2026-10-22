@@ -66,9 +66,14 @@ transport running, saves and restores its state, and checks it made sound. CI al
   phases drift apart (start, loop, seek, tempo change) Lua's time jumps forward to the host's.
   Only forward: a waiting clock routine would sit out a jump back.
 - **State.** The params, saved with the project as a PSET (what `params:write` stores).
-- **The editor**, for now: the screen and the encoders and keys (drag or scroll the encoders,
-  hold the keys; A S D and Y/H, U/J, I/K on the keyboard, as in norns-web). Phase 4 puts
-  norns-web's page here, with a drawer to map params to the host's automation.
+- **The face** is norns-web's page, the same one the browser shows, in a WebView (WebView2 on
+  Windows, WebKit on macOS and Linux), served from the bundle's `Resources/web/`. It sees it's
+  hosted and runs no Lua or sound of its own: it calls the plugin (see "In a plugin" in
+  `tools/norns-web/README.md`). Opening the drawer grows the window, so the device stays whole.
+- **Host automation:** 16 parameters, "map 1" to "map 16". The drawer's **map** button binds any
+  of terrarium's PARAMS to a free one; the slot takes that param's name ("map 3: rain change")
+  and the two follow each other, the host's lane driving the param and the plugin's changes
+  moving the slot. The bindings save with the project.
 
 ## Known gaps (phase 2)
 
@@ -76,5 +81,6 @@ transport running, saves and restores its state, and checks it made sound. CI al
 - A key or encoder that plays a note (K3's gestures) is heard 0.1 s late: its command is
   stamped with Lua's time, which runs ahead.
 - Swapping a module creates its synths on the audio thread (they allocate).
-- No host automation, MIDI out or sidechain yet (visitors), see doc/PLUGIN.md.
+- No MIDI out or sidechain yet (visitors), see doc/PLUGIN.md.
+- The face's fonts come from Google Fonts: offline, it falls back to the system's.
 - macOS: copying the resources into the bundle after JUCE builds it may need re-signing.

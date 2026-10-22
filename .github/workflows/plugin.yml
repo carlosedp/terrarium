@@ -44,7 +44,8 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y -qq libasound2-dev libfreetype-dev libfontconfig1-dev libx11-dev \
-            libxrandr-dev libxinerama-dev libxcursor-dev libxext-dev libgl1-mesa-dev xvfb
+            libxrandr-dev libxinerama-dev libxcursor-dev libxext-dev libgl1-mesa-dev xvfb \
+            libwebkit2gtk-4.1-dev  # the face's WebView
 
       # JUCE, Lua and the mi-UGens are downloaded by CMake: JUCE is ~100 MB, worth keeping
       - name: Cache the downloads
@@ -62,6 +63,7 @@ jobs:
         run: |
           r=$(find build -name 'terrarium-render*' -type f \( -perm -u+x -o -name '*.exe' \) | head -1)
           "$r" --script . --seconds 20 --bpm 93 --start 3.37 --block 441 --quiet --out render.wav
+          "$r" --script . --quiet --check-params
 
       - name: The plugin plays, loaded like a DAW
         run: |

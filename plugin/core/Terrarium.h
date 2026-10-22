@@ -68,6 +68,17 @@ public:
     void repl(const std::string& code);
     void copyFrame(unsigned char out[128 * 64]);
 
+    // PARAMS (message thread): see LuaHost
+    std::string paramsJson();
+    void paramDelta(int index, double d);
+    void paramDelta(const std::string& id, double d);
+    void pset(const std::string& action, const std::string& slot);
+    bool getNorm(const std::string& id, double& out);
+    void setNorm(const std::string& id, double v);
+    std::string paramId(int index);
+    int paramIndex(const std::string& id);
+    std::string paramName(const std::string& id);
+
     // the plugin's state: the params as a PSET, and what Lua stored
     std::map<std::string, std::string> saveState();
     void loadState(const std::map<std::string, std::string>& s);

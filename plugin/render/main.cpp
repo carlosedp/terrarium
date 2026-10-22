@@ -15,6 +15,8 @@
 //     --lua CODE      run in the script after it starts, like maiden's REPL (repeatable)
 //     --out FILE      the WAV (default terrarium.wav); the screen goes next to it as .pgm
 //     --quiet         no log
+//     --check-params  check PARAMS for the plugin's face and its automation slots: the list,
+//                     and each kind of param through 0..1 and back
 #include <cmath>
 #include <cstdio>
 #include <cstring>
@@ -67,7 +69,7 @@ int main(int argc, char** argv) {
     std::string script = ".", norns, mi = TERRARIUM_MI_DIR, out = "terrarium.wav";
     double seconds = 20, bpm = 120, start = 0;
     int block = 512, sr = 48000;
-    bool playing = true, quiet = false;
+    bool playing = true, quiet = false, checkParams = false;
     std::vector<std::string> lua;
     for (int i = 1; i < argc; ++i) {
         std::string a = argv[i];
@@ -84,6 +86,7 @@ int main(int argc, char** argv) {
         else if (a == "--lua") lua.push_back(next());
         else if (a == "--out") out = next();
         else if (a == "--quiet") quiet = true;
+        else if (a == "--check-params") checkParams = true;
         else {
             std::fprintf(stderr, "unknown option %s (see the top of render/main.cpp)\n", a.c_str());
             return 2;
@@ -111,6 +114,33 @@ int main(int argc, char** argv) {
     }
     t.prepare(sr);
     for (auto& code : lua) t.repl(code);
+
+    if (checkParams) {
+        std::string json = t.paramsJson();
+        int n = 0;
+        for (size_t p = json.find("\"i\":"); p != std::string::npos; p = json.find("\"i\":", p + 1)) ++n;
+        std::printf("params: %d in the list (%zu bytes of JSON)\n", n, json.size());
+        int bad = n > 50 ? 0 : 1;
+        // a control, an option and a number: set through 0..1, read back, by index and by id
+        for (const char* id : {"rain_change", "voice_kind", "t_length"}) {
+            int index = t.paramIndex(id);
+            if (!index || t.paramId(index) != id) {
+                std::printf("FAIL %s: index %d doesn't lead back to it\n", id, index);
+                bad = 1;
+                continue;
+            }
+            for (double v : {0.0, 1.0, 0.5}) {
+                t.setNorm(id, v);
+                double back = -1;
+                t.getNorm(id, back);
+                bool ok = std::fabs(back - v) < 0.26;  // options and numbers land on their steps
+                if (!ok) bad = 1;
+                std::printf("%s %-14s (%s, #%d) set %.2f -> %.3f\n", ok ? "ok  " : "FAIL", id, t.paramName(id).c_str(),
+                            index, v, back);
+            }
+        }
+        return bad;
+    }
 
     size_t total = (size_t)(seconds * sr);
     std::vector<float> L(total), R(total);

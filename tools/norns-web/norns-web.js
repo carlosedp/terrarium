@@ -36,16 +36,23 @@
     hood.open = localStorage.getItem(HOOD) === "open";
   } catch (e) {}
   // the page keeps room for the drawer at its bottom, so nothing hides behind it
-  new ResizeObserver(() =>
-    document.documentElement.style.setProperty("--hood-space", hood.offsetHeight + "px"),
-  ).observe(hood);
+  // A hosting plugin that offers set_extra_height grows its window by the open drawer's
+  // height instead (a plugin window can grow, a browser tab can't), so the device stays whole.
+  let extraAsked = 0;
+  new ResizeObserver(() => {
+    document.documentElement.style.setProperty("--hood-space", hood.offsetHeight + "px");
+    if (canGrow) {
+      const extra = hood.open ? hood.offsetHeight - hood.querySelector("summary").offsetHeight : 0;
+      if (extra !== extraAsked) native("set_extra_height", (extraAsked = extra));
+    }
+  }).observe(hood);
   let restoring = hood.open;
   hood.addEventListener("toggle", () => {
     if (hood.open) {
       badge.hidden = true;
       badge.dataset.n = "0";
       logEl.scrollTop = logEl.scrollHeight;
-      if (!restoring)
+      if (!restoring && !canGrow)
         requestAnimationFrame(() => {
           // the device's bottom just above the drawer, or its top at the window's if it doesn't fit
           const r = $("#device").getBoundingClientRect(),
@@ -688,10 +695,57 @@
     },
   };
 
+  // ---------- hosted: the face of a plugin that runs the script itself ----------
+  // Inside JUCE's WebBrowserComponent (window.__JUCE__), the plugin has its own Lua and its
+  // own sound: the page starts neither, and becomes the plugin's face. Encoders, keys,
+  // PARAMS, presets and the REPL call the plugin's native functions (enc, key, params,
+  // param_delta, repl, pset); the screen and the log arrive as its "frame" and "log" events.
+  // A plugin that also registers param_map and param_maps offers its host-automation slots,
+  // and PARAMS gets a "map" button per param. JUCE's wire protocol: an "__juce__invoke" event
+  // { name, params, resultId }, answered by "__juce__complete" { promiseId, result }.
+  const juceBackend = window.__JUCE__ && window.__JUCE__.backend;
+  const hosted = !!(juceBackend && typeof juceBackend.emitEvent === "function");
+  const hostFunctions = (window.__JUCE__ && window.__JUCE__.initialisationData &&
+    window.__JUCE__.initialisationData.__juce__functions) || [];
+  const calls = new Map();
+  let nextCall = 0;
+  if (hosted)
+    juceBackend.addEventListener("__juce__complete", (p) => {
+      const resolve = p && calls.get(p.promiseId);
+      if (resolve) {
+        calls.delete(p.promiseId);
+        resolve(p.result);
+      }
+    });
+  const native = (name, ...params) =>
+    new Promise((resolve) => {
+      const resultId = nextCall++;
+      calls.set(resultId, resolve);
+      juceBackend.emitEvent("__juce__invoke", { name, params, resultId });
+    });
+  const canMap = hosted && hostFunctions.includes("param_map") && hostFunctions.includes("param_maps");
+  const canGrow = hosted && hostFunctions.includes("set_extra_height");
+
+  function bootHosted() {
+    document.body.classList.add("hosted");
+    encFn = (n, d) => native("enc", n, d);
+    keyFn = (n, z) => native("key", n, z);
+    paramsJson = () => native("params");
+    paramDelta = (i, d) => native("param_delta", i, d);
+    replFn = (code) => native("repl", code);
+    psetFn = (action, n) => native("pset", action, String(n));
+    juceBackend.addEventListener("frame", (s) => {
+      if (typeof s === "string" && s.length >= W * H) blit(s);
+    });
+    juceBackend.addEventListener("log", (e) => log(String((e && e.text) || ""), (e && e.kind) || "print"));
+    renderParams();
+    setInterval(renderParams, 400);
+  }
+
   async function boot() {
     const [manifest, nornsLua] = await Promise.all([
       fetch("files.json", { cache: "no-store" }).then((r) => r.json()),
-      fetch("lib/norns.lua", { cache: "no-store" }).then((r) => r.text()),
+      hosted ? "" : fetch("lib/norns.lua", { cache: "no-store" }).then((r) => r.text()),
     ]);
     const { name, main, root, files, about, dev } = manifest;
     document.title = `${name} · norns-web`;
@@ -699,6 +753,7 @@
     $("#script-name").textContent = name;
     $(".brand").textContent = name;
     if (about) showAbout(about, root);
+    if (hosted) return bootHosted();
 
     // the engine stand-in, found from the script's engine.name before it runs
     const m = /engine\.name\s*=\s*["']([\w-]+)["']/.exec(files[main] || "");
@@ -950,15 +1005,28 @@
   // ---------- PARAMS panel ----------
   // Rebuilt when the list of params changes; otherwise only the values update,
   // so open groups and the pointer position survive.
+  // Hosted, the list comes from the plugin (a promise); a "map" button per param binds it to
+  // one of the plugin's host-automation slots, or frees it.
   const paramsEl = $("#params");
   let shape = "",
     openGroups = new Set(),
-    valueEls = new Map();
-  function renderParams() {
-    if (!paramsJson) return;
-    let list;
+    valueEls = new Map(),
+    mapEls = new Map(),
+    rendering = false;
+  async function renderParams() {
+    if (!paramsJson || rendering) return;
+    rendering = true;
     try {
-      list = JSON.parse(paramsJson());
+      await renderParamsNow();
+    } finally {
+      rendering = false;
+    }
+  }
+  async function renderParamsNow() {
+    let list, maps = {};
+    try {
+      list = JSON.parse(await paramsJson());
+      if (canMap) maps = (await native("param_maps")) || {};
     } catch (e) {
       return;
     }
@@ -975,6 +1043,7 @@
         .forEach((d) => openGroups.delete(d.dataset.group));
       paramsEl.innerHTML = "";
       valueEls = new Map();
+      mapEls = new Map();
       let groupBody = null;
       for (const p of list) {
         if (p.kind === "separator") {
@@ -1034,6 +1103,18 @@
           continue;
         }
         row.append(label, minus, val, plus);
+        if (canMap && p.kind !== "text" && p.kind !== "file") {
+          const map = document.createElement("button");
+          map.type = "button";
+          map.className = "map";
+          map.addEventListener("click", async () => {
+            await native("param_map", p.i);
+            renderParams();
+          });
+          row.classList.add("mappable");
+          row.append(map);
+          mapEls.set(p.i, map);
+        }
         (p.group && groupBody ? groupBody : paramsEl).appendChild(row);
         valueEls.set(p.i, val);
       }
@@ -1041,6 +1122,18 @@
     for (const p of list) {
       const el = valueEls.get(p.i);
       if (el && el.textContent !== p.str) el.textContent = p.str ?? "";
+      const m = mapEls.get(p.i);
+      if (m) {
+        const slot = maps[p.i] || 0;
+        const text = slot ? `map ${slot}` : "map";
+        if (m.textContent !== text) {
+          m.textContent = text;
+          m.classList.toggle("on", !!slot);
+          m.title = slot
+            ? `${p.name} follows the host's automation slot "map ${slot}"; click to free it`
+            : `Bind ${p.name} to a host automation slot`;
+        }
+      }
     }
   }
 })();

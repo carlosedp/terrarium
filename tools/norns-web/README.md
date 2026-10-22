@@ -71,6 +71,33 @@ An optional `norns-web.json` next to the script fills in the rest:
 - `more`, `install`, `links`: the About section (the install line has a copy button); `footer`:
   credits or license text.
 
+## In a plugin (hosted)
+
+A plugin that runs the script itself (its own Lua, its own sound) can use this page as its face,
+in JUCE's `WebBrowserComponent`. The page notices `window.__JUCE__` and starts neither Lua nor
+Web Audio: the encoders, keys, PARAMS, presets, the REPL and the page's actions call the plugin's
+native functions, and the screen and the log arrive as its events. The web page's own parts
+(Start sound, the gallery, how to play, about) are hidden; the device, its controls and the
+drawer stay.
+
+| page → plugin (native functions)      | does                                                        |
+| ------------------------------------- | ----------------------------------------------------------- |
+| `enc(n, d)`, `key(n, z)`              | the encoders and keys                                       |
+| `params()`                            | PARAMS as `norns_web.params_json()` gives it (a JSON string) |
+| `param_delta(index or id, d)`         | a step of one param                                         |
+| `repl(code)`, `pset(action, slot)`    | the REPL; save / load a PSET                                |
+| `param_map(index)`, `param_maps()`    | optional: bind a param to one of the plugin's host-automation slots (or free it), and `{ index: slot }`; with both, PARAMS gets a **map** button per param |
+| `set_extra_height(px)`                | optional: the drawer opened (or closed, 0): the plugin grows its window by it, so the device stays in view |
+
+| plugin → page (events) | carries                                                        |
+| ---------------------- | -------------------------------------------------------------- |
+| `frame`                | the screen: 128×64 letters, `"A"` (off) to `"P"` (full), as `norns_web.tick()` returns it |
+| `log`                  | `{ text, kind }`, kind `"print"` or `"error"`                  |
+
+The plugin serves the page's files itself (`index.html`, `norns-web.js`, and a `files.json`
+with no Lua files and the script's `norns-web.json` as `about`). terrarium's plugin
+(`plugin/juce/` in its repo) is an example.
+
 ## The engine stand-in
 
 When the script sets `engine.name = "X"`, the page loads `lib/Engine_X.js` from the script (norns
