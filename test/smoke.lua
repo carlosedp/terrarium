@@ -55,19 +55,23 @@ for layer = 1, #names do
 end
 check("hold K2 + E2 variants")
 
--- visitors: hold K2 + E2 picks the nb voice; notes go to nb, not the engine
+-- visitors: hold K2 + E2 picks the MIDI device; each note goes out over MIDI and also
+-- opens the engine's audio input; every note on gets its note off
 turn(1, -5); turn(1, 1)
 params:set("voice_kind", 4)
-M.run(1.2) -- nb readies its selector after a second
+assert(M.last_engine[1] == "voice_kind" and M.last_engine[2] == "input", "visitors: the engine voice isn't the input")
 key(2, 1); turn(2, 1); key(2, 0)
-assert(params:string("visitors_voice") == "test voice", "visitors: hold K2 + E2 did not pick the nb voice")
-local engine_before, nb_before = M.engine_calls.note or 0, M.nb_notes
-press(3); press(3); M.run(3)
-turn(2, 1, 10); M.run(0.2)
-assert(M.nb_notes > nb_before, "visitors: no notes reached the nb voice")
-assert((M.engine_calls.note or 0) == engine_before, "visitors: notes also went to the engine")
-assert(M.nb_mods > 0, "visitors: E2 never reached the voice's modulate")
-check(("visitors via nb (%d notes)"):format(M.nb_notes - nb_before))
+assert(params:string("visitors_midi") == "1: test synth", "visitors: hold K2 + E2 did not pick the MIDI device")
+local engine_before, midi_before = M.engine_calls.note or 0, M.midi_on
+local open_before = M.sets.voice_set.open
+turn(2, 1, 10); M.run(3)
+assert(M.midi_on > midi_before, "visitors: no notes went out over MIDI")
+assert((M.engine_calls.note or 0) > engine_before, "visitors: notes didn't open the input")
+assert(M.sets.voice_set.open > open_before, "visitors: E2 didn't open the input")
+assert(M.sets.voice_set.len and M.sets.voice_set.len > 0, "visitors: no note length for the input")
+params:set("visitors_midi", 1); M.run(5) -- no device now; longer than any note: all ended
+assert(M.midi_held == 0, ("visitors: %d MIDI notes left hanging"):format(M.midi_held))
+check(("visitors over MIDI (%d notes)"):format(M.midi_on - midi_before))
 params:set("voice_kind", 1)
 
 -- the drone: root of the key (and it follows it), K3 hushes and lets it rise

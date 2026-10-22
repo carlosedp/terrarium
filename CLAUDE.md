@@ -52,19 +52,22 @@ Shuffle button, how-to-play controls, the gallery of parts, links, copyright foo
 - A module with a variant (an option param picked with hold K2 + E2) sets `variant` to that param's id.
 - A module that adds its own params must set `extra_count` (params group sizes are declared up front).
 - A new color, air or drone module needs a matching `terrarium_<id>` SynthDef in the engine. A voice
-  module sets `voice` to the engine voice it plays (`plaits`, `rings`: `terrarium_voice_<kind>`;
-  `none` when it plays elsewhere, like visitors).
+  module sets `voice` to the engine voice it plays (`plaits`, `rings`, `input`:
+  `terrarium_voice_<kind>`; `none` for silence).
 - Add new modules and option entries at the end of their lists, so saved PSETs keep their choices.
 - **Read macros with `sc.m(i, k)`** (the value as it plays, climate and day included), never with
   `params:get` directly; `sc.base(i, k)` is the value as set. Each macro also has a `<id>_cv` param.
-- A voice module can define `play(sc, note, vel)` to play notes itself instead of the engine
-  (visitors does, through nb). `lib/nb` is a git submodule (sixolet/nb); don't edit it.
+- A voice module can define `play(sc, note, vel)` to play notes elsewhere as well as on the engine
+  (visitors sends them out over MIDI), and `stop()` to end any still sounding (on a PSET load
+  and at cleanup).
 - **Engine command changes go in three places:** `lib/Engine_Terrarium.sc`, the Lua that sends
   them, and `lib/Engine_Terrarium.js` (the browser engine), or norns-web logs them as unknown.
 - **A SynthDef change goes in `Engine_Terrarium.js` too** (its `DEFS`, one function per SynthDef):
   it plays the same mi-UGens, built as WebAssembly in `lib/Engine_Terrarium/` (don't edit those;
   `make mi-wasm` rebuilds them from `~/projects/norns-mi-UGens`, `./build.sh --wasm`). Scalar vs
   control rate matters as in the SynthDef: a literal is a scalar, a SynthDef argument a control.
+  The one exception is `terrarium_voice_input` (visitors): the browser has no MIDI out or input
+  for it, so visitors are silent there.
 - `tools/norns-web` must stay generic: nothing terrarium-specific in it. The browser runs Lua 5.4,
   so it won't catch 5.4-only code that would fail on norns (5.3).
 - A brain module must define `wind(sc)` (the sky drifts with it); `flash()` is optional.

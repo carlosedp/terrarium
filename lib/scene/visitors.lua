@@ -1,29 +1,39 @@
--- visitors (voice, nb): voices from outside the terrarium (nb mods, MIDI, Just
--- Friends...) arrive as creatures. Which creature depends on the voice: ants,
--- beetles or moths. Each note calls the nearest one over, and it glows for as
--- long as the note lasts. Their sound is their own: they come from outside
--- the jar, so the color and air parts don't touch it.
--- The nb voice is the variant (hold K2 + E2). E2 is the voice's own
--- "modulate" (each voice decides what that does), E3 the note length.
+-- visitors (voice, audio in): creatures from outside the terrarium. Each note
+-- goes out over MIDI to a synth beside the norns, and its sound comes back
+-- through the audio input, where water and air shape it like any voice. Each
+-- note also opens the input for a moment, so whatever plays into the jack
+-- (that synth, a guitar, a radio) is let in by the weather; the creature
+-- nearest the note glows for as long as it lasts.
+-- The MIDI device is the variant (hold K2 + E2; "none" plays the input only).
+-- E2 opens the input between notes too, E3 is the note length.
 
 local H = include('lib/helpers')
 
 local visitors = {
-  id = "visitors", name = "visitors", about = "nb", voice = "none",
+  id = "visitors", name = "visitors", about = "MIDI out, audio in", voice = "input",
   macros = {
-    { id = "modulate", name = "modulate", default = 0.5 },
-    { id = "length",   name = "length",   default = 0.4 },
+    { id = "opening", name = "opening", default = 0.2 },
+    { id = "length",  name = "length",  default = 0.4 },
   },
-  extra_count = 2, -- nb's voice selector and its hidden companion
-  variant = "visitors_voice",
-  crowd = {}, kind = nil, voice_name = nil, last_mod = nil,
+  extra_count = 2, -- the MIDI device and its channel
+  variant = "visitors_midi",
+  crowd = {}, kind = nil, device_name = nil,
+  held = {}, -- notes sounding on the MIDI device, by "port channel note": how many
 }
 
 local KINDS = { "ant", "beetle", "moth" }
 
-local function player() return params:lookup_param("visitors_voice"):get_player() end
+-- under snow (at full cover): the outside comes in less between notes
+visitors.muffle = { open = 0.6 }
 
--- the same voice always brings the same kind of creature
+function visitors:add_params(changed)
+  local ports = { "none" }
+  for i = 1, 16 do ports[i + 1] = i .. ": " .. (midi.vports[i] and midi.vports[i].name or "none") end
+  params:add_option("visitors_midi", "visitors midi out", ports, 1)
+  params:add_number("visitors_channel", "visitors midi channel", 1, 16, 1)
+end
+
+-- the same device always brings the same kind of creature
 local function kind_of(name)
   local sum = 0
   for i = 1, #name do sum = sum + name:byte(i) end
@@ -41,25 +51,46 @@ local function arrive(kind, GY)
   return crowd
 end
 
-function visitors:add_params(changed, sc)
-  sc.nb:add_param("visitors_voice", "visitors voice")
-end
+-- note length in seconds: 0.1 .. 2 beats (exponential)
+local function seconds(sc) return 0.1 * 2 ^ (sc.m(2, 2) * 4.3) * clock.get_beat_sec() end
 
--- note length in beats: 0.1 .. 2
-local function beats(sc) return 0.1 * 2 ^ (sc.m(2, 2) * 4.3) end
+-- the engine lets the input through: always by opening, and for each note's length
+visitors.map = {
+  open = { 1, 0, 1, 2 },
+}
 
-function visitors:play(sc, note, vel)
-  player():play_note(math.floor(note + 0.5), vel, beats(sc))
-end
-
--- no engine voice; E2 goes to the nb voice's modulate, only when it moves
 function visitors:sound(sc)
-  local v = sc.m(2, 1)
-  if v ~= self.last_mod then
-    self.last_mod = v
-    player():modulate(v)
+  local s = sc.mapped(self)
+  s.len = math.floor(seconds(sc) * 100 + 0.5) / 100
+  return s
+end
+
+-- the note goes out over MIDI as well; the engine still opens the input for it
+function visitors:play(sc, note, vel)
+  local port = params:get("visitors_midi") - 1
+  if port < 1 then return end
+  local dev, ch = midi.connect(port), params:get("visitors_channel")
+  local n, v = H.clamp(math.floor(note + 0.5), 0, 127), H.clamp(math.floor(vel * 127 + 0.5), 1, 127)
+  local key = port .. " " .. ch .. " " .. n
+  dev:note_on(n, v, ch)
+  self.held[key] = (self.held[key] or 0) + 1
+  clock.run(function()
+    clock.sleep(seconds(sc))
+    self.held[key] = self.held[key] - 1
+    if self.held[key] <= 0 then -- a repeat of the same note ends with the last one
+      self.held[key] = nil
+      dev:note_off(n, 0, ch)
+    end
+  end)
+end
+
+-- no note left hanging on the device (a PSET loaded, the script closed)
+function visitors:stop()
+  for key in pairs(self.held) do
+    local port, ch, n = key:match("(%d+) (%d+) (%d+)")
+    midi.connect(tonumber(port)):note_off(tonumber(n), 0, tonumber(ch))
   end
-  return {}
+  self.held = {}
 end
 
 function visitors:on_note(x, sc)
@@ -70,16 +101,16 @@ function visitors:on_note(x, sc)
   if near then
     near.target = x
     near.glow = 1
-    near.hold = beats(sc) * clock.get_beat_sec()
+    near.hold = seconds(sc)
   end
 end
 
 function visitors:update(dt, sc)
-  local name = params:string("visitors_voice")
-  if name ~= self.voice_name then -- a new voice: a new kind of creature walks in
-    self.voice_name = name
-    self.kind = name ~= "none" and kind_of(name) or nil
-    self.crowd = self.kind and arrive(self.kind, sc.GY) or {}
+  local name = params:string("visitors_midi")
+  if name ~= self.device_name then -- another device: another kind of creature walks in
+    self.device_name = name
+    self.kind = kind_of(name)
+    self.crowd = arrive(self.kind, sc.GY)
   end
   local lively = 0.4 + sc.m(2, 1) * 1.2
   for _, c in ipairs(self.crowd) do

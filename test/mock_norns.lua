@@ -1,6 +1,6 @@
 -- A minimal stand-in for the norns Lua runtime, enough to run terrarium
 -- headless on a computer: screen, params, controlspec, clock, metro, engine,
--- util, tab, midi, norns.system_cmd, and one fake nb voice. Not a simulator;
+-- util, tab, midi (one device), norns.system_cmd. Not a simulator;
 -- it records what the script does.
 
 local M = { now = 0, screen_calls = 0, engine_calls = {}, sets = {}, metros = {}, coroutines = {} }
@@ -9,7 +9,7 @@ local M = { now = 0, screen_calls = 0, engine_calls = {}, sets = {}, metros = {}
 local ROOT = (arg and arg[0] or ""):match("^(.*)/test/[^/]+$") or "."
 function include(path) return dofile(ROOT .. "/" .. path .. ".lua") end
 M.ROOT = ROOT
-_path = { code = ROOT .. "/" } -- so nb finds its own files relative to the script
+_path = { code = ROOT .. "/" }
 
 -- ---------- the time of day ----------
 -- always noon, so a run doesn't depend on when it happens (the day's "clock" follows it)
@@ -171,19 +171,16 @@ function util.acronym(s) return s:sub(1, 3) end
 function util.clamp(v, a, b) return math.max(a, math.min(b, v)) end
 tab = {}
 function tab.invert(t) local r = {} for k, v in pairs(t) do r[v] = k end return r end
+-- one MIDI device on port 1, counting the notes it's sent and how many still sound
+M.midi_on, M.midi_held = 0, 0
 midi = { vports = {} }
-_menu = { rebuild_params = function() end }
-
--- one fake nb voice (as a mod would register it), recording what it's asked to play
-M.nb_notes, M.nb_mods = 0, 0
-note_players = {
-  ["test voice"] = {
-    add_params = function() end,
-    note_on = function() M.nb_notes = M.nb_notes + 1 end,
-    note_off = function() end,
-    modulate = function() M.nb_mods = M.nb_mods + 1 end,
-  },
+for i = 1, 16 do midi.vports[i] = { name = i == 1 and "test synth" or "none" } end
+local midi_dev = {
+  note_on = function() M.midi_on = M.midi_on + 1; M.midi_held = M.midi_held + 1 end,
+  note_off = function() M.midi_held = M.midi_held - 1 end,
 }
+function midi.connect(port) return midi_dev end
+_menu = { rebuild_params = function() end }
 
 norns = { system_cmd = function(cmd, cb) M.last_system_cmd = cmd; if cb then cb("installed: MiPlaits\nexit=0") end end }
 

@@ -15,7 +15,7 @@ with the sound. The screen shows no numbers.
 | Part        | In the scene                                            | Modules                                                                                                             |
 | ----------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
 | **weather** | when notes happen and which ones                        | rain (clocked to the norns clock), lightning (random), snow (drifting, and it settles)                              |
-| **soil**    | what grows from the ground: what plays                  | meadow (Plaits), crystals (Plaits 6-op FM), reeds (Rings), visitors (any [nb](https://github.com/sixolet/nb) voice) |
+| **soil**    | what grows from the ground: what plays                  | meadow (Plaits), crystals (Plaits 6-op FM), reeds (Rings), visitors (MIDI out, the audio in back)                   |
 | **water**   | the pond and the fog: what shapes it                    | pond (Rings), fog (Ripples)                                                                                         |
 | **air**     | the sky: where it rings out                             | clouds (Clouds), fireflies (Beads), mountains (MiVerb)                                                              |
 | **hum**     | always there, under it all, on the key's root and fifth | aurora (Plaits), roots (Elements), none                                                                             |
@@ -47,9 +47,6 @@ From the maiden REPL:
 ;install https://github.com/carlosedp/terrarium
 ```
 
-[nb](https://github.com/sixolet/nb) comes in as a git submodule (`lib/nb`). Cloning by hand,
-use `git clone --recurse-submodules`.
-
 ## Controls
 
 | Control      | Does                                                                                                                               |
@@ -57,7 +54,7 @@ use `git clone --recurse-submodules`.
 | E1           | choose a part (the others dim for a moment)                                                                                        |
 | E2, E3       | that part's two macros (their names show for a moment while you turn)                                                              |
 | K2           | swap the part's module                                                                                                             |
-| hold K2 + E2 | pick the module's variant: Plaits engine (meadow), DX bank (crystals), Rings model (reeds, pond), nb voice (visitors), Clouds mode |
+| hold K2 + E2 | pick the module's variant: Plaits engine (meadow), DX bank (crystals), Rings model (reeds, pond), MIDI device (visitors), Clouds mode |
 | K3           | gesture: new phrase (weather), strike (soil, water), freeze (air), hush / rise (hum)                                               |
 | hold K1      | peek at all parts; while held, E2 picks a setting and E3 changes it                                                                |
 | hold K1 + K3 | a new terrarium: random modules, varieties, knobs and settings, all but the day (also PARAMS > randomize the jar)                  |
@@ -100,7 +97,6 @@ lib/brain.lua            phrase, pitch mapping, seasons
 lib/canvas.lua           128x64 framebuffer, blitted to the screen as merged runs
 lib/glass.lua            the glass over the scene: rim, condensation, frost
 lib/climate.lua          chaotic attractors that modulate the macros
-lib/nb/                  the nb library (git submodule), for visitors
 lib/scene/*.lua          one file per module: its drawing, macros and sound mapping
 lib/installer.lua        mi-UGens check and installer
 doc/SOUND.md             macro -> mi-UGen parameter map (the tuning reference)
@@ -165,7 +161,7 @@ REPL, printing the result to paste back; PARAMS > levels balances the slots. See
 - [ ] CPU with the heaviest combination (2 Plaits + Rings + Beads); pick voice count from it
 - [ ] screen frame time (the smoke test averages about 730 screen calls per frame and peaks around 1,550 with fog or a lightning flash; the pond's reflection is the main extra cost)
 - [ ] tune ranges and curves in each module's `sound()` by ear (doc/SOUND.md lists open questions)
-- [ ] visitors with real nb voices (Emplaitress, MIDI, Just Friends); they play dry, outside color and air
+- [ ] visitors with a real synth: MIDI out, its audio back into the input (and the monitor level turned down)
 - [ ] grid: phrase editing, key/scale picker
 
 ## License and copyright
@@ -182,7 +178,6 @@ terrarium is made by [Voltage Foundry Modular](https://vfmod.com). © 2026 Volta
   browser version carries WebAssembly builds of seven of them in `lib/Engine_Terrarium/`, built
   from [norns-mi-UGens](https://github.com/carlosedp/norns-mi-UGens) (`BUILDINFO` there records
   the source).
-  [nb](https://github.com/sixolet/nb) by sixolet is a git submodule;
   [wasmoon](https://github.com/ceifa/wasmoon) (MIT) is vendored in `tools/norns-web`.
 - Mutable Instruments, monome, norns and all other product names are trademarks of their
   respective owners, used only to identify what terrarium works with. No affiliation with or

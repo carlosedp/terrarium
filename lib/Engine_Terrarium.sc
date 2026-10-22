@@ -1,7 +1,7 @@
 // Engine_Terrarium: the sound of terrarium.
 // Copyright (C) 2026 Voltage Foundry Modular (vfmod.com). GPL-3.0, see LICENSE.
 //
-//   voice (2x MiPlaits | MiRings) -> voiceBus -> color (MiRings | MiRipples) -> colorBus
+//   voice (2x MiPlaits | MiRings | the audio input) -> voiceBus -> color (MiRings | MiRipples) -> colorBus
 //     -> air (MiClouds | MiBeads | MiVerb) -> out
 //   drone (2x MiPlaits | MiElements) -> colorBus: under the weather, into the air
 //   tape: last, on the whole output (wow, flutter, crackle, hiss, tone, drive), when on
@@ -10,7 +10,7 @@
 // this engine only exposes the slots and their raw parameters:
 //
 //   note(pitch, accent, pan)       play a note on the next voice (and strum Rings)
-//   voice_kind(name)               plaits | rings | none (nb plays the notes)
+//   voice_kind(name)               plaits | rings | input | none (silent, no synth)
 //   voice_set(key, value)          set a parameter on the voice synths
 //   color_kind(name)               pond | fog
 //   color_set(key, value)
@@ -84,6 +84,15 @@ Engine_Terrarium : CroneEngine {
 			var sig = rings.ar(0, t_trig, pitch, struct.lag(0.05), bright.lag(0.05), damp.lag(0.05), pos,
 				model, 2, 1);
 			Out.ar(out, sig * amp * vol.lag(0.1) * fade.(gate));
+		}).add;
+
+		// the audio input as a voice (visitors): each note opens it for len seconds, open lets
+		// some through between notes. Its notes play a synth over MIDI, which comes back in here.
+		SynthDef(\terrarium_voice_input, { |out, in_l, in_r, gate = 1, t_trig = 0, level = 0.8, open = 0.04,
+			len = 0.3, amp = 1, vol = 1|
+			var sig = [In.ar(in_l), In.ar(in_r)];
+			var env = EnvGen.kr(Env.perc(0.01, len, 1, -2), t_trig) * level;
+			Out.ar(out, sig * max(open.lag(0.1), env) * amp * vol.lag(0.1) * fade.(gate));
 		}).add;
 
 		// color: the voice excites Rings; more structure, more resonator in the mix
@@ -210,7 +219,7 @@ Engine_Terrarium : CroneEngine {
 	setVoice { |kind|
 		var old = voices, name = ("terrarium_voice_" ++ kind).asSymbol;
 		if (ready.not or: { kind == voiceKind }) { ^this };
-		if (kind == \none) { // visitors: notes go to nb, outside the engine
+		if (kind == \none) { // an empty slot
 			voiceKind = kind;
 			voices = nil;
 			old !? { old.do(_.set(\gate, 0)) };
@@ -223,7 +232,9 @@ Engine_Terrarium : CroneEngine {
 		voiceKind = kind;
 		if (voiceParams[kind].isNil) { voiceParams[kind] = IdentityDictionary.new };
 		voices = Array.fill(if (kind == \plaits) { 2 } { 1 }, {
-			Synth(name, [\out, voiceBus] ++ voiceParams[kind].asKeyValuePairs, voiceGroup)
+			// the norns' inputs, for the input voice (the others have no such controls)
+			Synth(name, [\out, voiceBus, \in_l, context.in_b[0].index, \in_r, context.in_b[1].index]
+				++ voiceParams[kind].asKeyValuePairs, voiceGroup)
 		});
 		nextVoice = 0;
 		old !? { old.do(_.set(\gate, 0)) };

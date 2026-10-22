@@ -6,7 +6,7 @@ DEST  ?= /home/we/dust/code/terrarium
 MIUGENS ?= ../norns-mi-UGens
 
 .DEFAULT_GOAL := help
-.PHONY: help web norns-web stop test soak build clean submodules deploy manual-images manual-pdf mi-wasm logo
+.PHONY: help web norns-web stop test soak build clean deploy manual-images manual-pdf mi-wasm logo
 
 help: ## list the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{ printf "  make %-14s %s\n", $$1, $$2 }'
@@ -31,9 +31,6 @@ build: ## static copy of norns-web in tools/norns-web/dist (to publish)
 
 clean: ## remove the static copy
 	rm -rf tools/norns-web/dist
-
-submodules: ## fetch lib/nb after a clone without --recurse-submodules
-	git submodule update --init
 
 # copies the script to the norns over ssh (NORNS=we@<ip> if norns.local doesn't resolve);
 # then load it from the norns menu or maiden

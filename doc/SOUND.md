@@ -14,7 +14,7 @@ Conventions:
 - **Fixed** values are per-module defaults.
 - **Coupled** values come from _another_ slot. That's where the "it just sounds good" comes from,
   so keep the list short and deliberate.
-- Signal flow: `brain → voice → color → air → out`. Visitors (nb voices) play outside it, dry.
+- Signal flow: `brain → voice → color → air → out`. Visitors' voice is the audio input.
 - Parts go by their code names here (brain, voice, color, air, drone), as in param ids and
   `tune()`. On screen they're weather, soil, water, air and hum.
 
@@ -74,8 +74,8 @@ Each note sends `pitch` (MIDI note), a velocity-like `accent` (0..1) and `pan`:
   - tilt: 1 up to A3 (57), down to 0.7 at C6 (84), so the top of the range never pierces
   - snow: `1 − 0.35 × cover`
 - **pan** = `(x / 127 × 2 − 1) × 0.6`: a note is heard from where it lands, left to right (it was
-  a random ±0.3). The Plaits voices pan; the Rings voice is stereo by itself; visitors play
-  through nb, which pans them its own way.
+  a random ±0.3). The Plaits voices pan; the Rings voice is stereo by itself, and so is
+  the input (visitors).
 
 The engine maps accent to Plaits' `level` (`0.5 + 0.5 × accent`), which opens the LPG.
 
@@ -98,7 +98,7 @@ The cover muffles the voice. Each key in the voice module's `muffle` table is mu
 | meadow   | `timbre` 0.5, `decay` 0.45, `lpg` 0.7 |
 | crystals | `timbre` 0.5, `decay` 0.45, `lpg` 0.7 |
 | reeds    | `bright` 0.55, `damp` 0.4             |
-| visitors | none (velocity only)                  |
+| visitors | `open` 0.6                            |
 
 When the cover shrinks (checked every 4 s), every 0.04 that melted becomes a drip: a note from
 the phrase at velocity 0.35, skipped in a deep calm (breath). Over a 20-minute day that's about
@@ -188,20 +188,29 @@ other); no Plaits behind it. Most Rings models are strings, drawn as reeds that 
 - **CPU:** reeds with the pond runs two Rings. Measure it; if it's too heavy, the pond could
   switch to its own exciter when reeds is the voice, or that pairing could be blocked.
 
-### Visitors → any nb voice
+### Visitors → MIDI out, the audio input back
 
-nb voices (Emplaitress, Doubledecker, monami.e, MIDI, Just Friends…) play as **visitors**,
-drawn as creatures that come in from outside: ants, beetles or moths, fixed per voice.
+Each note goes out over MIDI to a synth beside the norns, and the norns' audio input is the
+voice (`terrarium_voice_input`): whatever comes back in goes through color and air like Plaits
+would. Each note also opens the input, so anything plugged in (that synth, a guitar, a radio) is
+let in by the weather. Drawn as creatures that come in from outside: ants, beetles or moths,
+fixed per MIDI device.
 
-| Macro       | Parameter                                              | Range                            |
-| ----------- | ------------------------------------------------------ | -------------------------------- |
-| E2 modulate | `player:modulate(v)` (each voice decides what it does) | 0 → 1, sent only when it changes |
-| E3 length   | note length                                            | 0.1 → 2 beats (exponential)      |
+| Macro      | Parameter                                                         | Range                            |
+| ---------- | ----------------------------------------------------------------- | -------------------------------- |
+| E2 opening | `open`: how much of the input comes through between notes         | 0 → 1 (squared)                  |
+| E3 length  | `len` (seconds) and the MIDI note's length                        | 0.1 → 2 beats (exponential)      |
 
-- **Variant (hold K2 + E2):** the nb voice (`visitors_voice`, from `nb:add_param`). "none" is silent.
-- Each voice's own parameters are in PARAMS under "visitor voices" (`nb:add_player_params`).
-- **Dry:** nb doesn't route audio. Each voice sounds wherever its mod, engine or device sends it,
-  so color and air don't process visitors. The engine's voice slot is empty (`voice_kind none`).
+- **Each note** opens the input along `Env.perc(0.01, len, 1, −2) × level` (`level` from the
+  accent), over `open`: the gain is the larger of the two.
+- **Variant (hold K2 + E2):** the MIDI device (`visitors_midi`: none, or ports 1–16 by name). "none"
+  sends nothing; the input still plays. The channel is `visitors_channel` (PARAMS).
+- **MIDI notes** are the note rounded, velocity × 127, held for the length; a repeat of a held note
+  ends with the last one. Loading a PSET or leaving the script ends any still sounding.
+- **The monitor:** norns already sends its input straight to the output (SYSTEM > AUDIO >
+  monitor). Turn it down, or the dry input plays under the shaped one.
+- **In the browser** visitors are silent: `Engine_Terrarium.js` has no input voice and MIDI out
+  goes nowhere. (Web MIDI out and a line input could make the loop work there one day.)
 
 ## Color
 
@@ -334,8 +343,7 @@ a second).
 | `tone`    | lowpass from 19 kHz down to 7 kHz × tone                                              | 0.25  | 0.38 | 0.5  | 0.7     |
 | `drive`   | tanh saturation, gain-compensated (unity for quiet signals)                           | 0.15  | 0.25 | 0.35 | 0.5     |
 
-The amounts are the `EROSION` table in `terrarium.lua`. Visitors (nb) play outside the engine, so
-the erosion doesn't reach them.
+The amounts are the `EROSION` table in `terrarium.lua`.
 
 ## Drone
 

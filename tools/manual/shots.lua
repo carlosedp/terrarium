@@ -10,9 +10,6 @@ local root, out = arg[1], arg[2]
 arg[0] = root .. "/test/smoke.lua"
 local M = dofile(root .. "/test/mock_norns.lua")
 math.randomseed(11)
--- a few fake nb voices, so visitors have creatures to show
-local fake = { add_params = function() end, note_on = function() end, note_off = function() end, modulate = function() end }
-note_players = { ["doubledecker 1"] = fake, ["emplaitress 1"] = fake, ["jf 1"] = fake }
 local real_include, cache = include, {}
 function include(p)
   if p == "lib/canvas" or p == "lib/daylight" then cache[p] = cache[p] or real_include(p); return cache[p] end
@@ -65,7 +62,7 @@ for _, f in ipairs({ 1, 2, 3, 4, 5, 8, 9 }) do
 end
 set({ meadow_flora = 1, voice_kind = 2, crystals_ratio = 0.7, crystals_index = 0.8 }); M.run(3); pick("crystals", 5, 20, 53)
 set({ voice_kind = 3, reeds_structure = 0.6, reeds_brightness = 0.8, reeds_model = 2 }); M.run(3); pick("reeds", 5, 25, 53)
-set({ voice_kind = 4 }); M.run(1.3); params:set("visitors_voice", 2); M.run(9); pick("visitors", 5, 45, 54)
+set({ voice_kind = 4, visitors_midi = 2 }); M.run(9); pick("visitors", 5, 45, 54)
 set({ voice_kind = 1 }); M.run(2)
 
 -- color

@@ -155,7 +155,7 @@ E1 picks a part, and the others dim for a moment so it's clear which one you're 
   Roots, a single voice, stays on the root.
 - **A new terrarium on K1 + K3 (October 2026).** For exploring: every part gets a random module,
   variety and knobs (kept between 0.15 and 0.85), and the settings change too: key, scale, range,
-  length, seasons, climate, drift, breath. Never visitors, which need an outside voice, or none,
+  length, seasons, climate, drift, breath. Never visitors, which need something plugged into the input, or none,
   which is silence, and never the day: it's about time (clock ties it to your night), not
   texture, so a random jump would read as a glitch. The light sweeps along the ground and the new
   key shows.
@@ -186,6 +186,14 @@ E1 picks a part, and the others dim for a moment so it's clear which one you're 
   the jar (ants, beetles, moths), because their sound is outside it too: nb doesn't route audio,
   so color and air can't process them. An earlier note assumed an insert on the main output
   would carry them through; nb has no such thing, so they stay dry.
+- **Visitors: MIDI out, the audio input back (October 2026).** Replaces the nb visitors above.
+  Dry voices broke the scene's promise that weather, water and air all shape one sound, and the
+  voices nb offers that live inside the norns (Emplaitress and the like) could never come back
+  in. Now each note goes out over norns' own MIDI (`midi.connect`, a device and a channel) and
+  the engine's voice is the audio input, which each note opens: a synth patched back into the
+  jack is played by the weather and shaped by water and air, and anything else plugged in is let
+  in by it. Dropping nb also drops the git submodule. The module keeps its id and place in the
+  list, so PSETs that chose visitors still do. crow and Just Friends could join as variants later.
 - **Parts named for the landscape (October 2026).** On screen the parts were brain, voice, color,
   air and drone: what each does in a synth. They're now weather, soil, water, air and hum: where
   each sits in the picture, so the words match what you look at. "hum" over "earth" or "bedrock"

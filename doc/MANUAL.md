@@ -48,8 +48,8 @@ and Elements breathes under the ground. Émilie Gillet's instruments, alive insi
 
 - A **norns** (any kind: the original, shield, or fates).
 - The **mi-UGens**, the Mutable Instruments sound modules for norns. The first time you open terrarium without them, it offers to install for you.
-- Optional: **nb voices** (like Emplaitress or Doubledecker, installed as norns mods) or a MIDI
-  synth, if you'd like visitors in your jar. More on that in [visitors](#visitors).
+- Optional: a **MIDI synth** with its audio patched back into the norns input, or anything else
+  to plug into the input, if you'd like visitors in your jar. More on that in [visitors](#visitors).
 
 To install terrarium, type this in the maiden REPL:
 
@@ -275,21 +275,23 @@ Each note plucks a reed by the water, and you can see it vibrate like a string.
 
 ![A line of ants walking along the ground](img/visitors.png)
 
-Visitors are voices from outside the jar: an nb voice (a norns mod like Emplaitress or
-Doubledecker), a MIDI synth, or Just Friends. Each voice brings its own creatures (ants, beetles
-or moths), which wander in from the edge. When a note plays, the nearest one hurries over and
-glows for as long as the note lasts.
+Visitors come from outside the jar. Each note goes out over MIDI to a synth beside the norns,
+and the synth's sound comes back in through the norns' audio input, where the pond, the fog and
+the sky shape it like any other soil. Each note also opens the input for a moment, so anything
+you plug in (that synth, a guitar, a radio) is let in by the weather. Each MIDI device brings its
+own creatures (ants, beetles or moths), which wander in from the edge. When a note plays, the
+nearest one hurries over and glows for as long as the note lasts.
 
-**A MIDI synth as a visitor:** plug it into the norns over USB (or through a USB MIDI interface)
-before opening terrarium, and it appears in the voice list as "midi: _its name_ 1". The notes go
-out to it as MIDI, on channel 1 unless you change it; its channel, the CC that E2 sends and its
-pitch-bend range are in **PARAMS**, under its name.
+**Setting it up:** plug the synth into the norns over USB (or through a USB MIDI interface)
+before opening terrarium, and patch its audio output into the norns' inputs. Then turn the
+**monitor** level down in the norns mixer (**SYSTEM > AUDIO**), or you'll hear the dry input
+under the shaped one. The MIDI channel is in **PARAMS**, with the visitors.
 
-- **Choose the voice:** hold K2 and turn E2. With "none", nothing arrives and nothing plays.
-- **E2 modulate**: whatever that voice chooses to do with it.
-- **E3 length**: how long each note lasts.
-
-Visitors bring their own sound: the pond, the fog and the sky don't change it.
+- **Choose the MIDI device:** hold K2 and turn E2. With "none", no notes go out, but the input
+  still plays: plug in anything and let the weather open it.
+- **E2 opening**: how much of the input comes through between notes. All the way down, you hear
+  it only when a note plays; all the way up, all the time.
+- **E3 length**: how long each note lasts, and how long it keeps the input open.
 
 ### water: the pond and the fog
 
@@ -502,8 +504,9 @@ Swap what grows in the soil while the sky stays frozen.
 roots. Settings: _day: 1 hour_, _erosion: worn_. Listen to it close in through the night and
 open up as the morning thaws it.
 
-**A visitor**: install an nb voice, choose visitors on the soil, pick the voice (hold K2 + E2),
-and watch the creatures come in. Try it with the hum hushed.
+**A visitor**: connect a MIDI synth and patch it back into the input, choose visitors on the
+soil, pick the synth (hold K2 + E2), and watch the creatures come in. Try it with the hum
+hushed.
 
 <!-- These will get specific values once the sound has been tuned on the norns. -->
 
@@ -516,12 +519,15 @@ without some of them is (Beads and Elements came later). Press K3 (with
 Wi-Fi), then **SYSTEM > RESTART**. If you copied a `mi-UGens-norns*.tar.gz` into `dust/` yourself,
 press K2 instead.
 
-**Visitors: nothing arrives.** Hold K2 and turn E2 on the visitors to pick a voice. If the only
-choice is "none", install an nb voice mod (and enable it in **SYSTEM > MODS**), or connect a MIDI
-synth before opening terrarium.
+**Visitors: no notes go out.** Hold K2 and turn E2 on the visitors to pick the MIDI device, and
+check the channel in **PARAMS**. A device connected after opening terrarium shows up the next
+time you open it.
 
-**Visitors sound dry.** That's on purpose: visitors bring their own sound from outside the jar,
-so the pond, the fog and the sky don't change it.
+**Visitors: silent.** The sound comes in through the norns input: patch the synth's output into
+it, and turn E2 up to hear the input between notes.
+
+**Visitors: I hear the synth dry, too.** That's the norns monitor: turn it down in **SYSTEM >
+AUDIO**.
 
 **Crackles or dropouts.** Some combinations are heavier than others: reeds with the pond and
 roots is the heaviest. Swap one of them, or choose _none_ for the hum.
@@ -555,7 +561,8 @@ ranges. The scene is the only readout.
 weather (rain | lightning | snow)   when and which notes; no sound of its own
    │ notes (pitch = where they land)   (snow's cover muffles the soil)
    ▼
-soil (meadow | crystals | reeds)    visitors play outside, through nb
+soil (meadow | crystals | reeds |   visitors: notes out over MIDI,
+      visitors)                       the audio input back in
    ▼
 water (pond | fog)
    ▼
@@ -576,7 +583,7 @@ output
 | soil    | meadow    | Plaits (12 melodic engines) | harmonics | timbre     | Plaits engine  |
 | soil    | crystals  | Plaits (6-op FM banks)      | ratio     | index      | FM bank        |
 | soil    | reeds     | Rings (internal exciter)    | structure | brightness | resonator type |
-| soil    | visitors  | any nb voice                | modulate  | length     | nb voice       |
+| soil    | visitors  | (MIDI out, the audio input) | opening   | length     | MIDI device    |
 | water   | pond      | Rings                       | structure | damping    | resonator type |
 | water   | fog       | Ripples                     | clarity   | shimmer    | —              |
 | air     | clouds    | Clouds                      | density   | size       | mode           |
@@ -623,8 +630,7 @@ terrarium is made by **[Voltage Foundry Modular](https://vfmod.com)**: Eurorack 
 and adventures into anything else that makes sound.
 
 Its sound is built on Émilie Gillet's Mutable Instruments modules, brought to SuperCollider by
-Volker Böhm's mi-UGens, and runs on monome's norns. Visitors arrive through sixolet's nb.
-Thank you all.
+Volker Böhm's mi-UGens, and runs on monome's norns. Thank you all.
 
 © 2026 Voltage Foundry Modular. The terrarium name, this manual and its images are all rights
 reserved. The code is free software under the GNU GPL v3.0. Mutable Instruments, monome, norns

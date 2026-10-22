@@ -23,8 +23,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          submodules: true # lib/nb
 
       - name: Smoke test on Lua 5.3, like norns
         run: |

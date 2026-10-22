@@ -28,7 +28,6 @@ local glass = include("lib/glass")
 local Climate = include("lib/climate")
 local Day = include("lib/daylight")
 local Breath = include("lib/breath")
-local nb = include("lib/nb/lib/nb")
 
 local FPS = 15
 local GY = 54 -- the ground line
@@ -81,7 +80,7 @@ local CV_SRC = { { 3, 1 }, { 1, 2 }, { 2, 3 }, { 3, 1 }, { 2, 3 } }
 local CV_DEFAULT = { { 0, 0.3 }, { 0.4, 0.3 }, { 0.35, 0.25 }, { 0.35, 0.3 }, { 0.3, 0.35 } }
 
 -- shared scene state handed to every module
-local sc = { t = 0, GY = GY, frozen = false, fly_t = 0, brain = Brain, nb = nb, breath = Breath, day = Day,
+local sc = { t = 0, GY = GY, frozen = false, fly_t = 0, brain = Brain, breath = Breath, day = Day,
   activity = 0, lift = 0, -- how busy the weather is lately, and how much it lights up the drone
   cover = 0,              -- snow on the ground, 0..1: it muffles the voice
   cold = 0 }              -- the cold it brings into the jar, slower: the sky slows and stills
@@ -203,7 +202,8 @@ local function play(ev, fresh, vel, step)
   vel = (vel or (fresh and 1 or 0.75)) * dynamics(note, step) * (1 - 0.35 * sc.cover) -- snow softens it
   vel = H.clamp(vel, 0, 1)
   local pan = (ev.x / 127 * 2 - 1) * 0.6 -- you hear a note from where it lands
-  if voice.play then voice:play(sc, note, vel) else engine.note(note, vel, pan) end
+  if voice.play then voice:play(sc, note, vel) end -- visitors: out over MIDI too
+  engine.note(note, vel, pan)
   -- the drone answers the weather: each note makes it give way a little (it swells back in
   -- the gaps) and lights it up for a moment, a lightning strike much more than a raindrop
   sc.activity = math.min(1, sc.activity + 0.2 * vel)
@@ -245,6 +245,13 @@ local function brain_loop()
         play(ev, fresh, nil, step)
       end
     end
+  end
+end
+
+-- a module that plays notes outside the engine (visitors, over MIDI) ends them
+local function stop_notes()
+  for _, L in ipairs(LAYERS) do
+    for _, m in ipairs(L.mods) do if m.stop then m:stop() end end
   end
 end
 
@@ -345,12 +352,8 @@ local function add_params()
     end
   end
 
-  -- each nb voice's own params (visitors play them)
-  params:add_separator("terrarium_nb", "visitor voices")
-  nb:add_player_params()
-
-  -- loading a PSET: nb asks for its voices to be stopped, so no note hangs
-  params.action_read = function() nb:stop_all() end
+  -- loading a PSET: no note left hanging on a MIDI device
+  params.action_read = stop_notes
 end
 
 -- the season turned: show it in the settings without moving home
@@ -728,7 +731,6 @@ function init()
     redraw_metro:start()
     return
   end
-  nb:init()
   add_params()
   params:bang()
   Brain.new_phrase(sc.t)
@@ -739,5 +741,5 @@ end
 
 function cleanup()
   if redraw_metro then redraw_metro:stop() end
-  nb:stop_all()
+  stop_notes()
 end
