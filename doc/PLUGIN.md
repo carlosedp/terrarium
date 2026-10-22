@@ -63,11 +63,14 @@ lands on the grid, not on the UI timer's jitter. Screen frames go to the UI afte
 
 1. **mi-UGens native libraries** (norns-mi-UGens, branch `native-libs`): one shared library per
    UGen for Linux, macOS (universal) and Windows, the same C API as wasm, a header-only C++ loader
-   and a render test; CI builds and tests each platform and adds them to releases. *Built and
-   passing on Linux; macOS and Windows wait for a CI run.*
+   and a render test; CI builds and tests each platform and adds them to releases. *Done:
+   norns-mi-UGens v1.2.0; the same sound on all three platforms.*
 2. **Plugin skeleton:** JUCE (VST3, AU, standalone), Lua + `norns.lua` embedded, the host clock,
    the native mi-UGens loaded from the bundle, MiPlaits only: rain on meadow, on the DAW's grid.
-   This proves the hard parts: Lua threading, tempo sync, the native engine.
+   This proves the hard parts: Lua threading, tempo sync, the native engine. *In progress on the
+   `plugin` branch ([plugin/](../plugin/README.md)): the core (Lua, engine, timing, no JUCE) and
+   `terrarium-render` work, notes land within a 64-sample block of the host's 16ths at any tempo,
+   start and block size; the VST3 and standalone build and pass pluginval (strictness 5).*
 3. **The engine:** the rest of `Engine_Terrarium.js` in C++, every SynthDef; the sidechain input
    and MIDI out for visitors.
 4. **UI and automation:** norns-web's page as the editor, the drawer with map slots, state in the

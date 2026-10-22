@@ -542,8 +542,10 @@ local function guarded(f, ...)
   if not ok then js.error(tostring(err)) end
 end
 
-function norns_web.boot(name, main)
-  norns.state = { name = name, shortname = name, path = _path.code .. name .. "/", script = _path.code .. name .. "/" .. main, data = _path.data .. name .. "/" }
+-- dir: the script's folder, when it isn't _path.code .. name (a plugin carries it in its bundle)
+function norns_web.boot(name, main, dir)
+  dir = dir or (_path.code .. name .. "/")
+  norns.state = { name = name, shortname = name, path = dir, script = dir .. main, data = _path.data .. name .. "/" }
   guarded(function()
     dofile(norns.state.script)
     if init then init() end
