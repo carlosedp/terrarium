@@ -97,6 +97,7 @@ form for Windows paths. `gh`, `podman`, `lua`/`luac` are available.
 ## Design references
 
 - `doc/DESIGN.md`: decisions and their reasons (read before changing behavior)
+- `doc/PLUGIN.md`: the plan for terrarium as a VST3/AU plugin (JUCE), phases and where it stands
 - `doc/SOUND.md`: macro -> mi-UGen parameter map, ranges, couplings, open tuning questions
 - `tools/norns-web/README.md`: running the script in a browser (generic, not terrarium-specific)
 - `doc/MANUAL.md`: the player's manual (`make manual-pdf` rebuilds the PDF, `make manual-images`
