@@ -93,3 +93,6 @@ target_compile_definitions(terrarium_host_test PRIVATE
   JUCE_MODAL_LOOPS_PERMITTED=1)  # it runs the message loop by hand, between blocks
 target_link_libraries(terrarium_host_test PRIVATE juce::juce_audio_processors juce::juce_events
   PUBLIC juce::juce_recommended_config_flags)
+if(APPLE)
+  target_link_libraries(terrarium_host_test PRIVATE "-framework CoreAudioKit")  # hosting AUs (AUGenericView)
+endif()

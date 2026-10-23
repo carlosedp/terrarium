@@ -63,7 +63,10 @@
       "keys": "K3",
       "does": "a gesture: a new tune, a strike, freeze the sky, hush the hum"
     },
-    { "keys": "hold K2 + E2", "does": "choose a variety of what lives there" },
+    {
+      "keys": "hold K2 + E2",
+      "does": "choose a variety of what lives there"
+    },
     {
       "keys": "hold K1",
       "does": "peek at the whole jar; E2 picks a setting and E3 changes it"
@@ -73,6 +76,44 @@
       "does": "a whole new terrarium, at random (the Shuffle button does it too)"
     }
   ],
+  "downloads": {
+    "title": "Use it in your music",
+    "intro": "terrarium also comes as a plugin for your DAW (VST3, and AU on macOS) and as a standalone app: the same jar and the same Mutable Instruments sound, on your session's tempo, with its knobs as automation lanes and its visitors playing your synths. It runs on your computer, no norns needed. Or put it on a norns, below.",
+    "items": [
+      {
+        "title": "Windows",
+        "text": "VST3 plugin and standalone app, for Windows 10 and 11 (64-bit). Ableton Live, Reason, Bitwig, Reaper, Cubase.",
+        "url": "https://github.com/carlosedp/terrarium/releases/latest/download/terrarium-plugin-windows.zip",
+        "label": "Download for Windows"
+      },
+      {
+        "title": "macOS",
+        "text": "AU and VST3 plugins and a standalone app, for Intel and Apple Silicon. Logic Pro, Ableton Live, Reason, Bitwig.",
+        "url": "https://github.com/carlosedp/terrarium/releases/latest/download/terrarium-plugin-macos.zip",
+        "label": "Download for macOS"
+      },
+      {
+        "title": "Linux",
+        "text": "VST3 plugin and standalone app (x86_64). Bitwig, Reaper, Ardour.",
+        "url": "https://github.com/carlosedp/terrarium/releases/latest/download/terrarium-plugin-linux.zip",
+        "label": "Download for Linux"
+      }
+    ],
+    "links": [
+      {
+        "label": "the plugin's manual",
+        "url": "https://github.com/carlosedp/terrarium/blob/main/doc/PLUGIN-MANUAL.md"
+      },
+      {
+        "label": "the plugin's manual (PDF)",
+        "url": "https://github.com/carlosedp/terrarium/releases/latest/download/terrarium-plugin-manual.pdf"
+      },
+      {
+        "label": "all releases",
+        "url": "https://github.com/carlosedp/terrarium/releases"
+      }
+    ]
+  },
   "install": ";install https://github.com/carlosedp/terrarium",
   "links": [
     {

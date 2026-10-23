@@ -879,6 +879,42 @@
     }
 
     /* what's in the script: pictures with a word each */
+    /* downloads (norns-web.json "downloads"): a card per package, each with its button */
+    .downloads {
+      display: grid;
+      gap: 14px;
+      grid-template-columns: repeat(auto-fill, minmax(min(220px, 100%), 1fr));
+      list-style: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    .downloads li {
+      display: grid;
+      gap: 8px;
+      align-content: space-between;
+      padding: 14px 16px;
+      background: var(--surface);
+      border: 1px solid var(--rule);
+      border-radius: 8px;
+    }
+
+    .downloads b {
+      font-family: var(--font-display);
+      font-weight: 400;
+      letter-spacing: 0.03em;
+    }
+
+    .downloads p {
+      font-size: var(--step--1);
+      color: var(--muted);
+      text-wrap: pretty;
+    }
+
+    .downloads .btn {
+      justify-self: start;
+    }
+
     .gallery {
       display: grid;
       gap: 14px;
@@ -1729,6 +1765,13 @@
     <section aria-labelledby="howto-title">
       <h2 id="howto-title">How to play</h2>
       <div id="howto"></div>
+    </section>
+
+    <section id="downloads-section" aria-labelledby="downloads-title" hidden>
+      <h2 id="downloads-title">Downloads</h2>
+      <p class="section-lede" id="downloads-lede" hidden></p>
+      <ul class="downloads" id="downloads"></ul>
+      <nav class="links" id="downloads-links" aria-label="more about the downloads" hidden></nav>
     </section>
 
     <section class="about" id="about" aria-labelledby="about-title" hidden>

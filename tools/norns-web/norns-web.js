@@ -601,6 +601,7 @@
     }
     if (a.actions) showActions(a.actions);
     if (a.gallery && a.gallery.length) showGallery(a.gallery, a.gallery_intro, root);
+    if (a.downloads) showDownloads(a.downloads);
     if (a.controls) showHelp(a.controls);
     const link = (l) => {
       const el = document.createElement("a");
@@ -667,6 +668,42 @@
         $(full ? "#full-actions" : "#actions").append(b);
       }
     }
+  }
+
+  // downloads (norns-web.json "downloads": { title, intro, items: [{ title, text, url, label }],
+  // links }): the script elsewhere (a plugin, an app), a card per package, near the end
+  function showDownloads(d) {
+    if (d.title) $("#downloads-title").textContent = d.title;
+    if (d.intro) {
+      $("#downloads-lede").textContent = d.intro;
+      $("#downloads-lede").hidden = false;
+    }
+    for (const it of d.items || []) {
+      const li = document.createElement("li");
+      const b = document.createElement("b");
+      b.textContent = it.title || "";
+      const p = document.createElement("p");
+      p.textContent = it.text || "";
+      const a = document.createElement("a");
+      a.className = "btn";
+      a.href = it.url;
+      a.textContent = it.label || "Download";
+      li.append(b, p, a);
+      $("#downloads").append(li);
+    }
+    if (d.links && d.links.length) {
+      for (const l of d.links) {
+        const a = document.createElement("a");
+        a.className = "btn";
+        a.href = l.url;
+        a.textContent = l.label;
+        a.rel = "noopener";
+        a.target = "_blank";
+        $("#downloads-links").append(a);
+      }
+      $("#downloads-links").hidden = false;
+    }
+    $("#downloads-section").hidden = false;
   }
 
   // what's in the script (norns-web.json "gallery"): pictures, each with a name and a line

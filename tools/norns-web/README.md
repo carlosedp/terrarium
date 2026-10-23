@@ -68,6 +68,9 @@ An optional `norns-web.json` next to the script fills in the rest:
 - `controls`: what each control does, for How to play and its dialog (without it, a generic note
   about knobs and keys). The keyboard and touch help is added after it.
 - `gallery`: pictures of what's in the script, each with a name and a line; `build.mjs` copies them.
+- `downloads`: the script elsewhere (a plugin, an app), a section near the end: `{ title, intro,
+  items: [{ title, text, url, label }], links: [{ label, url }] }`, a card and a button per
+  package. Hidden in a plugin's face.
 - `more`, `install`, `links`: the About section (the install line has a copy button); `footer`:
   credits or license text.
 
