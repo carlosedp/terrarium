@@ -24,6 +24,9 @@ struct Command {
     char name[24] = {};
     int argc = 0;
     Arg args[4];
+    // a module swap's new synth, built on the message thread (Engine::prepareCommand), so the
+    // audio thread never allocates one; the audio thread owns it once it runs the command
+    void* synth = nullptr;
 
     bool is(const char* n) const { return std::strcmp(name, n) == 0; }
     double num(int i, double dflt = 0) const { return i < argc && !args[i].isString ? args[i].num : dflt; }

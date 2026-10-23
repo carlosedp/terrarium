@@ -2,8 +2,9 @@
 
 terrarium as a VST3 / AU instrument and a standalone app: the same Lua, the same Mutable
 Instruments code, in a DAW. The plan and where it stands are in [doc/PLUGIN.md](../doc/PLUGIN.md).
-**Phase 2:** the script runs and follows the host's tempo and beat; only Plaits plays (meadow,
-crystals), the other parts are silent for now.
+**Phases 2 and 3:** the script runs and follows the host's tempo and beat, and every part of
+the jar plays: the whole engine, as `lib/Engine_Terrarium.sc` has it. Visitors are silent until
+the plugin has its MIDI out and sidechain input.
 
 ## What's here
 
@@ -65,6 +66,13 @@ transport running, saves and restores its state, and checks it made sound. CI al
 - **The host's beat.** With the transport playing, Lua's tempo is the host's, and when their beat
   phases drift apart (start, loop, seek, tempo change) Lua's time jumps forward to the host's.
   Only forward: a waiting clock routine would sit out a jump back.
+- **The engine** (`core/Engine.cpp`) is `Engine_Terrarium.sc` in C++, SynthDef by SynthDef:
+  the same graphs, the same lags, the same routing (voice into color, drone beside it, air to the
+  output, the tape on it), on the native mi-UGens and a few plain SuperCollider UGens
+  (`core/Ugens.h`: LFTri, LFNoise1/2, DelayC, Dust, Decay2, Butterworth filters, noise). A module
+  swap builds its synth on the message thread, from a mirror of what the slots were sent, and
+  hands it over with the command; the old one fades out and goes back to be freed there. The
+  audio thread allocates nothing.
 - **State.** The params, saved with the project as a PSET (what `params:write` stores).
 - **The face** is norns-web's page, the same one the browser shows, in a WebView (WebView2 on
   Windows, WebKit on macOS and Linux), served from the bundle's `Resources/web/`. It sees it's
@@ -76,12 +84,10 @@ transport running, saves and restores its state, and checks it made sound. CI al
   and the two follow each other, the host's lane driving the param and the plugin's changes
   moving the slot. The bindings save with the project.
 
-## Known gaps (phase 2)
+## Known gaps
 
-- Only `voice_plaits` plays: Rings, the color, air and drone slots and the tape are next.
 - A key or encoder that plays a note (K3's gestures) is heard 0.1 s late: its command is
   stamped with Lua's time, which runs ahead.
-- Swapping a module creates its synths on the audio thread (they allocate).
 - No MIDI out or sidechain yet (visitors), see doc/PLUGIN.md.
 - The face's fonts come from Google Fonts: offline, it falls back to the system's.
 - macOS: copying the resources into the bundle after JUCE builds it may need re-signing.

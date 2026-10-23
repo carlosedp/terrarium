@@ -59,7 +59,9 @@ public:
     bool boot(std::string& err);
     void prepare(double sampleRate);
 
-    void process(float* left, float* right, int n, const HostTime& host, bool offline = false);
+    // in: the plugin's input (visitors hear it), or null
+    void process(float* left, float* right, int n, const HostTime& host, bool offline = false,
+                 const float* inL = nullptr, const float* inR = nullptr);
 
     // the message thread's part
     bool tick();  // true if the screen changed
@@ -100,6 +102,8 @@ private:
     std::vector<Command> pending_ = std::vector<Command>(1024);
     int npending_ = 0;
     double nextOfflineTick_ = 0;
+    std::vector<float> inL_ = std::vector<float>(1 << 15), inR_ = std::vector<float>(1 << 15);  // the input, a ring
+    size_t inRead_ = 0, inWrite_ = BLOCK;
 
     // shared
     std::atomic<double> audioTime_{0};

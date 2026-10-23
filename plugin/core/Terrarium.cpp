@@ -18,8 +18,13 @@ bool Terrarium::boot(std::string& err) {
     if (!engine_.load(paths_.miLibs, err)) return false;
     std::lock_guard<std::mutex> lock(lua_);
     host_ = std::make_unique<LuaHost>(LuaHost::Callbacks{
-        [this](const Command& c) {
-            if (!queue_->push(c) && onLog) onLog("engine queue full, a command was dropped", true);
+        [this](const Command& cmd) {
+            Command c = cmd;
+            engine_.prepareCommand(c);  // a module swap gets its synth here, not on the audio thread
+            if (!queue_->push(c)) {
+                engine_.discard(c);
+                if (onLog) onLog("engine queue full, a command was dropped", true);
+            }
         },
         [this](const std::string& s, bool error) {
             if (onLog) onLog(s, error);
@@ -32,10 +37,21 @@ bool Terrarium::boot(std::string& err) {
     return true;
 }
 
+// with the audio stopped: what Lua has sent so far is run, then every slot is rebuilt at this rate
 void Terrarium::prepare(double sampleRate) {
+    std::lock_guard<std::mutex> lock(lua_);
     sr_ = sampleRate;
+    Command c;
+    for (int i = 0; i < npending_; ++i) engine_.command(pending_[i]);
+    npending_ = 0;
+    while (queue_->pop(c)) engine_.command(c);
     engine_.prepare(sampleRate);
     bufPos_ = BLOCK;
+    // the input is heard a block late: one block of silence first, so it never runs dry
+    inRead_ = 0;
+    inWrite_ = BLOCK;
+    std::fill(inL_.begin(), inL_.end(), 0.0f);
+    std::fill(inR_.begin(), inR_.end(), 0.0f);
 }
 
 // ---------- the audio thread ----------
@@ -66,13 +82,27 @@ void Terrarium::renderBlock() {
         engine_.command(pending_[first]);
         pending_[first] = pending_[--npending_];
     }
-    engine_.render(bufL_, bufR_);
+    float inL[BLOCK], inR[BLOCK];
+    size_t mask = inL_.size() - 1;
+    for (int i = 0; i < BLOCK; ++i) {
+        bool have = inRead_ != inWrite_;
+        inL[i] = have ? inL_[inRead_ & mask] : 0.0f;
+        inR[i] = have ? inR_[inRead_ & mask] : 0.0f;
+        if (have) ++inRead_;
+    }
+    engine_.render(bufL_, bufR_, inL, inR);
     t_ = end;
     audioTime_.store(t_, std::memory_order_release);
 }
 
-void Terrarium::process(float* left, float* right, int n, const HostTime& host, bool offline) {
+void Terrarium::process(float* left, float* right, int n, const HostTime& host, bool offline, const float* inL,
+                        const float* inR) {
     follow(host);
+    size_t mask = inL_.size() - 1;
+    for (int i = 0; i < n && inWrite_ - inRead_ < inL_.size(); ++i, ++inWrite_) {
+        inL_[inWrite_ & mask] = inL ? inL[i] : 0.0f;
+        inR_[inWrite_ & mask] = inR ? inR[i] : (inL ? inL[i] : 0.0f);
+    }
     for (int i = 0; i < n;) {
         if (bufPos_ == BLOCK) {
             if (offline && t_ + LOOKAHEAD >= nextOfflineTick_) {
@@ -108,6 +138,7 @@ void Terrarium::tickLocked(double t) {
     if (t < luaTime_) t = luaTime_;  // Lua's time never goes back
     luaTime_ = t;
     host_->tick(t);
+    engine_.emptyTrash();
     Note note;
     while (engine_.notes.pop(note))
         if (onLog) onLog(note.text, false);

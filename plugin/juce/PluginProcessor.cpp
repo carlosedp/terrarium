@@ -118,7 +118,7 @@ void TerrariumProcessor::syncSlots() {
         if (bound_[k].empty()) continue;
         float hv = slots_[k]->get();
         double lv = 0;
-        if (hv != lastHost_[k]) {
+        if (!juce::exactlyEqual(hv, lastHost_[k])) {  // any move by the host, however small
             core_->setNorm(bound_[k], hv);
             lastHost_[k] = hv;
             if (core_->getNorm(bound_[k], lv)) lastLua_[k] = (float)lv;

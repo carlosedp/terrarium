@@ -13,10 +13,12 @@
 //     --block N       the host's block size (default 512)
 //     --sr N          sample rate (default 48000)
 //     --lua CODE      run in the script after it starts, like maiden's REPL (repeatable)
+//     --at SECS CODE  run CODE at SECS into the render (repeatable): module swaps mid-play
 //     --out FILE      the WAV (default terrarium.wav); the screen goes next to it as .pgm
 //     --quiet         no log
 //     --check-params  check PARAMS for the plugin's face and its automation slots: the list,
 //                     and each kind of param through 0..1 and back
+#include <algorithm>
 #include <cmath>
 #include <cstdio>
 #include <cstring>
@@ -71,6 +73,7 @@ int main(int argc, char** argv) {
     int block = 512, sr = 48000;
     bool playing = true, quiet = false, checkParams = false;
     std::vector<std::string> lua;
+    std::vector<std::pair<double, std::string>> at;
     for (int i = 1; i < argc; ++i) {
         std::string a = argv[i];
         auto next = [&]() -> std::string { return i + 1 < argc ? argv[++i] : ""; };
@@ -84,6 +87,10 @@ int main(int argc, char** argv) {
         else if (a == "--block") block = std::stoi(next());
         else if (a == "--sr") sr = std::stoi(next());
         else if (a == "--lua") lua.push_back(next());
+        else if (a == "--at") {
+            double when = std::stod(next());
+            at.push_back({when, next()});
+        }
         else if (a == "--out") out = next();
         else if (a == "--quiet") quiet = true;
         else if (a == "--check-params") checkParams = true;
@@ -148,8 +155,11 @@ int main(int argc, char** argv) {
     host.valid = true;
     host.bpm = bpm;
     host.playing = playing;
+    std::sort(at.begin(), at.end());
+    size_t nextAt = 0;
     for (size_t pos = 0; pos < total; pos += block) {
         int n = (int)std::min<size_t>(block, total - pos);
+        while (nextAt < at.size() && at[nextAt].first * sr <= (double)pos) t.repl(at[nextAt++].second);
         host.ppq = start + (double)pos / sr * bpm / 60;
         t.process(L.data() + pos, R.data() + pos, n, host, true);
     }
@@ -161,7 +171,12 @@ int main(int argc, char** argv) {
     pgm(screen, fb);
 
     double peak = 0, sum = 0;
+    size_t bad = 0;
     for (size_t i = 0; i < total; ++i) {
+        if (!std::isfinite(L[i]) || !std::isfinite(R[i])) {
+            ++bad;
+            continue;
+        }
         peak = std::max(peak, (double)std::max(std::fabs(L[i]), std::fabs(R[i])));
         sum += (double)L[i] * L[i] + (double)R[i] * R[i];
     }
@@ -174,6 +189,10 @@ int main(int argc, char** argv) {
     }
     std::printf("%s: %.1f s, %zu notes, rms %.4f, peak %.3f; screen %s\n", out.c_str(), seconds, notes.size(),
                 std::sqrt(sum / (2.0 * total)), peak, screen.c_str());
+    if (bad) {
+        std::printf("FAIL: %zu non-finite samples\n", bad);
+        return 1;
+    }
     if (playing && notes.size() > 1)
         std::printf("on the host's grid: every note within %.2f ms of a 16th (%.2f ms = one block)\n",
                     worst * 1000, 1000.0 * BLOCK / sr);

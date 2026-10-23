@@ -72,7 +72,10 @@ lands on the grid, not on the UI timer's jitter. Screen frames go to the UI afte
    `terrarium-render` work, notes land within a 64-sample block of the host's 16ths at any tempo,
    start and block size; the VST3 and standalone build and pass pluginval (strictness 5).*
 3. **The engine:** the rest of `Engine_Terrarium.js` in C++, every SynthDef; the sidechain input
-   and MIDI out for visitors.
+   and MIDI out for visitors. *The engine is done on the `plugin` branch: every SynthDef of the
+   .sc (voices, pond, fog, clouds, fireflies, mountains, aurora, roots, the tape), module swaps
+   built off the audio thread, tested by rendering every module and 57 swaps in 30 s (clean
+   under AddressSanitizer). Visitors' MIDI out and sidechain input are next.*
 4. **UI and automation:** norns-web's page as the editor, the drawer with map slots, state in the
    project. *Pulled ahead of phase 3, on the `plugin` branch: the page is the face
    (norns-web's hosted mode), 16 map slots named after what they follow, both ways, saved with

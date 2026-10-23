@@ -64,6 +64,17 @@ jobs:
           r=$(find build -name 'terrarium-render*' -type f \( -perm -u+x -o -name '*.exe' \) | head -1)
           "$r" --script . --seconds 20 --bpm 93 --start 3.37 --block 441 --quiet --out render.wav
           "$r" --script . --quiet --check-params
+          # every slot's modules swapped mid-play, twice a second (built off the audio thread)
+          args=(); i=0
+          for t in $(seq 1 0.5 19); do
+            case $((i % 6)) in
+              0) c="params:set('voice_kind', $((i % 4 + 1)))" ;; 1) c="params:set('color_kind', $((i % 2 + 1)))" ;;
+              2) c="params:set('air_kind', $((i % 3 + 1)))" ;;   3) c="params:set('drone_kind', $((i % 3 + 1)))" ;;
+              4) c="params:set('t_erosion', $((i % 5 + 1)))" ;;  5) c="params:set('brain_kind', $((i % 3 + 1)))" ;;
+            esac
+            args+=(--at "$t" "$c"); i=$((i + 1))
+          done
+          "$r" --script . --quiet --seconds 20 --out swaps.wav "${args[@]}"
 
       - name: The plugin plays, loaded like a DAW
         run: |
