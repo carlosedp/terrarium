@@ -6,7 +6,8 @@ ids, `tune()`, `sc.cur(i)`); the screen, PARAMS names and the player docs call t
 soil, water, air and hum (`name` in `LAYERS`). Two macros per part, no numbers on screen. See README.md for the user view and
 doc/DESIGN.md for why things are the way they are.
 
-**Status:** 1.0.0 (2026-10-23; releases come from `v*` tags, `.github/workflows/plugin.yml`).
+**Status:** 1.0.0 (2026-10-23; releases come from `v*` tags, `.github/workflows/plugin.yml`;
+pushes and PRs run the plugin core's quick check, `plugin-core.yml` / `plugin/tests.sh`).
 The plugin (`plugin/`) and norns-web play the whole engine. Still never run on a norns (the user's
 norns hadn't arrived): the Lua side passes a headless smoke test; `lib/Engine_Terrarium.sc` has
 never been compiled.

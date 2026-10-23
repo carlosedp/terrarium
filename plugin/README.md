@@ -46,6 +46,11 @@ build/plugin/juce/terrarium_host_test_artefacts/Release/terrarium_host_test \
     build/plugin/juce/terrarium_plugin_artefacts/Release/VST3/terrarium.vst3
 ```
 
+`bash plugin/tests.sh build/plugin/terrarium-render` runs all of the core's checks (the beat, PARAMS,
+module swaps, sample rates, the transport, visitors' MIDI): CI's `plugin-core.yml` runs it on every
+push and PR that touches the plugin or the Lua (no JUCE, a couple of minutes), and `plugin.yml`
+again before each release, with the full build on every platform, from `v*` tags.
+
 `terrarium-render` boots the script, plays it as a host would (offline), and writes a WAV and the
 last screen (`.pgm`). It reports how far each note is from the host's 16ths: within a 64-sample
 block, as scsynth schedules. `--lua 'params:set("voice_kind", 2)'` runs code in the script first,

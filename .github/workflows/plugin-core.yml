@@ -1,0 +1,34 @@
+# The plugin's core (plugin/core, plugin/render), on every push and PR that could change it: the
+# engine and terrarium's own Lua, played offline by terrarium-render and checked (plugin/tests.sh).
+# No JUCE, Linux only: a couple of minutes. The plugins themselves are built, tested on every
+# platform and released from v* tags (plugin.yml).
+name: plugin core
+
+on:
+  push:
+    branches: [main]
+    paths: ["plugin/**", "lib/**", "terrarium.lua", "tools/norns-web/lib/norns.lua", ".github/workflows/plugin-core.yml"]
+  pull_request:
+    paths: ["plugin/**", "lib/**", "terrarium.lua", "tools/norns-web/lib/norns.lua", ".github/workflows/plugin-core.yml"]
+  workflow_dispatch:
+
+jobs:
+  core:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      # Lua and the native mi-UGens, downloaded by CMake
+      - name: Cache the downloads
+        uses: actions/cache@v4
+        with:
+          path: build/_deps
+          key: core-deps-${{ hashFiles('plugin/CMakeLists.txt') }}
+
+      - name: Build the core and terrarium-render
+        run: |
+          cmake -S plugin -B build -DCMAKE_BUILD_TYPE=Release -DTERRARIUM_PLUGIN=OFF -Wno-dev
+          cmake --build build --parallel 4
+
+      - name: Test it
+        run: bash plugin/tests.sh build/terrarium-render
