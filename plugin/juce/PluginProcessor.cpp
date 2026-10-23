@@ -4,17 +4,16 @@
 
 #include "PluginEditor.h"
 
-// A host automation slot: 0..1, named after the param it follows ("map 3: rain change")
+// A host automation slot: 0..1, named after the param it follows ("weather 1: rain rate",
+// "map 3: key")
 class TerrariumProcessor::Slot : public juce::AudioParameterFloat {
 public:
-    explicit Slot(int n)
-        : AudioParameterFloat(juce::ParameterID("map" + juce::String(n), 1), "map " + juce::String(n),
-                              juce::NormalisableRange<float>(0, 1), 0),
-          n_(n) {}
+    Slot(const juce::String& id, const juce::String& name)
+        : AudioParameterFloat(juce::ParameterID(id, 1), name, juce::NormalisableRange<float>(0, 1), 0), base_(name) {}
 
     juce::String getName(int maximumStringLength) const override {
         std::lock_guard<std::mutex> lock(m_);
-        auto s = "map " + juce::String(n_) + (label_.isEmpty() ? "" : ": " + label_);
+        auto s = base_ + (label_.isEmpty() ? "" : ": " + label_);
         return maximumStringLength > 0 ? s.substring(0, maximumStringLength) : s;
     }
     void setLabel(const juce::String& l) {
@@ -23,7 +22,7 @@ public:
     }
 
 private:
-    int n_;
+    juce::String base_;
     mutable std::mutex m_;
     juce::String label_;
 };
@@ -31,7 +30,16 @@ private:
 TerrariumProcessor::TerrariumProcessor()
     : AudioProcessor(BusesProperties().withOutput("Output", juce::AudioChannelSet::stereo(), true)) {
     for (int k = 0; k < SLOTS; ++k) {
-        slots_[(size_t)k] = new Slot(k + 1);
+        juce::String id, name;
+        if (k < MACROS) {
+            juce::String part = terrarium::Terrarium::partName(k / 2 + 1), n(k % 2 + 1);
+            id = "macro_" + part + "_" + n;
+            name = part + " " + n;
+        } else {
+            id = "map" + juce::String(k - MACROS + 1);
+            name = "map " + juce::String(k - MACROS + 1);
+        }
+        slots_[(size_t)k] = new Slot(id, name);
         addParameter(slots_[(size_t)k]);
     }
     // off: the weather goes on when the host's transport stops, as a norns' does
@@ -119,6 +127,11 @@ void TerrariumProcessor::timerCallback() {
 // the script), the slot takes it. Comparing each side with its own last value, not the two
 // with each other, keeps a stepped param (an option) from fighting an automation lane.
 void TerrariumProcessor::syncSlots() {
+    // the macros follow whatever module lives in each part now
+    for (int k = 0; k < MACROS; ++k) {
+        auto id = core_->macroParam(k / 2 + 1, k % 2 + 1);
+        if (id != bound_[(size_t)k]) bind(k, id);
+    }
     for (size_t k = 0; k < SLOTS; ++k) {
         if (bound_[k].empty()) continue;
         float hv = slots_[k]->get();
@@ -155,15 +168,15 @@ int TerrariumProcessor::toggleMap(int paramIndex) {
     if (!booted_) return 0;
     auto id = core_->paramId(paramIndex);
     if (id.empty()) return 0;
-    for (int k = 0; k < SLOTS; ++k)
+    for (int k = MACROS; k < SLOTS; ++k)
         if (bound_[(size_t)k] == id) {
             bind(k, "");
             return 0;
         }
-    for (int k = 0; k < SLOTS; ++k)
+    for (int k = MACROS; k < SLOTS; ++k)
         if (bound_[(size_t)k].empty()) {
             bind(k, id);
-            return k + 1;
+            return k - MACROS + 1;
         }
     return 0;
 }
@@ -171,9 +184,9 @@ int TerrariumProcessor::toggleMap(int paramIndex) {
 juce::var TerrariumProcessor::maps() {
     auto* o = new juce::DynamicObject();
     if (booted_)
-        for (int k = 0; k < SLOTS; ++k)
+        for (int k = MACROS; k < SLOTS; ++k)
             if (!bound_[(size_t)k].empty())
-                o->setProperty(juce::String(core_->paramIndex(bound_[(size_t)k])), k + 1);
+                o->setProperty(juce::String(core_->paramIndex(bound_[(size_t)k])), k - MACROS + 1);
     return juce::var(o);
 }
 
@@ -194,10 +207,10 @@ void TerrariumProcessor::getStateInformation(juce::MemoryBlock& dest) {
         e->addTextElement(juce::String(v));
     }
     xml.setAttribute("stop_with_transport", stopWithTransport->get());
-    for (int k = 0; k < SLOTS; ++k)
+    for (int k = MACROS; k < SLOTS; ++k)
         if (!bound_[(size_t)k].empty()) {
             auto* e = xml.createNewChildElement("map");
-            e->setAttribute("slot", k + 1);
+            e->setAttribute("slot", k - MACROS + 1);
             e->setAttribute("param", juce::String(bound_[(size_t)k]));
         }
     copyXmlToBinary(xml, dest);
@@ -215,10 +228,10 @@ void TerrariumProcessor::setStateInformation(const void* data, int size) {
     for (auto* e : xml->getChildWithTagNameIterator("pref"))
         uiPrefs[e->getStringAttribute("key").toStdString()] = e->getAllSubText().toStdString();
     *stopWithTransport = xml->getBoolAttribute("stop_with_transport", stopWithTransport->get());
-    for (int k = 0; k < SLOTS; ++k) bind(k, "");
+    for (int k = MACROS; k < SLOTS; ++k) bind(k, "");
     for (auto* e : xml->getChildWithTagNameIterator("map")) {
-        int k = e->getIntAttribute("slot") - 1;
-        if (k >= 0 && k < SLOTS) bind(k, e->getStringAttribute("param").toStdString());
+        int k = MACROS + e->getIntAttribute("slot") - 1;
+        if (k >= MACROS && k < SLOTS) bind(k, e->getStringAttribute("param").toStdString());
     }
 }
 

@@ -154,6 +154,15 @@ int main(int argc, char** argv) {
                             index, v, back);
             }
         }
+        t.repl("params:set('voice_kind', 1)");  // meadow again (the checks above moved it)
+        for (int part = 1; part <= Terrarium::PARTS; ++part) {
+            std::string a = t.macroParam(part, 1), b = t.macroParam(part, 2);
+            std::printf("%s %-8s macros: %s, %s\n", a.empty() && part != 5 ? "FAIL" : "ok  ", Terrarium::partName(part),
+                        a.c_str(), b.c_str());
+            if (a.empty() && part != 5) bad = 1;
+        }
+        t.repl("params:set('voice_kind', 3)");  // reeds: the soil's macros follow the module
+        std::printf("soil, after swapping to reeds: %s, %s\n", t.macroParam(2, 1).c_str(), t.macroParam(2, 2).c_str());
         return bad;
     }
 

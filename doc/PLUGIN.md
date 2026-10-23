@@ -42,14 +42,14 @@ Sidechain inputs work in all of them. Check it in each before promising it.
 
 ## Automation: a drawer, like Under the hood
 
-A VST3 declares its parameters when it loads; terrarium's change with the modules. Three layers:
+A VST3 declares its parameters when it loads; terrarium's change with the modules. A short list,
+so a DAW's stays readable:
 
-1. **Fixed:** the ten macros (weather A/B, soil A/B, …), meaning whatever the loaded module says;
-   each part's module; the settings (key, scale, range, length, seasons, climate, day, breath,
-   erosion…); shuffle and the gestures as triggers.
-2. **Map slots:** sixteen generic "map 1…16" parameters. In the drawer, the page's Under the hood
-   with a "map" button on every param, the user binds any terrarium param (a Plaits engine, a cv
-   amount) to a slot; the DAW automates the slot, like norns' MIDI mapping.
+1. **Fixed:** the ten macros, "weather 1" .. "hum 2", meaning whatever the loaded module says and
+   renamed with it; and "stop with the DAW's transport".
+2. **Map slots:** eight generic "map 1…8" parameters. In the drawer, the page's Under the hood
+   with a "map" button on every param, the user binds any terrarium param (a module, the key, a
+   cv amount) to a slot; the DAW automates the slot, like norns' MIDI mapping.
 3. **State:** the PSET dump `norns.lua` already writes, plus the slot bindings, saved in the
    project.
 
@@ -78,9 +78,8 @@ lands on the grid, not on the UI timer's jitter. Screen frames go to the UI afte
    under AddressSanitizer). Visitors' MIDI out and sidechain input are next.*
 4. **UI and automation:** norns-web's page as the editor, the drawer with map slots, state in the
    project. *Pulled ahead of phase 3, on the `plugin` branch: the page is the face
-   (norns-web's hosted mode), 16 map slots named after what they follow, both ways, saved with
-   the project. Still to do: the fixed layer (the ten macros, the modules, the settings as their
-   own parameters).*
+   (norns-web's hosted mode), the ten macros and 8 map slots named after what they follow, both
+   ways, the map bindings saved with the project.*
 
-Later: CPU per instance (Clouds, Beads and Elements are heavy), sample rates other than 48 kHz
-(the mi-UGens are written for fixed rates), notarizing the macOS build.
+Later: notarizing the macOS build. (The engine runs at 48 kHz at any host rate, with a resampler
+at the edges; the heaviest jar takes about 10% of a core.)

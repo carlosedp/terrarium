@@ -91,10 +91,16 @@ transport running, saves and restores its state, and checks it made sound. CI al
   hosted and runs no Lua or sound of its own: it calls the plugin (see "In a plugin" in
   `tools/norns-web/README.md`). The page never scrolls (the device zooms to fit), and the drawer is a tab at the right:
   opening it grows the window wider, so the device stays whole.
-- **Host automation:** 16 parameters, "map 1" to "map 16". The drawer's **map** button binds any
-  of terrarium's PARAMS to a free one; the slot takes that param's name ("map 3: rain change")
-  and the two follow each other, the host's lane driving the param and the plugin's changes
-  moving the slot. The bindings save with the project.
+- **Host automation**, kept to a short list:
+  - **10 macros**, "weather 1" to "hum 2": the two macros of whatever module lives in each part,
+    renamed as it changes ("weather 1: rain rate", "soil 2: meadow timbre"). Swap the module and
+    the same lane drives the new one's macro.
+  - **8 map slots**, "map 1" to "map 8": the drawer's **map** button binds any of terrarium's
+    PARAMS to a free one ("map 3: key"); the bindings save with the project.
+  - **"stop with the DAW's transport"**.
+
+  A slot and its param follow each other: the host's lane drives the param, and the plugin's own
+  changes (the encoders, the face, the script) move the slot.
 
 ## Known gaps
 

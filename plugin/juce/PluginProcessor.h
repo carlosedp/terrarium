@@ -2,10 +2,13 @@
 // The audio thread renders; a 60 Hz timer on the message thread ticks the script's Lua
 // ahead of it; the host's tempo and position steer Lua's clock.
 //
-// Host automation: 16 "map" parameters. The plugin's face binds any of terrarium's PARAMS
-// to one (the drawer's "map" buttons); the slot then takes that param's name, and the two
-// follow each other: the host moves the slot, the param follows; the param changes in the
-// plugin, the slot follows. Bindings are saved with the project.
+// Host automation, kept small so a DAW's list stays readable:
+//   10 macros, "weather 1" .. "hum 2": the two macros of whatever module lives in each part,
+//      renamed as it changes ("weather 1: rain rate");
+//   8 "map" slots: the face's drawer binds any of terrarium's PARAMS to one ("map 3: key");
+//   "stop with the DAW's transport".
+// A slot and its param follow each other: the host moves the slot, the param follows; the
+// param changes in the plugin, the slot follows. The map bindings are saved with the project.
 #pragma once
 
 #include <juce_audio_processors/juce_audio_processors.h>
@@ -19,7 +22,7 @@
 
 class TerrariumProcessor : public juce::AudioProcessor, private juce::Timer {
 public:
-    static constexpr int SLOTS = 16;
+    static constexpr int MACROS = 10, MAPS = 8, SLOTS = MACROS + MAPS;  // macros first, then maps
 
     TerrariumProcessor();
     ~TerrariumProcessor() override;

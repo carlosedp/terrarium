@@ -300,4 +300,28 @@ std::string LuaHost::paramName(const std::string& id) {
     return s;
 }
 
+bool LuaHost::doString(const char* code) {
+    if (!L_) return false;
+    if (luaL_dostring(L_, code) != LUA_OK) {
+        if (cb_.log) cb_.log(lua_tostring(L_, -1), true);
+        lua_pop(L_, 1);
+        return false;
+    }
+    return true;
+}
+
+std::string LuaHost::callString(const char* fn, int a, int b) {
+    if (!L_) return "";
+    lua_getglobal(L_, fn);
+    lua_pushinteger(L_, a);
+    lua_pushinteger(L_, b);
+    if (lua_pcall(L_, 2, 1, 0) != LUA_OK) {
+        lua_pop(L_, 1);
+        return "";
+    }
+    std::string s = lua_isstring(L_, -1) ? lua_tostring(L_, -1) : "";
+    lua_pop(L_, 1);
+    return s;
+}
+
 }  // namespace terrarium

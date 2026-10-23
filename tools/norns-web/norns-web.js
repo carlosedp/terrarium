@@ -234,7 +234,7 @@
   })();
   const query = new URLSearchParams(location.search);
   view.shell = query.get("shell") || view.shell || "shield";
-  view.screen = query.get("screen") || view.screen || "white";
+  view.screen = query.get("screen") || view.screen || "yellow"; // the amber of a shield's OLED, by default
   function applyView() {
     $("#device").dataset.shell = view.shell;
     $("#v-shell").value = view.shell;

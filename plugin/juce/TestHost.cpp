@@ -80,6 +80,11 @@ int main(int argc, char** argv) {
     }
     plugin->releaseResources();
 
+    // the parameters, as a DAW lists them (the macros named after the modules playing)
+    juce::StringArray names;
+    for (auto* p : plugin->getParameters()) names.add(p->getName(64));
+    std::printf("%d parameters: %s\n", names.size(), names.joinIntoString(" | ").toRawUTF8());
+
     // the state round trip a DAW does when it saves a project
     juce::MemoryBlock state;
     plugin->getStateInformation(state);

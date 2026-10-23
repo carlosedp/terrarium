@@ -52,6 +52,11 @@ public:
     int paramIndex(const std::string& id);  // 0 if there's none
     std::string paramName(const std::string& id);
 
+    // Lua of the host's own, after boot: a chunk, and a global function of two integers that
+    // returns a string ("" if it fails)
+    bool doString(const char* code);
+    std::string callString(const char* fn, int a, int b);
+
     // the screen: 128x64 levels 0..15, the last frame the script drew
     const unsigned char* frame() const { return frame_; }
 

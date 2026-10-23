@@ -85,6 +85,12 @@ public:
     int paramIndex(const std::string& id);
     std::string paramName(const std::string& id);
 
+    // terrarium's macros, for the plugin's fixed host parameters: the param id of macro k (1, 2)
+    // of whatever module lives in part i (1 weather, 2 soil, 3 water, 4 air, 5 hum), "" for none
+    static constexpr int PARTS = 5;
+    static const char* partName(int i);
+    std::string macroParam(int part, int k);
+
     // the plugin's state: the params as a PSET, and what Lua stored
     std::map<std::string, std::string> saveState();
     void loadState(const std::map<std::string, std::string>& s);

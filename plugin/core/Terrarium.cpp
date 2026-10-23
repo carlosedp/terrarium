@@ -14,6 +14,33 @@ Terrarium::~Terrarium() {
     host_.reset();
 }
 
+// A part's module is its <layer>_kind option (the options are the modules' ids), and the
+// module's macros are its control params <module>_<macro>, in the order they were added (each
+// followed by its _cv param, which isn't one).
+static const char* MACROS_LUA = R"LUA(
+local LAYER = { "brain", "voice", "color", "air", "drone" }
+function terrarium_macro(part, k)
+  local ok, kind = pcall(function()
+    local p = params:lookup_param(LAYER[part] .. "_kind")
+    return p.options[p.value]
+  end)
+  if not ok or not kind then return "" end
+  local n = 0
+  for _, p in ipairs(params.params) do
+    if p.kind == "control" and p.id and p.id:sub(1, #kind + 1) == kind .. "_" and not p.id:match("_cv$") then
+      n = n + 1
+      if n == k then return p.id end
+    end
+  end
+  return ""
+end
+)LUA";
+
+const char* Terrarium::partName(int i) {
+    static const char* names[] = {"weather", "soil", "water", "air", "hum"};
+    return i >= 1 && i <= PARTS ? names[i - 1] : "";
+}
+
 bool Terrarium::boot(std::string& err) {
     if (!engine_.load(paths_.miLibs, err)) return false;
     std::lock_guard<std::mutex> lock(lua_);
@@ -34,6 +61,7 @@ bool Terrarium::boot(std::string& err) {
         err = "the script didn't start (see the log)";
         return false;
     }
+    host_->doString(MACROS_LUA);
     return true;
 }
 
@@ -219,6 +247,7 @@ void Terrarium::setNorm(const std::string& id, double v) { WITH_LUA(void()); hos
 std::string Terrarium::paramId(int index) { WITH_LUA(""); return host_->paramId(index); }
 int Terrarium::paramIndex(const std::string& id) { WITH_LUA(0); return host_->paramIndex(id); }
 std::string Terrarium::paramName(const std::string& id) { WITH_LUA(""); return host_->paramName(id); }
+std::string Terrarium::macroParam(int part, int k) { WITH_LUA(""); return host_->callString("terrarium_macro", part, k); }
 
 #undef WITH_LUA
 
