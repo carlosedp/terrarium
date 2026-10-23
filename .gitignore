@@ -7,3 +7,4 @@ tools/manual/.print.html
 
 # plugin builds (cmake -S plugin -B build/plugin)
 build/
+.local
