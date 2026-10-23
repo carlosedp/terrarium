@@ -156,7 +156,7 @@ through the plugin's **side chain**.
 E2):
 
 - **1: DAW (plugin MIDI out):** the plugin's own MIDI output, for a DAW that passes an
-  instrument's MIDI on to another track (Reason, Bitwig, Reaper, Cubase; not Live or Logic).
+  instrument's MIDI on to another track (Live, Reason, Bitwig, Reaper, Cubase; not Logic).
 - **2 and on:** your computer's MIDI outputs, which terrarium opens itself: a hardware synth, or a
   virtual MIDI port another track listens to (**loopMIDI** on Windows, the **IAC Driver** on
   macOS). This works in any DAW. The list is read when the plugin loads; connect a new device,
@@ -171,15 +171,15 @@ it for a moment; **E2 (opening)** lets some through between notes, **E3 (length)
 each note lasts. Mute the synth's own track (or set its output to the side chain only), or you'll
 hear it dry under the jar's version.
 
-<!-- To confirm: Reason's route for 1: DAW, and Live's instrument side chain. Live takes no MIDI
-     out of a VST3 plugin (tested on Windows, Live 12); the virtual-port routes are sure. -->
+<!-- To confirm: Reason's route for 1: DAW, and Live's instrument side chain. Live's 1: DAW route
+     and the virtual-port routes are tested (Windows, Live 12). -->
 
 ### In Ableton Live
 
-- **The notes:** use a virtual port. Live doesn't take MIDI out of VST3 plugins, so **1: DAW**
-  doesn't reach other tracks there. Create a port with **loopMIDI** (Windows) or the **IAC Driver**
-  (macOS, in Audio MIDI Setup), pick it in terrarium (hold K2 + E2), and make a MIDI track with the
-  synth, its **MIDI From** set to that port and its monitor on **In**.
+- **The notes:** pick **1: DAW** in terrarium (hold K2 + E2). Make a MIDI track with the synth, and
+  set its **MIDI From** to terrarium's track, then, in the menu just under it, to **terrarium**
+  (the plugin itself, not Pre FX or Post FX). Set the synth track's monitor to **In**.
+  A virtual port (loopMIDI on Windows, the IAC Driver on macOS) works too, as its **MIDI From**.
 - **The sound:** open terrarium's device, show its **Sidechain** section, and pick the synth's
   track as the source.
 
