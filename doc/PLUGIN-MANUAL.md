@@ -1,6 +1,6 @@
 # terrarium, the plugin
 
-_generative music in a jar, in your DAW_
+_generative music in a jar, in your DAW_ · version 1.0.0
 
 ![terrarium's plugin window: the jar's screen on a norns shield, under a night sky](img/plugin-face.png)
 

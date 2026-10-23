@@ -1,11 +1,16 @@
 # terrarium as a plugin (doc/PLUGIN.md, plugin/): build it on Linux, macOS and Windows,
 # check the core renders on the beat, load the built plugin like a DAW and check it plays,
 # validate it (pluginval, on Linux), and keep the plugins as workflow artifacts.
+#
+# A v* tag (git tag -a v1.2.0 && git push origin v1.2.0) does all that and then publishes a
+# GitHub release: each platform's zip under the tag's name, and both manuals as PDFs. The plugin's
+# version (plugin/CMakeLists.txt) should match the tag.
 name: plugin
 
 on:
   push:
-    branches: [plugin]
+    tags: ["v*"]
+    branches: [main, plugin]
     paths: ["plugin/**", "lib/**", "terrarium.lua", "tools/norns-web/lib/norns.lua", ".github/workflows/plugin.yml"]
   pull_request:
     paths: ["plugin/**", "lib/**", "terrarium.lua", "tools/norns-web/lib/norns.lua", ".github/workflows/plugin.yml"]
@@ -75,10 +80,13 @@ jobs:
             args+=(--at "$t" "$c"); i=$((i + 1))
           done
           "$r" --script . --quiet --seconds 20 --out swaps.wav "${args[@]}"
-          # the engine runs at 48 kHz at any host rate: the same level at 44.1, 48 and 96 kHz
+          # the engine runs at 48 kHz at any host rate: about the same level at 44.1, 48 and 96 kHz
+          # (the notes differ from run to run on some platforms, so not exactly; before, 96 kHz
+          # was 40% quieter)
           for sr in 44100 48000 96000; do
-            "$r" --script . --quiet --seconds 15 --sr $sr --out sr.wav | grep -o 'rms [0-9.]*'
-          done | sort -u | awk 'END { if (NR != 1) { print "levels differ by rate"; exit 1 } }'
+            "$r" --script . --quiet --seconds 20 --sr $sr --out sr.wav | grep -o 'rms [0-9.]*' | cut -d' ' -f2
+          done | awk '{ v[NR] = $1; if (NR == 1 || $1 < lo) lo = $1; if ($1 > hi) hi = $1 }
+            END { printf "rms by rate: %s %s %s\n", v[1], v[2], v[3]; if (hi > lo * 1.25) { print "levels differ by rate"; exit 1 } }'
           # stop with the transport: no notes while it's stopped
           "$r" --script . --quiet --seconds 25 --stopped-between 8 16 --stop-with-transport --out stop.wav \
             | tee stop.txt
@@ -129,3 +137,48 @@ jobs:
           name: terrarium-plugin-${{ matrix.name }}
           path: _dist/*.zip
           if-no-files-found: error
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # create the release
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: terrarium-plugin-*
+          path: dist
+          merge-multiple: true
+
+      - name: Name the zips after the tag, with the manuals beside them
+        run: |
+          cd dist
+          for f in terrarium-plugin-*.zip; do mv "$f" "${f%.zip}-${GITHUB_REF_NAME}.zip"; done
+          cp ../doc/terrarium-plugin-manual.pdf ../doc/terrarium-manual.pdf .
+          ls -l
+
+      - name: Release notes
+        run: |
+          v="${GITHUB_REF_NAME}"
+          {
+            echo "terrarium ${v#v}: generative music in a jar, as a plugin for your DAW (VST3 on Windows and macOS,"
+            echo "AU on macOS, and a standalone app), with the same script and the same Mutable Instruments sound as on"
+            echo "a norns. On a norns, install it from maiden: \`;install https://github.com/${GITHUB_REPOSITORY}\`."
+            echo
+            echo "**Plugin downloads:** \`terrarium-plugin-windows-${v}.zip\`, \`terrarium-plugin-macos-${v}.zip\`"
+            echo "(VST3 and AU), \`terrarium-plugin-linux-${v}.zip\`. How to install and play it:"
+            echo "[the plugin's manual](https://github.com/${GITHUB_REPOSITORY}/blob/${v}/doc/PLUGIN-MANUAL.md)"
+            echo "(\`terrarium-plugin-manual.pdf\` here). The music itself is in"
+            echo "[the terrarium manual](https://github.com/${GITHUB_REPOSITORY}/blob/${v}/doc/MANUAL.md)."
+            echo
+            echo "The plugins aren't signed: on macOS, allow them in System Settings > Privacy & Security"
+            echo "the first time (or right-click > Open the standalone)."
+          } > notes.md
+
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          body_path: notes.md

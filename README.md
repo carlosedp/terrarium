@@ -30,8 +30,9 @@ and scale. The weather keeps a Turing Machine-style phrase, and each note leaves
 ground. **Change** sets how often notes are replaced, dropped to a rest or added back.
 **Seasons** (slow by default) let the key drift between close neighbors and find its way home.
 
-> **Status: v0.1, untested on hardware.** The Lua side runs headless against a mocked norns
-> (see [Development](#development)); the engine and the sound mappings still need a real norns.
+> **Version 1.0.0.** The plugin and the browser version play the whole engine; on a norns it's
+> still untested on hardware: the Lua side runs headless against a mocked norns (see
+> [Development](#development)), and the SuperCollider engine still needs a real norns.
 
 ## Requirements
 
