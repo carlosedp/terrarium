@@ -153,10 +153,12 @@ jobs:
           path: dist
           merge-multiple: true
 
+      # each zip twice: under the tag's name, and under a fixed one that the website's links
+      # (releases/latest/download/terrarium-plugin-windows.zip) always find in the latest release
       - name: Name the zips after the tag, with the manuals beside them
         run: |
           cd dist
-          for f in terrarium-plugin-*.zip; do mv "$f" "${f%.zip}-${GITHUB_REF_NAME}.zip"; done
+          for f in terrarium-plugin-*.zip; do cp "$f" "${f%.zip}-${GITHUB_REF_NAME}.zip"; done
           cp ../doc/terrarium-plugin-manual.pdf ../doc/terrarium-manual.pdf .
           ls -l
 
