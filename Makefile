@@ -6,7 +6,7 @@ DEST  ?= /home/we/dust/code/terrarium
 MIUGENS ?= ../norns-mi-UGens
 
 .DEFAULT_GOAL := help
-.PHONY: help web norns-web stop test soak build clean deploy manual-images manual-pdf mi-wasm logo
+.PHONY: help web norns-web stop test soak build clean deploy manual-images manual-pdf art mi-wasm logo
 
 help: ## list the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{ printf "  make %-14s %s\n", $$1, $$2 }'
@@ -51,6 +51,10 @@ logo: ## draw the mark (doc/img/icon.svg, logo.svg, icon-touch.svg and its 180 p
 manual-pdf: ## build doc/terrarium-manual.pdf from doc/MANUAL.md (node + a Chromium)
 	@[ -d tools/manual/node_modules ] || npm --prefix tools/manual install --no-fund --no-audit
 	node tools/manual/pdf.mjs
+
+art: ## render doc/art (README banner, social preview, wallpapers) from the script in norns-web (node + a Chromium)
+	@[ -d tools/manual/node_modules ] || npm --prefix tools/manual install --no-fund --no-audit
+	node tools/manual/art.mjs
 
 # the browser's engine plays mi-UGens built as WebAssembly by norns-mi-UGens (podman or docker)
 mi-wasm: ## rebuild lib/Engine_Terrarium/ (the browser's mi-UGens) from norns-mi-UGens (MIUGENS=...)
