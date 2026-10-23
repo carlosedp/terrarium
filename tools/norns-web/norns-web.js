@@ -224,7 +224,7 @@
     g2d.putImageData(img, 0, 0);
   }
 
-  // ---------- view: the shell (norns | shield) and the screen's color, remembered ----------
+  // ---------- view: the shell (norns | shield), the case's finish and the screen's color, remembered ----------
   const view = (() => {
     try {
       return JSON.parse(prefs.get("norns-web:view")) || {};
@@ -234,10 +234,13 @@
   })();
   const query = new URLSearchParams(location.search);
   view.shell = query.get("shell") || view.shell || "shield";
+  view.finish = query.get("finish") || view.finish || "alu";
   view.screen = query.get("screen") || view.screen || "yellow"; // the amber of a shield's OLED, by default
   function applyView() {
     $("#device").dataset.shell = view.shell;
+    $("#device").dataset.finish = view.finish;
     $("#v-shell").value = view.shell;
+    $("#v-finish").value = view.finish;
     $("#v-screen").value = view.screen;
     setTint(view.screen);
     try {
@@ -246,6 +249,10 @@
   }
   $("#v-shell").addEventListener("change", (e) => {
     view.shell = e.target.value;
+    applyView();
+  });
+  $("#v-finish").addEventListener("change", (e) => {
+    view.finish = e.target.value;
     applyView();
   });
   $("#v-screen").addEventListener("change", (e) => {
@@ -905,7 +912,7 @@
   const angles = { 1: 0, 2: 0, 3: 0 };
   function spin(n, d) {
     angles[n] += d * 12;
-    const el = document.querySelector(`.enc[data-e="${n}"] i`);
+    const el = document.querySelector(`.enc[data-e="${n}"] .knurl`);
     if (el) el.style.transform = `rotate(${angles[n]}deg)`;
   }
   // the wheel: a mouse notch is one step; a trackpad's stream of small deltas adds up,

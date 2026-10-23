@@ -24,9 +24,9 @@ encoders take the scroll wheel and dragging.
 ## The device
 
 Two shells, under the screen: **shield** (the default: compact, K1 top left and E1 top right, K2 K3 E2 E3
-along the bottom) or **norns**, and the screen's color: **yellow** (the default: the amber some
-shields have) or **white**. They're remembered by the browser, and the URL can set them:
-`?shell=norns&screen=white`. On a phone the page is touch-first: drag the encoders up and down,
+along the bottom) or **norns**, the case: **aluminium** (the default) or **black**, and the screen's
+color: **yellow** (the default: the amber some shields have) or **white**. They're remembered by the
+browser, and the URL can set them: `?shell=norns&finish=black&screen=white`. On a phone the page is touch-first: drag the encoders up and down,
 hold keys with one finger while tapping another.
 
 ## Publish a static copy
@@ -42,7 +42,7 @@ loads the same pinned version from jsdelivr.
 ## The page's text
 
 The page puts the device up front, standing on the ground under a night sky, with Start sound, the
-script's actions, How to play (also <kbd>?</kbd>), Full screen and a Look menu (shell and screen
+script's actions, How to play (also <kbd>?</kbd>), Full screen and a Look menu (shell, case and screen
 color); full screen shows just the device, under its own night sky (its buttons stack down the
 right side on a phone turned sideways, and a phone held upright is asked to turn). PARAMS, PSETs, the log and the
 REPL are in "Under the hood", a drawer at the bottom of the window: opening it scrolls the device into
