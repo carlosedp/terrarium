@@ -31,6 +31,17 @@
 
 namespace terrarium {
 
+// MIDI for the host's own MIDI out, from one process() call: each at its sample in the block
+struct MidiOut {
+    struct Event {
+        int offset;
+        unsigned char bytes[3];
+        int size;
+    };
+    Event events[256];
+    int count = 0;
+};
+
 struct HostTime {
     bool valid = false;    // the host says where it is
     bool playing = false;
@@ -57,13 +68,20 @@ public:
     std::function<void(const std::string&, bool)> onLog;  // message thread (or the offline audio thread)
     // each engine command as the audio runs it, with the time of its block (for tests; audio thread)
     std::function<void(const Command&, double)> onRun;
+    // MIDI for a port other than the DAW's (a device the plugin opens), with how long from now it's
+    // due (the message thread, as Lua makes it: Lua runs ahead, so it's usually a little later)
+    std::function<void(const MidiEvent&, double)> onMidiDevice;
+
+    // the MIDI ports Lua's midi.vports shows, before boot(); dawPort (1..16) is the one that goes
+    // to the host's MIDI out, through process(), 0 for none
+    void setMidiPorts(std::vector<std::string> names, int dawPort);
 
     bool boot(std::string& err);
     void prepare(double sampleRate);
 
     // in: the plugin's input (visitors hear it), or null
     void process(float* left, float* right, int n, const HostTime& host, bool offline = false,
-                 const float* inL = nullptr, const float* inR = nullptr);
+                 const float* inL = nullptr, const float* inR = nullptr, MidiOut* midi = nullptr);
     // on: while the host's transport is stopped, Lua's clocks wait (no weather); off, they run on
     void setStopWithTransport(bool on);
 
@@ -120,6 +138,14 @@ private:
     std::atomic<double> audioTime_{0};
     std::atomic<double> tempo_{120};
     std::atomic<bool> stopWithTransport_{false}, running_{true};
+
+    // MIDI for the host's MIDI out: queued from Lua, out of the audio thread when it's due
+    std::vector<std::string> midiPorts_;
+    int dawPort_ = 0;
+    std::unique_ptr<SpscQueue<MidiEvent, 1024>> midiQueue_ = std::make_unique<SpscQueue<MidiEvent, 1024>>();
+    std::vector<MidiEvent> pendingMidi_ = std::vector<MidiEvent>(512);
+    int npendingMidi_ = 0, hostPos_ = 0;
+    MidiOut* midiOut_ = nullptr;
     bool luaRunning_ = true;
     double luaTime_ = 0, luaTempo_ = 0;  // Lua's side
 

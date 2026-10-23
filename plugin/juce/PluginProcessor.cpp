@@ -8,8 +8,8 @@
 // "map 3: key")
 class TerrariumProcessor::Slot : public juce::AudioParameterFloat {
 public:
-    Slot(const juce::String& id, const juce::String& name)
-        : AudioParameterFloat(juce::ParameterID(id, 1), name, juce::NormalisableRange<float>(0, 1), 0), base_(name) {}
+    Slot(const juce::String& id, const juce::String& title)
+        : AudioParameterFloat(juce::ParameterID(id, 1), title, juce::NormalisableRange<float>(0, 1), 0), base_(title) {}
 
     juce::String getName(int maximumStringLength) const override {
         std::lock_guard<std::mutex> lock(m_);
@@ -27,8 +27,13 @@ private:
     juce::String label_;
 };
 
+// The buses: the stereo output; a main input nobody needs (off), so that the visitors' input is a
+// side chain (an aux bus), which is how Logic, Reason and Live offer an instrument's input.
 TerrariumProcessor::TerrariumProcessor()
-    : AudioProcessor(BusesProperties().withOutput("Output", juce::AudioChannelSet::stereo(), true)) {
+    : AudioProcessor(BusesProperties()
+                         .withInput("Input", juce::AudioChannelSet::stereo(), false)
+                         .withOutput("Output", juce::AudioChannelSet::stereo(), true)
+                         .withInput("Visitors", juce::AudioChannelSet::stereo(), false)) {
     for (int k = 0; k < SLOTS; ++k) {
         juce::String id, name;
         if (k < MACROS) {
@@ -58,6 +63,13 @@ TerrariumProcessor::TerrariumProcessor()
         if (log_.size() > 300) log_.erase(log_.begin());
         ++logCount_;
     };
+    // visitors' MIDI ports, for Lua's midi.vports: the DAW's MIDI out, then the system's outputs
+    std::vector<std::string> ports{"DAW (plugin MIDI out)"};
+    midiDevices_ = juce::MidiOutput::getAvailableDevices();
+    for (auto& d : midiDevices_)
+        if (ports.size() < 16) ports.push_back(d.name.toStdString());
+    core_->setMidiPorts(ports, 1);
+    core_->onMidiDevice = [this](const terrarium::MidiEvent& e, double delay) { sendToDevice(e, delay); };
     std::string err;
     booted_ = res.isDirectory() && core_->boot(err);
     if (!booted_) bootError_ = res.isDirectory() ? juce::String(err) : "can't find the plugin's Resources folder";
@@ -85,16 +97,56 @@ std::vector<TerrariumProcessor::LogLine> TerrariumProcessor::logSince(size_t& se
 }
 
 bool TerrariumProcessor::isBusesLayoutSupported(const BusesLayout& layouts) const {
-    return layouts.getMainOutputChannelSet() == juce::AudioChannelSet::stereo();
+    if (layouts.getMainOutputChannelSet() != juce::AudioChannelSet::stereo()) return false;
+    for (auto& in : layouts.inputBuses)  // each input: off, mono or stereo
+        if (!in.isDisabled() && in != juce::AudioChannelSet::mono() && in != juce::AudioChannelSet::stereo()) return false;
+    return true;
 }
 
-void TerrariumProcessor::prepareToPlay(double sampleRate, int) {
+void TerrariumProcessor::prepareToPlay(double sampleRate, int samplesPerBlock) {
+    input_.setSize(2, juce::jmax(1, samplesPerBlock));
     if (booted_) core_->prepare(sampleRate);
 }
 
-void TerrariumProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer&) {
+// a message for one of the system's MIDI outputs, sent when it's due (Lua runs a little ahead)
+void TerrariumProcessor::sendToDevice(const terrarium::MidiEvent& e, double delay) {
+    int index = e.port - 2;  // port 2 is the first device
+    if (index < 0 || index >= midiDevices_.size()) return;
+    auto& out = openMidi_[e.port];
+    if (!out) {
+        out = juce::MidiOutput::openDevice(midiDevices_[index].identifier);
+        if (!out) {
+            if (core_->onLog)
+                core_->onLog("can't open MIDI output " + midiDevices_[index].name.toStdString() +
+                                 " (another program may have it)",
+                             true);
+            return;
+        }
+        out->startBackgroundThread();
+    }
+    juce::MidiBuffer b;
+    b.addEvent(juce::MidiMessage(e.bytes, e.size), 0);
+    out->sendBlockOfMessages(b, juce::Time::getMillisecondCounterHiRes() + (isNonRealtime() ? 0 : delay * 1000), 1000);
+}
+
+void TerrariumProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::MidiBuffer& midi) {
     juce::ScopedNoDenormals noDenormals;
-    if (!booted_ || buffer.getNumChannels() < 2) {
+    midi.clear();
+    int n = buffer.getNumSamples();
+    // the visitors' input (the side chain), if the host sends one, copied before the output is written
+    const float* inL = nullptr;
+    const float* inR = nullptr;
+    if (getBusCount(true) > 1 && getBus(true, 1)->isEnabled() && n <= input_.getNumSamples()) {
+        auto side = getBusBuffer(buffer, true, 1);
+        if (side.getNumChannels() > 0) {
+            input_.copyFrom(0, 0, side, 0, 0, n);
+            input_.copyFrom(1, 0, side, juce::jmin(1, side.getNumChannels() - 1), 0, n);
+            inL = input_.getReadPointer(0);
+            inR = input_.getReadPointer(1);
+        }
+    }
+    auto out = getBusBuffer(buffer, false, 0);
+    if (!booted_ || out.getNumChannels() < 2) {
         buffer.clear();
         return;
     }
@@ -109,8 +161,12 @@ void TerrariumProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::Mi
             else host.playing = false;  // no position, nothing to follow
         }
     }
-    core_->process(buffer.getWritePointer(0), buffer.getWritePointer(1), buffer.getNumSamples(), host,
-                   isNonRealtime());
+    core_->process(out.getWritePointer(0), out.getWritePointer(1), n, host, isNonRealtime(), inL, inR, &midiOut_);
+    for (int i = 0; i < midiOut_.count; ++i) {
+        auto& e = midiOut_.events[i];
+        midi.addEvent(juce::MidiMessage(e.bytes, e.size), e.offset);
+    }
+    for (int ch = 2; ch < buffer.getNumChannels(); ++ch) buffer.clear(ch, 0, n);  // nothing on the inputs' channels
 }
 
 // Lua, ahead of the audio (when rendering offline, process() ticks it itself), then the slots

@@ -61,4 +61,12 @@ private:
 
 using CommandQueue = SpscQueue<Command, 4096>;
 
+// a MIDI message from Lua (midi.connect(port):note_on(...)), stamped like a command
+struct MidiEvent {
+    double time = 0;
+    int port = 0;  // 1..16, as norns' midi.vports
+    unsigned char bytes[3] = {};
+    int size = 0;
+};
+
 }  // namespace terrarium

@@ -11,6 +11,7 @@
 // param changes in the plugin, the slot follows. The map bindings are saved with the project.
 #pragma once
 
+#include <juce_audio_devices/juce_audio_devices.h>  // the system's MIDI outputs, for visitors
 #include <juce_audio_processors/juce_audio_processors.h>
 
 #include <array>
@@ -38,7 +39,7 @@ public:
 
     const juce::String getName() const override { return "terrarium"; }
     bool acceptsMidi() const override { return false; }
-    bool producesMidi() const override { return false; }
+    bool producesMidi() const override { return true; }  // visitors' notes, on its first MIDI port
     double getTailLengthSeconds() const override { return 0; }
 
     int getNumPrograms() override { return 1; }
@@ -83,6 +84,14 @@ private:
     std::array<Slot*, SLOTS> slots_{};
     std::array<std::string, SLOTS> bound_;          // the param id each slot follows ("" for none)
     std::array<float, SLOTS> lastHost_{}, lastLua_{};  // the last values seen on each side
+
+    // visitors' MIDI: port 1 is the DAW's MIDI out, the rest the system's MIDI outputs, opened
+    // when first played to (a synth, or a virtual port another track listens to)
+    juce::Array<juce::MidiDeviceInfo> midiDevices_;
+    std::map<int, std::unique_ptr<juce::MidiOutput>> openMidi_;
+    void sendToDevice(const terrarium::MidiEvent& e, double delay);
+    terrarium::MidiOut midiOut_;
+    juce::AudioBuffer<float> input_;  // the visitors' input, copied before the outputs are written
 
     void timerCallback() override;
     void syncSlots();

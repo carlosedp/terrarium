@@ -18,6 +18,8 @@
 //     --at SECS CODE  run CODE at SECS into the render (repeatable): module swaps mid-play
 //     --out FILE      the WAV (default terrarium.wav); the screen goes next to it as .pgm
 //     --quiet         no log
+//     --midi-ports A,B,...   MIDI ports for Lua's midi.vports: the first goes to the host's MIDI out
+//     --input-tone    a 220 Hz tone into the input (what visitors hear)
 //     --check-params  check PARAMS for the plugin's face and its automation slots: the list,
 //                     and each kind of param through 0..1 and back
 #include <algorithm>
@@ -73,7 +75,8 @@ int main(int argc, char** argv) {
     std::string script = ".", norns, mi = TERRARIUM_MI_DIR, out = "terrarium.wav";
     double seconds = 20, bpm = 120, start = 0;
     int block = 512, sr = 48000;
-    bool playing = true, quiet = false, checkParams = false, stopWith = false;
+    bool playing = true, quiet = false, checkParams = false, stopWith = false, inputTone = false;
+    std::vector<std::string> midiPorts;
     double stopA = -1, stopB = -1;
     std::vector<std::string> lua;
     std::vector<std::pair<double, std::string>> at;
@@ -90,6 +93,16 @@ int main(int argc, char** argv) {
             stopA = std::stod(next());
             stopB = std::stod(next());
         } else if (a == "--stop-with-transport") stopWith = true;
+        else if (a == "--input-tone") inputTone = true;
+        else if (a == "--midi-ports") {
+            std::string list = next();
+            for (size_t p = 0; p <= list.size();) {
+                size_t q = list.find(',', p);
+                if (q == std::string::npos) q = list.size();
+                midiPorts.push_back(list.substr(p, q - p));
+                p = q + 1;
+            }
+        }
         else if (a == "--start") start = std::stod(next());
         else if (a == "--block") block = std::stoi(next());
         else if (a == "--sr") sr = std::stoi(next());
@@ -119,6 +132,15 @@ int main(int argc, char** argv) {
     std::vector<double> notes;
     t.onRun = [&](const Command& c, double time) {
         if (c.is("note")) notes.push_back(time);
+    };
+
+    int dawMidi = 0, dawNoteOns = 0, deviceMidi = 0, deviceNoteOns = 0;
+    double maxDelay = 0;
+    t.setMidiPorts(midiPorts, midiPorts.empty() ? 0 : 1);
+    t.onMidiDevice = [&](const MidiEvent& e, double delay) {
+        ++deviceMidi;
+        if ((e.bytes[0] & 0xf0) == 0x90 && e.bytes[2] > 0) ++deviceNoteOns;
+        maxDelay = std::max(maxDelay, delay);
     };
 
     std::string err;
@@ -174,8 +196,11 @@ int main(int argc, char** argv) {
     host.playing = playing;
     std::sort(at.begin(), at.end());
     size_t nextAt = 0;
+    MidiOut midi;
+    std::vector<float> tone((size_t)block);
     for (size_t pos = 0; pos < total; pos += block) {
         int n = (int)std::min<size_t>(block, total - pos);
+        for (int i = 0; i < n; ++i) tone[(size_t)i] = inputTone ? 0.3f * (float)std::sin(2 * 3.14159265 * 220 * (double)(pos + (size_t)i) / sr) : 0.0f;
         while (nextAt < at.size() && at[nextAt].first * sr <= (double)pos) t.repl(at[nextAt++].second);
         double secs = (double)pos / sr;
         bool stopped = secs >= stopA && secs < stopB;
@@ -183,7 +208,11 @@ int main(int argc, char** argv) {
         // stopped, the host's position holds; started again, it carries on from there
         double played = stopA >= 0 && secs >= stopA ? stopA + std::max(0.0, secs - stopB) : secs;
         host.ppq = start + played * bpm / 60;
-        t.process(L.data() + pos, R.data() + pos, n, host, true);
+        t.process(L.data() + pos, R.data() + pos, n, host, true, tone.data(), tone.data(), &midi);
+        for (int i = 0; i < midi.count; ++i) {
+            ++dawMidi;
+            if ((midi.events[i].bytes[0] & 0xf0) == 0x90 && midi.events[i].bytes[2] > 0) ++dawNoteOns;
+        }
     }
 
     wav(out, L, R, sr);
@@ -215,6 +244,9 @@ int main(int argc, char** argv) {
         std::printf("FAIL: %zu non-finite samples\n", bad);
         return 1;
     }
+    if (!midiPorts.empty())
+        std::printf("MIDI: %d messages to the DAW (%d note-ons), %d to devices (%d note-ons, due up to %.0f ms ahead)\n",
+                    dawMidi, dawNoteOns, deviceMidi, deviceNoteOns, maxDelay * 1000);
     if (stopA >= 0) {
         // the audio's time and Lua's line up within the lookahead; count by the audio's
         int during = 0;

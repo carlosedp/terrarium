@@ -11,7 +11,8 @@
 -- metro, util, tab, include, norns,
 -- engine commands (sent to a JS stand-in, lib/Engine_<name>.js, if any), and one
 -- built-in nb voice ("web synth") for scripts that use nb.
--- midi, grid, arc, softcut, crow, poll and the rest are silent stubs.
+-- midi out (when the host has ports: a plugin's); grid, arc, softcut, crow, poll and the rest
+-- are silent stubs.
 
 local W, H = 128, 64
 local js = js_bridge -- set by norns-web.js: engine(), log(), os_capture()
@@ -516,9 +517,27 @@ function include(file)
   end
   error("include: can't find " .. file, 2)
 end
-midi = stub("midi")
-midi.vports = {}
-for i = 1, 16 do midi.vports[i] = { name = "none", connected = false } end
+-- midi: out through the host, when it has ports (js.midi_ports() names them, js.midi_send(port,
+-- bytes...) sends, stamped with util.time); otherwise every port is "none" and sending is silent
+midi = setmetatable({ vports = {}, devices = {} }, { __index = function() return function() end end })
+local midi_ports = js.midi_ports and js.midi_ports() or {}
+for i = 1, 16 do
+  local name = midi_ports[i]
+  midi.vports[i] = { name = name or "none", connected = name ~= nil }
+end
+local function midi_device(port)
+  local d = { port = port, name = midi.vports[port] and midi.vports[port].name or "none" }
+  local function send(...) if js.midi_send and midi.vports[port] and midi.vports[port].connected then js.midi_send(port, ...) end end
+  local function status(s, ch) return s + util.clamp((ch or 1) - 1, 0, 15) end
+  function d:note_on(n, v, ch) send(status(0x90, ch), n, v or 100) end
+  function d:note_off(n, v, ch) send(status(0x80, ch), n, v or 0) end
+  function d:cc(cc, v, ch) send(status(0xB0, ch), cc, v) end
+  function d:pitchbend(v, ch) send(status(0xE0, ch), v & 0x7f, (v >> 7) & 0x7f) end
+  function d:program_change(v, ch) send(status(0xC0, ch), v) end
+  function d:send(data) if type(data) == "table" then send(table.unpack(data)) end end
+  return d
+end
+function midi.connect(port) return midi_device(port or 1) end
 grid, arc, hid, crow, softcut, audio, poll, osc, keyboard, gamepad = stub("grid"), stub("arc"), stub("hid"),
   stub("crow"), stub("softcut"), stub("audio"), stub("poll"), stub("osc"), stub("keyboard"), stub("gamepad")
 _menu = { rebuild_params = function() end, redraw = function() end }

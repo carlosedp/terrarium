@@ -41,7 +41,7 @@ juce_add_plugin(terrarium_plugin
   PLUGIN_CODE Trrm
   IS_SYNTH TRUE
   NEEDS_MIDI_INPUT FALSE
-  NEEDS_MIDI_OUTPUT FALSE
+  NEEDS_MIDI_OUTPUT TRUE  # visitors' notes to the DAW
   EDITOR_WANTS_KEYBOARD_FOCUS TRUE
   NEEDS_WEB_BROWSER TRUE
   NEEDS_WEBVIEW2 TRUE
@@ -59,7 +59,7 @@ if(MSVC)
   target_compile_options(terrarium_plugin PRIVATE /utf-8)  # the sources are UTF-8, not the system codepage
 endif()
 target_link_libraries(terrarium_plugin
-  PRIVATE terrarium_core juce::juce_audio_utils juce::juce_gui_extra
+  PRIVATE terrarium_core juce::juce_audio_utils juce::juce_audio_devices juce::juce_gui_extra
   PUBLIC juce::juce_recommended_config_flags juce::juce_recommended_lto_flags juce::juce_recommended_warning_flags)
 
 # ---------- the resources, staged once and copied into each bundle ----------

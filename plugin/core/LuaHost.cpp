@@ -115,6 +115,32 @@ int LuaHost::l_storage_get(lua_State* L) {
     return 1;
 }
 
+int LuaHost::l_midi_ports(lua_State* L) {
+    auto* h = self(L);
+    lua_createtable(L, (int)h->midiPorts.size(), 0);
+    for (size_t i = 0; i < h->midiPorts.size() && i < 16; ++i) {
+        lua_pushstring(L, h->midiPorts[i].c_str());
+        lua_rawseti(L, -2, (lua_Integer)i + 1);
+    }
+    return 1;
+}
+
+// midi_send(port, bytes...): stamped with util.time(), as engine commands are
+int LuaHost::l_midi_send(lua_State* L) {
+    MidiEvent e;
+    e.port = (int)luaL_checkinteger(L, 1);
+    int n = lua_gettop(L) - 1;
+    e.size = n < 0 ? 0 : n < 3 ? n : 3;
+    for (int i = 0; i < e.size && i < 3; ++i) e.bytes[i] = (unsigned char)((int)luaL_checknumber(L, i + 2) & 0xff);
+    lua_getglobal(L, "util");
+    lua_getfield(L, -1, "time");
+    if (lua_pcall(L, 0, 1, 0) == LUA_OK) e.time = lua_tonumber(L, -1);
+    lua_pop(L, 2);
+    auto* h = self(L);
+    if (h->cb_.midi && e.size > 0) h->cb_.midi(e);
+    return 0;
+}
+
 int LuaHost::l_storage_set(lua_State* L) {
     self(L)->storage[luaL_checkstring(L, 1)] = luaL_checkstring(L, 2);
     return 0;
@@ -143,7 +169,8 @@ bool LuaHost::boot(const std::string& nornsLua, const std::string& scriptDir, co
     static const luaL_Reg bridge[] = {
         {"engine", l_engine},       {"engine_name", l_engine_name}, {"log", l_log},
         {"error", l_error},         {"os_capture", l_os_capture},   {"nb", l_nb},
-        {"storage_get", l_storage_get}, {"storage_set", l_storage_set}, {nullptr, nullptr},
+        {"storage_get", l_storage_get}, {"storage_set", l_storage_set}, {"midi_ports", l_midi_ports},
+        {"midi_send", l_midi_send},     {nullptr, nullptr},
     };
     luaL_newlib(L_, bridge);
     lua_setglobal(L_, "js_bridge");

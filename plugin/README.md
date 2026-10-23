@@ -1,10 +1,11 @@
 # terrarium, the plugin
 
+For playing it, see [the plugin's manual](../doc/PLUGIN-MANUAL.md). This is for building it.
+
 terrarium as a VST3 / AU instrument and a standalone app: the same Lua, the same Mutable
 Instruments code, in a DAW. The plan and where it stands are in [doc/PLUGIN.md](../doc/PLUGIN.md).
 **Phases 2 and 3:** the script runs and follows the host's tempo and beat, and every part of
-the jar plays: the whole engine, as `lib/Engine_Terrarium.sc` has it. Visitors are silent until
-the plugin has its MIDI out and sidechain input.
+the jar plays: the whole engine, as `lib/Engine_Terrarium.sc` has it, visitors included.
 
 ## What's here
 
@@ -83,6 +84,20 @@ transport running, saves and restores its state, and checks it made sound. CI al
   hands it over with the command; the old one fades out and goes back to be freed there. The
   audio thread allocates nothing.
 - **State.** The params, saved with the project as a PSET (what `params:write` stores).
+- **Visitors** send their notes out over MIDI and let the plugin's input in, as on a norns
+  (a synth over USB, its sound back through the input). Pick the port with hold K2 + E2 on the
+  soil (or `visitors midi out` in PARAMS):
+  - **1: DAW (plugin MIDI out)**: the plugin's own MIDI output, for a host that routes an
+    instrument's MIDI to another track (Reason, Bitwig, Reaper, Cubase; Logic doesn't, Live is
+    worth trying);
+  - **2 and on: the system's MIDI outputs**, which the plugin opens itself: a hardware synth, or a
+    virtual port another track listens to (loopMIDI on Windows, the IAC Driver on macOS). Works in
+    any host. The list is read when the plugin loads.
+
+  The sound comes back through the plugin's side chain, "Visitors" (an aux input: Logic,
+  Reason and Live offer it as the instrument's side chain): route the synth's track, or an
+  input with the hardware synth, into it. Each note opens it for a moment, and visitors' first
+  macro lets some through between notes.
 - **The face's settings** (the shell, the screen's color, the drawer) are kept with the project, and
   its fonts come in the bundle (a DAW may be offline). The plugin's icon is the jar
   (`doc/img/icon-touch.svg`).
@@ -106,5 +121,4 @@ transport running, saves and restores its state, and checks it made sound. CI al
 
 - A key or encoder that plays a note (K3's gestures) is heard 0.1 s late: its command is
   stamped with Lua's time, which runs ahead.
-- No MIDI out or sidechain yet (visitors), see doc/PLUGIN.md.
 - macOS: copying the resources into the bundle after JUCE builds it may need re-signing.

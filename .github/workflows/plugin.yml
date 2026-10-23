@@ -83,11 +83,17 @@ jobs:
           "$r" --script . --quiet --seconds 25 --stopped-between 8 16 --stop-with-transport --out stop.wav \
             | tee stop.txt
           grep -q ': 0 notes meanwhile' stop.txt
+          # visitors: notes out to the DAW's MIDI port, the input let in
+          "$r" --script . --quiet --seconds 15 --midi-ports "DAW,device" --input-tone \
+            --lua "params:set('voice_kind', 4)" --lua "params:set('visitors_midi', 2)" --out visitors.wav | tee v.txt
+          grep -qE 'MIDI: [1-9][0-9]* messages to the DAW' v.txt
 
       - name: The plugin plays, loaded like a DAW
         run: |
           run() { if [[ $RUNNER_OS == Linux ]]; then xvfb-run -a "$@"; else "$@"; fi; }
           run "${{ matrix.host_test }}" "${{ matrix.vst3 }}" 20
+          # visitors: the side chain on, the soil on visitors (through the state), notes out of its MIDI
+          run "${{ matrix.host_test }}" "${{ matrix.vst3 }}" 15 --visitors
 
       - name: pluginval
         if: runner.os == 'Linux'

@@ -97,6 +97,11 @@ Hosted, the page never scrolls: the device and its buttons zoom down to fit the 
 `fonts/` has the page's three fonts (OFL), for a host that may be offline: swap the Google Fonts
 links for `fonts/fonts.css` (terrarium's plugin does it when it stages the page).
 
+A host can give the script MIDI out: `js_bridge.midi_ports()` returns the port names
+`midi.vports` shows (up to 16), and a device from `midi.connect(port)` sends its `note_on`,
+`note_off`, `cc`, `pitchbend`, `program_change` and `send` through `js_bridge.midi_send(port,
+bytes...)`. Without them every port is "none" and sending is silent (as in the browser).
+
 `lib/norns.lua` also has `norns_web.set_running(on)`, for a host with a transport: stopped, the
 clock routines wait (the metros, and so the screen, go on); started again, a routine waiting on
 `clock.sync` lands on its next beat.

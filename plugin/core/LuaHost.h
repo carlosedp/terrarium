@@ -8,6 +8,7 @@
 #include <functional>
 #include <map>
 #include <string>
+#include <vector>
 
 #include "Commands.h"
 
@@ -20,6 +21,7 @@ public:
     struct Callbacks {
         std::function<void(const Command&)> engine;            // an engine command, stamped
         std::function<void(const std::string&, bool)> log;      // a line of output; true: an error
+        std::function<void(const MidiEvent&)> midi;             // a MIDI message, stamped
     };
 
     explicit LuaHost(Callbacks cb);
@@ -62,6 +64,8 @@ public:
 
     // what params:write() kept (PSETs), saved with the plugin's state
     std::map<std::string, std::string> storage;
+    // the MIDI ports norns' midi.vports shows (up to 16), set before boot
+    std::vector<std::string> midiPorts;
 
 private:
     lua_State* L_ = nullptr;
@@ -78,6 +82,8 @@ private:
     static int l_nb(lua_State* L);
     static int l_storage_get(lua_State* L);
     static int l_storage_set(lua_State* L);
+    static int l_midi_ports(lua_State* L);
+    static int l_midi_send(lua_State* L);
 };
 
 }  // namespace terrarium

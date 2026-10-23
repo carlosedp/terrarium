@@ -6,7 +6,9 @@ A small world of Mutable Instruments for [monome norns](https://monome.org/docs/
 
 **[Read the manual](doc/MANUAL.md)** for how to play it (also as a [PDF](doc/terrarium-manual.pdf)),
 or **[try it in your browser](https://carlosedp.github.io/terrarium/)**, phones included: the real
-script, playing the real Mutable Instruments code.
+script, playing the real Mutable Instruments code. It also comes as a **VST3 / AU plugin** for your
+DAW, on its tempo and automation: see [the plugin's manual](doc/PLUGIN-MANUAL.md) (and
+[plugin/](plugin/README.md) for building it).
 
 The patch is a landscape. Five parts each draw one piece of the scene and play one part of
 the sound. Swap a module and that piece of the scene changes; turn a macro and the scene moves

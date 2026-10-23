@@ -56,7 +56,15 @@ bool Terrarium::boot(std::string& err) {
         [this](const std::string& s, bool error) {
             if (onLog) onLog(s, error);
         },
+        [this](const MidiEvent& e) {
+            if (e.port == dawPort_) {
+                if (!midiQueue_->push(e) && onLog) onLog("MIDI queue full, a message was dropped", true);
+            } else if (onMidiDevice) {
+                onMidiDevice(e, std::max(0.0, e.time - audioTime_.load(std::memory_order_acquire)));
+            }
+        },
     });
+    host_->midiPorts = midiPorts_;
     if (!host_->boot(paths_.nornsLua, paths_.script, paths_.name)) {
         err = "the script didn't start (see the log)";
         return false;
@@ -131,13 +139,29 @@ void Terrarium::renderBlock() {
     }
     engine_.render(bufL_, bufR_, inL, inR);
     out_.push(bufL_, bufR_, BLOCK);
+    // the host's MIDI out: what's due by the end of this block, where this block starts sounding
+    MidiEvent m;
+    while (npendingMidi_ < (int)pendingMidi_.size() && midiQueue_->pop(m)) pendingMidi_[npendingMidi_++] = m;
+    for (int i = 0; i < npendingMidi_;) {
+        if (pendingMidi_[i].time < end) {
+            if (midiOut_ && midiOut_->count < (int)(sizeof(midiOut_->events) / sizeof(midiOut_->events[0]))) {
+                auto& ev = midiOut_->events[midiOut_->count++];
+                ev.offset = hostPos_;
+                ev.size = pendingMidi_[i].size;
+                std::memcpy(ev.bytes, pendingMidi_[i].bytes, sizeof(ev.bytes));
+            }
+            pendingMidi_[i] = pendingMidi_[--npendingMidi_];
+        } else ++i;
+    }
     t_ = end;
     audioTime_.store(t_, std::memory_order_release);
 }
 
 void Terrarium::process(float* left, float* right, int n, const HostTime& host, bool offline, const float* inL,
-                        const float* inR) {
+                        const float* inR, MidiOut* midi) {
     offline_ = offline;
+    midiOut_ = midi;
+    if (midi) midi->count = 0;
     follow(host);
     // the input, converted to 48 kHz, waits in a ring for the engine's blocks
     static const float silence[512] = {};
@@ -155,13 +179,20 @@ void Terrarium::process(float* left, float* right, int n, const HostTime& host, 
     // the output: the engine's blocks, converted to the host's rate as the host asks for them
     for (int i = 0; i < n;) {
         i += out_.pull(left + i, right + i, n - i);
+        hostPos_ = std::min(i, n - 1);
         if (i < n) renderBlock();
     }
+    midiOut_ = nullptr;
     // a loud moment from the voices shouldn't hit the host past full scale
     for (int i = 0; i < n; ++i) {
         left[i] = std::tanh(left[i] * 0.75f);
         right[i] = std::tanh(right[i] * 0.75f);
     }
+}
+
+void Terrarium::setMidiPorts(std::vector<std::string> names, int dawPort) {
+    midiPorts_ = std::move(names);
+    dawPort_ = dawPort;
 }
 
 void Terrarium::setStopWithTransport(bool on) { stopWithTransport_.store(on, std::memory_order_relaxed); }

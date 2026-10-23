@@ -75,7 +75,9 @@ lands on the grid, not on the UI timer's jitter. Screen frames go to the UI afte
    and MIDI out for visitors. *The engine is done on the `plugin` branch: every SynthDef of the
    .sc (voices, pond, fog, clouds, fireflies, mountains, aurora, roots, the tape), module swaps
    built off the audio thread, tested by rendering every module and 57 swaps in 30 s (clean
-   under AddressSanitizer). Visitors' MIDI out and sidechain input are next.*
+   under AddressSanitizer). Visitors too: MIDI out to the DAW (port 1) or to any system MIDI
+   output the plugin opens itself (a synth, loopMIDI, the IAC Driver), each note on its beat, and
+   the sound back through a "Visitors" side chain.*
 4. **UI and automation:** norns-web's page as the editor, the drawer with map slots, state in the
    project. *Pulled ahead of phase 3, on the `plugin` branch: the page is the face
    (norns-web's hosted mode), the ten macros and 8 map slots named after what they follow, both
