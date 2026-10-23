@@ -38,7 +38,7 @@ public:
     bool hasEditor() const override { return true; }
 
     const juce::String getName() const override { return "terrarium"; }
-    bool acceptsMidi() const override { return false; }
+    bool acceptsMidi() const override { return true; }   // Live wants an instrument to take MIDI; it's ignored
     bool producesMidi() const override { return true; }  // visitors' notes, on its first MIDI port
     double getTailLengthSeconds() const override { return 0; }
 

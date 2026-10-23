@@ -156,7 +156,7 @@ through the plugin's **side chain**.
 E2):
 
 - **1: DAW (plugin MIDI out):** the plugin's own MIDI output, for a DAW that passes an
-  instrument's MIDI on to another track.
+  instrument's MIDI on to another track (Reason, Bitwig, Reaper, Cubase; not Live or Logic).
 - **2 and on:** your computer's MIDI outputs, which terrarium opens itself: a hardware synth, or a
   virtual MIDI port another track listens to (**loopMIDI** on Windows, the **IAC Driver** on
   macOS). This works in any DAW. The list is read when the plugin loads; connect a new device,
@@ -171,16 +171,15 @@ it for a moment; **E2 (opening)** lets some through between notes, **E3 (length)
 each note lasts. Mute the synth's own track (or set its output to the side chain only), or you'll
 hear it dry under the jar's version.
 
-<!-- To confirm in each DAW: the DAW-port routes (Live's MIDI From a plugin track, Reason's
-     MIDI out on the rack) and Live's instrument side chain. The virtual-port routes are sure. -->
+<!-- To confirm: Reason's route for 1: DAW, and Live's instrument side chain. Live takes no MIDI
+     out of a VST3 plugin (tested on Windows, Live 12); the virtual-port routes are sure. -->
 
 ### In Ableton Live
 
-- **The notes:** make a MIDI track with the synth, and try setting its **MIDI From** to
-  terrarium's track, with terrarium on **1: DAW**. If Live doesn't offer terrarium there, use a
-  virtual port, which always works: create one with loopMIDI (Windows) or the IAC Driver (macOS,
-  in Audio MIDI Setup), pick it in terrarium (hold K2 + E2), and set the synth track's **MIDI
-  From** to that port, with its monitor on **In**.
+- **The notes:** use a virtual port. Live doesn't take MIDI out of VST3 plugins, so **1: DAW**
+  doesn't reach other tracks there. Create a port with **loopMIDI** (Windows) or the **IAC Driver**
+  (macOS, in Audio MIDI Setup), pick it in terrarium (hold K2 + E2), and make a MIDI track with the
+  synth, its **MIDI From** set to that port and its monitor on **In**.
 - **The sound:** open terrarium's device, show its **Sidechain** section, and pick the synth's
   track as the source.
 

@@ -93,8 +93,8 @@ transport running, saves and restores its state, and checks it made sound. CI al
   (a synth over USB, its sound back through the input). Pick the port with hold K2 + E2 on the
   soil (or `visitors midi out` in PARAMS):
   - **1: DAW (plugin MIDI out)**: the plugin's own MIDI output, for a host that routes an
-    instrument's MIDI to another track (Reason, Bitwig, Reaper, Cubase; Logic doesn't, Live is
-    worth trying);
+    instrument's MIDI to another track (Reason, Bitwig, Reaper, Cubase; not Logic, and not Live,
+    which takes no MIDI out of VST3 plugins);
   - **2 and on: the system's MIDI outputs**, which the plugin opens itself: a hardware synth, or a
     virtual port another track listens to (loopMIDI on Windows, the IAC Driver on macOS). Works in
     any host. The list is read when the plugin loads.

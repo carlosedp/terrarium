@@ -52,8 +52,13 @@ int main(int argc, char** argv) {
         std::fprintf(stderr, "can't open it: %s\n", err.toRawUTF8());
         return 1;
     }
-    std::printf("%s (%s), %d outputs\n", plugin->getName().toRawUTF8(), found[0]->pluginFormatName.toRawUTF8(),
-                plugin->getTotalNumOutputChannels());
+    std::printf("%s %s (%s), %d outputs, MIDI in: %s, MIDI out: %s\n", plugin->getName().toRawUTF8(),
+                found[0]->version.toRawUTF8(), found[0]->pluginFormatName.toRawUTF8(), plugin->getTotalNumOutputChannels(),
+                plugin->acceptsMidi() ? "yes" : "no", plugin->producesMidi() ? "yes" : "no");
+    if (!plugin->acceptsMidi()) {
+        std::fprintf(stderr, "FAIL: no MIDI input; Ableton Live won't load an instrument without one\n");
+        return 1;
+    }
 
     // visitors: the side chain on, and the soil switched in the saved params (a PSET, "id\tvalue")
     if (visitors) {
@@ -151,6 +156,10 @@ int main(int argc, char** argv) {
     juce::StringArray names;
     for (auto* p : plugin->getParameters()) names.add(p->getName(64));
     std::printf("%d parameters: %s\n", names.size(), names.joinIntoString(" | ").toRawUTF8());
+    if (names.size() > 40) {
+        std::fprintf(stderr, "FAIL: %d parameters; the host's list should stay short\n", names.size());
+        return 1;
+    }
 
     // the state round trip a DAW does when it saves a project
     juce::MemoryBlock state;

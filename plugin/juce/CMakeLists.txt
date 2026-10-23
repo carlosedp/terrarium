@@ -40,7 +40,7 @@ juce_add_plugin(terrarium_plugin
   PLUGIN_MANUFACTURER_CODE Vfmd
   PLUGIN_CODE Trrm
   IS_SYNTH TRUE
-  NEEDS_MIDI_INPUT FALSE
+  NEEDS_MIDI_INPUT TRUE  # Live loads a VST3 instrument only with an event input (terrarium ignores it)
   NEEDS_MIDI_OUTPUT TRUE  # visitors' notes to the DAW
   EDITOR_WANTS_KEYBOARD_FOCUS TRUE
   NEEDS_WEB_BROWSER TRUE
@@ -54,7 +54,10 @@ target_sources(terrarium_plugin PRIVATE PluginProcessor.cpp PluginEditor.cpp)
 # the DLL backend, which wants a loader DLL at run time)
 target_compile_definitions(terrarium_plugin PUBLIC
   JUCE_WEB_BROWSER=1 JUCE_USE_WIN_WEBVIEW2_WITH_STATIC_LINKING=1
-  JUCE_USE_CURL=0 JUCE_VST3_CAN_REPLACE_VST2=0 JUCE_DISPLAY_SPLASH_SCREEN=0)
+  JUCE_USE_CURL=0 JUCE_VST3_CAN_REPLACE_VST2=0 JUCE_DISPLAY_SPLASH_SCREEN=0
+  # the MIDI input is there for Live (see NEEDS_MIDI_INPUT); without this, JUCE's VST3 adds 2048
+  # "MIDI CC" parameters to the host's list
+  JUCE_VST3_EMULATE_MIDI_CC_WITH_PARAMETERS=0)
 if(MSVC)
   target_compile_options(terrarium_plugin PRIVATE /utf-8)  # the sources are UTF-8, not the system codepage
 endif()
