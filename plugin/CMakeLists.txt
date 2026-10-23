@@ -15,7 +15,7 @@ if(APPLE AND NOT CMAKE_OSX_ARCHITECTURES)
   set(CMAKE_OSX_ARCHITECTURES "x86_64;arm64" CACHE STRING "macOS architectures")
 endif()
 set(CMAKE_OSX_DEPLOYMENT_TARGET 10.13 CACHE STRING "")
-project(terrarium VERSION 0.1.0 LANGUAGES C CXX)
+project(terrarium VERSION 1.0.0 LANGUAGES C CXX)
 
 option(TERRARIUM_PLUGIN "build the JUCE plugin (VST3, AU, standalone)" ON)
 set(MI_UGENS_DIR "" CACHE PATH "mi-UGens-native/ folder (default: download the release's)")
