@@ -34,6 +34,7 @@ public:
     // Lua's clocks and metros up to time t (seconds); true if the screen changed
     bool tick(double t);
     void setTempo(double bpm);
+    void setRunning(bool on);  // false: the clock routines wait (a stopped transport)
     void enc(int n, int d);
     void key(int n, int z);
     void repl(const std::string& code);

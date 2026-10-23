@@ -48,6 +48,24 @@ juce::WebBrowserComponent::Options TerrariumEditor::options() {
                                     .withBackgroundColour(NIGHT))
         .withResourceProvider([this](const juce::String& url) { return resource(url); })
         .withNativeIntegrationEnabled()
+        // the page's settings, kept with the project, and the plugin's option for the Look menu
+        .withInitialisationData("prefs", prefsVar())
+        .withInitialisationData("options", optionsVar())
+        .withNativeFunction("prefs_set",
+                            [this](Args a, Done done) {
+                                if (a.size() >= 2) proc_.uiPrefs[a[0].toString().toStdString()] = a[1].toString().toStdString();
+                                done(true);
+                            })
+        .withNativeFunction("set_option",
+                            [this](Args a, Done done) {
+                                if (a.size() >= 2 && a[0].toString() == "stop_with_transport") {
+                                    auto* p = proc_.stopWithTransport;
+                                    p->beginChangeGesture();
+                                    p->setValueNotifyingHost((bool)a[1] ? 1.0f : 0.0f);
+                                    p->endChangeGesture();
+                                }
+                                done(true);
+                            })
         .withNativeFunction("enc",
                             [core](Args a, Done done) {
                                 if (auto* c = core()) c->enc(argInt(a, 0), argInt(a, 1));
@@ -89,6 +107,20 @@ juce::WebBrowserComponent::Options TerrariumEditor::options() {
             setExtraWidth(argInt(a, 0));
             done(true);
         });
+}
+
+juce::var TerrariumEditor::prefsVar() {
+    auto* o = new juce::DynamicObject();
+    for (auto& [k, v] : proc_.uiPrefs) o->setProperty(juce::String(k), juce::String(v));
+    return juce::var(o);
+}
+
+juce::var TerrariumEditor::optionsVar() {
+    auto* o = new juce::DynamicObject();
+    o->setProperty("id", "stop_with_transport");
+    o->setProperty("label", "stop with the DAW's transport");
+    o->setProperty("value", proc_.stopWithTransport->get());
+    return juce::Array<juce::var>{juce::var(o)};
 }
 
 // the page's files, from Resources/web/ (and nothing outside it)

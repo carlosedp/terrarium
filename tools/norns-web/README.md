@@ -89,8 +89,17 @@ drawer stay.
 | `param_map(index)`, `param_maps()`    | optional: bind a param to one of the plugin's host-automation slots (or free it), and `{ index: slot }`; with both, PARAMS gets a **map** button per param |
 | `set_extra_height(px)`                | optional: the drawer opened (or closed, 0): the plugin grows its window taller by it, so the device stays in view |
 | `set_extra_width(px)`                 | optional, instead: the drawer opens at the right (a tab along the edge, PARAMS above the log) and the plugin grows its window wider by it |
+| `prefs_set(key, value)`               | optional: the page's own settings (the look, the drawer) go to the plugin, to keep with the project; it passes them back in as `initialisationData` `prefs` (an object) |
+| `set_option(id, on)`                  | optional: the plugin's options, passed in as `initialisationData` `options` (`[{ id, label, value }]`), become checkboxes in Look |
 
 Hosted, the page never scrolls: the device and its buttons zoom down to fit the window's height.
+
+`fonts/` has the page's three fonts (OFL), for a host that may be offline: swap the Google Fonts
+links for `fonts/fonts.css` (terrarium's plugin does it when it stages the page).
+
+`lib/norns.lua` also has `norns_web.set_running(on)`, for a host with a transport: stopped, the
+clock routines wait (the metros, and so the screen, go on); started again, a routine waiting on
+`clock.sync` lands on its next beat.
 
 | plugin → page (events) | carries                                                        |
 | ---------------------- | -------------------------------------------------------------- |

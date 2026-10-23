@@ -27,6 +27,7 @@
 #include "Commands.h"
 #include "Engine.h"
 #include "LuaHost.h"
+#include "Resampler.h"
 
 namespace terrarium {
 
@@ -41,6 +42,7 @@ class Terrarium {
 public:
     static constexpr double LOOKAHEAD = 0.1;  // seconds Lua runs ahead of the audio
     static constexpr double TICK = 1.0 / 60;  // how often Lua ticks when rendering offline
+    static constexpr double ENGINE_SR = 48000;  // the engine's rate, whatever the host's (a norns')
 
     struct Paths {
         std::string nornsLua;  // norns-web's norns.lua
@@ -62,6 +64,8 @@ public:
     // in: the plugin's input (visitors hear it), or null
     void process(float* left, float* right, int n, const HostTime& host, bool offline = false,
                  const float* inL = nullptr, const float* inR = nullptr);
+    // on: while the host's transport is stopped, Lua's clocks wait (no weather); off, they run on
+    void setStopWithTransport(bool on);
 
     // the message thread's part
     bool tick();  // true if the screen changed
@@ -98,7 +102,8 @@ private:
     double sr_ = 48000;
     double t_ = 0;               // the time of the next block to render
     float bufL_[BLOCK], bufR_[BLOCK];
-    int bufPos_ = BLOCK;         // samples of buf already handed out
+    Resampler out_, in_;         // 48 kHz to the host's rate, and the host's input to 48 kHz
+    bool offline_ = false;
     std::vector<Command> pending_ = std::vector<Command>(1024);
     int npending_ = 0;
     double nextOfflineTick_ = 0;
@@ -108,6 +113,8 @@ private:
     // shared
     std::atomic<double> audioTime_{0};
     std::atomic<double> tempo_{120};
+    std::atomic<bool> stopWithTransport_{false}, running_{true};
+    bool luaRunning_ = true;
     double luaTime_ = 0, luaTempo_ = 0;  // Lua's side
 
     void renderBlock();

@@ -50,6 +50,34 @@
   const side = hosted && hostFunctions.includes("set_extra_width");
   if (side) document.body.classList.add("side-drawer");
 
+  // The page's own settings (the look, the drawer): in the browser's storage, or, hosted by a
+  // plugin that passes them in (initialisationData "prefs") and takes them back (prefs_set),
+  // with the plugin, so they're saved in the project. Options the plugin offers
+  // (initialisationData "options": [{ id, label, value }], set_option(id, on)) go in Look.
+  const initData = (hosted && window.__JUCE__.initialisationData) || {};
+  const first = (v) => (Array.isArray(v) ? v[0] : v);
+  const hostPrefs = hosted && hostFunctions.includes("prefs_set") ? first(initData.prefs) || {} : null;
+  const prefs = {
+    get(k) {
+      if (hostPrefs) return k in hostPrefs ? String(hostPrefs[k]) : null;
+      try {
+        return localStorage.getItem(k);
+      } catch (e) {
+        return null;
+      }
+    },
+    set(k, v) {
+      if (hostPrefs) {
+        hostPrefs[k] = String(v);
+        native("prefs_set", k, String(v));
+        return;
+      }
+      try {
+        localStorage.setItem(k, v);
+      } catch (e) {}
+    },
+  };
+
 
   // ---------- under the hood: a drawer at the bottom of the window, closed until asked for ----------
   // Open, it shares the window with the device (opening it scrolls the device into view above it);
@@ -65,13 +93,13 @@
     document.documentElement.style.setProperty(side ? "--drawer-w" : "--drawer-h", h + "px");
     if (save)
       try {
-        localStorage.setItem(HOOD_H, h);
+        prefs.set(HOOD_H, h);
       } catch (e) {}
   };
   try {
-    const h = +localStorage.getItem(HOOD_H);
+    const h = +prefs.get(HOOD_H);
     if (h) setDrawer(h);
-    hood.open = localStorage.getItem(HOOD) === "open";
+    hood.open = prefs.get(HOOD) === "open";
   } catch (e) {}
   // the page keeps room for the drawer at its bottom, so nothing hides behind it
   // A hosting plugin that offers set_extra_height grows its window by the open drawer's
@@ -109,7 +137,7 @@
     }
     restoring = false;
     try {
-      localStorage.setItem(HOOD, hood.open ? "open" : "closed");
+      prefs.set(HOOD, hood.open ? "open" : "closed");
     } catch (e) {}
   });
   {
@@ -199,7 +227,7 @@
   // ---------- view: the shell (norns | shield) and the screen's color, remembered ----------
   const view = (() => {
     try {
-      return JSON.parse(localStorage.getItem("norns-web:view")) || {};
+      return JSON.parse(prefs.get("norns-web:view")) || {};
     } catch (e) {
       return {};
     }
@@ -213,7 +241,7 @@
     $("#v-screen").value = view.screen;
     setTint(view.screen);
     try {
-      localStorage.setItem("norns-web:view", JSON.stringify(view));
+      prefs.set("norns-web:view", JSON.stringify(view));
     } catch (e) {}
   }
   $("#v-shell").addEventListener("change", (e) => {
@@ -225,6 +253,17 @@
     applyView();
   });
   applyView();
+  // a hosting plugin's options, as checkboxes in Look
+  for (const o of (hosted && hostFunctions.includes("set_option") && first(initData.options)) || []) {
+    const label = document.createElement("label");
+    label.className = "option";
+    const box = document.createElement("input");
+    box.type = "checkbox";
+    box.checked = !!o.value;
+    box.addEventListener("change", () => native("set_option", o.id, box.checked));
+    label.append(box, " " + o.label);
+    document.querySelector(".menu .pop").append(label);
+  }
   // the Look menu closes when you click elsewhere
   document.addEventListener("click", (e) => {
     document.querySelectorAll("details.menu[open]").forEach((d) => {

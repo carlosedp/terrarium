@@ -3,7 +3,8 @@
 // plugin instead.
 //
 //   page -> plugin   enc(n, d), key(n, z), params(), param_delta(i or id, d), repl(code),
-//                    pset(action, slot), param_map(i), param_maps(), set_extra_width(px)
+//                    pset(action, slot), param_map(i), param_maps(), set_extra_width(px),
+//                    prefs_set(key, value), set_option(id, on)
 //   plugin -> page   "frame": the screen, 128x64 letters "A".."P"; "log": { text, kind }
 //
 // The page and its files are served from the bundle's Resources/web/ (stage.cmake puts
@@ -36,4 +37,6 @@ private:
     std::optional<juce::WebBrowserComponent::Resource> resource(const juce::String& url);
     juce::WebBrowserComponent::Options options();
     void setExtraWidth(int px);
+    juce::var prefsVar();
+    juce::var optionsVar();
 };

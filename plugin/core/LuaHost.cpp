@@ -186,6 +186,12 @@ void LuaHost::setTempo(double bpm) {
     call("set_tempo", 1, 0);
 }
 
+void LuaHost::setRunning(bool on) {
+    if (!L_) return;
+    lua_pushboolean(L_, on);
+    call("set_running", 1, 0);
+}
+
 void LuaHost::enc(int n, int d) {
     if (!L_) return;
     lua_pushinteger(L_, n);

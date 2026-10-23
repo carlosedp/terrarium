@@ -75,6 +75,14 @@ jobs:
             args+=(--at "$t" "$c"); i=$((i + 1))
           done
           "$r" --script . --quiet --seconds 20 --out swaps.wav "${args[@]}"
+          # the engine runs at 48 kHz at any host rate: the same level at 44.1, 48 and 96 kHz
+          for sr in 44100 48000 96000; do
+            "$r" --script . --quiet --seconds 15 --sr $sr --out sr.wav | grep -o 'rms [0-9.]*'
+          done | sort -u | awk 'END { if (NR != 1) { print "levels differ by rate"; exit 1 } }'
+          # stop with the transport: no notes while it's stopped
+          "$r" --script . --quiet --seconds 25 --stopped-between 8 16 --stop-with-transport --out stop.wav \
+            | tee stop.txt
+          grep -q ': 0 notes meanwhile' stop.txt
 
       - name: The plugin plays, loaded like a DAW
         run: |

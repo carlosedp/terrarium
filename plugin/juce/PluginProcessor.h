@@ -11,6 +11,7 @@
 #include <juce_audio_processors/juce_audio_processors.h>
 
 #include <array>
+#include <map>
 #include <mutex>
 #include <vector>
 
@@ -56,6 +57,11 @@ public:
         bool error;
     };
     std::vector<LogLine> logSince(size_t& seen);
+
+    // the face's own settings (its look, the drawer), kept with the project
+    std::map<std::string, std::string> uiPrefs;
+    // "stop with the DAW's transport": no weather while the host's transport is stopped
+    juce::AudioParameterBool* stopWithTransport = nullptr;
 
     // automation slots: bind a param (by index) to a free slot, or free it; 0 if none was free
     int toggleMap(int paramIndex);

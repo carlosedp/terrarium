@@ -63,6 +63,15 @@ transport running, saves and restores its state, and checks it made sound. CI al
   lock-free queue until the audio gets there, so notes land on their 64-sample block however
   the message thread is doing. Lua never runs on the audio thread, except when the host renders
   offline (a bounce), where nothing else would keep up.
+- **48 kHz inside.** The engine and Lua's clock run at 48 kHz whatever the host's rate, as a norns
+  does: Plaits and Rings change their envelopes and damping with the rate, so they'd sound
+  different at 88.2 or 96 kHz. The output, and the input visitors hear, go through a 64-tap
+  windowed-sinc resampler (`core/Resampler.h`; flat to 18 kHz, aliasing 71 dB down, 0.7 ms);
+  at 48 kHz it's skipped.
+- **The transport.** "stop with the DAW's transport" (a host parameter, off by default, also in the
+  face's Look menu): on, the weather stops while the transport is stopped (the clock routines
+  wait; tails ring out, the screen goes on) and comes back on the beat; off, the rain keeps
+  falling on its own, as on a norns.
 - **The host's beat.** With the transport playing, Lua's tempo is the host's, and when their beat
   phases drift apart (start, loop, seek, tempo change) Lua's time jumps forward to the host's.
   Only forward: a waiting clock routine would sit out a jump back.
@@ -74,6 +83,9 @@ transport running, saves and restores its state, and checks it made sound. CI al
   hands it over with the command; the old one fades out and goes back to be freed there. The
   audio thread allocates nothing.
 - **State.** The params, saved with the project as a PSET (what `params:write` stores).
+- **The face's settings** (the shell, the screen's color, the drawer) are kept with the project, and
+  its fonts come in the bundle (a DAW may be offline). The plugin's icon is the jar
+  (`doc/img/icon-touch.svg`).
 - **The face** is norns-web's page, the same one the browser shows, in a WebView (WebView2 on
   Windows, WebKit on macOS and Linux), served from the bundle's `Resources/web/`. It sees it's
   hosted and runs no Lua or sound of its own: it calls the plugin (see "In a plugin" in
@@ -89,5 +101,4 @@ transport running, saves and restores its state, and checks it made sound. CI al
 - A key or encoder that plays a note (K3's gestures) is heard 0.1 s late: its command is
   stamped with Lua's time, which runs ahead.
 - No MIDI out or sidechain yet (visitors), see doc/PLUGIN.md.
-- The face's fonts come from Google Fonts: offline, it falls back to the system's.
 - macOS: copying the resources into the bundle after JUCE builds it may need re-signing.

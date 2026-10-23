@@ -37,7 +37,8 @@ bool Terrarium::boot(std::string& err) {
     return true;
 }
 
-// with the audio stopped: what Lua has sent so far is run, then every slot is rebuilt at this rate
+// with the audio stopped: what Lua has sent so far is run, then every slot is rebuilt. The engine
+// runs at 48 kHz whatever the host's rate (as a norns does); the edges convert.
 void Terrarium::prepare(double sampleRate) {
     std::lock_guard<std::mutex> lock(lua_);
     sr_ = sampleRate;
@@ -45,8 +46,9 @@ void Terrarium::prepare(double sampleRate) {
     for (int i = 0; i < npending_; ++i) engine_.command(pending_[i]);
     npending_ = 0;
     while (queue_->pop(c)) engine_.command(c);
-    engine_.prepare(sampleRate);
-    bufPos_ = BLOCK;
+    engine_.prepare(ENGINE_SR);
+    out_.configure(ENGINE_SR, sampleRate);
+    in_.configure(sampleRate, ENGINE_SR);
     // the input is heard a block late: one block of silence first, so it never runs dry
     inRead_ = 0;
     inWrite_ = BLOCK;
@@ -57,19 +59,28 @@ void Terrarium::prepare(double sampleRate) {
 // ---------- the audio thread ----------
 
 void Terrarium::follow(const HostTime& host) {
+    // stopped with the transport: Lua's clock routines wait while the host's transport is stopped
+    running_.store(!(stopWithTransport_.load(std::memory_order_relaxed) && host.valid && !host.playing),
+                   std::memory_order_relaxed);
     if (!host.valid) return;
     if (host.bpm > 0) tempo_.store(host.bpm, std::memory_order_relaxed);
     if (!host.playing || host.bpm <= 0) return;
-    // where this host block starts, in Lua's time: the samples already rendered come first
-    double now = t_ - (BLOCK - bufPos_) / sr_;
+    // where this host block starts, in Lua's time: what's rendered and not yet out comes first
+    double now = t_ - (double)out_.pending() / ENGINE_SR;
     double beats = now * host.bpm / 60;
     double ahead = host.ppq - beats;
     ahead -= std::floor(ahead);  // how far the host's beat phase is ahead of Lua's, 0..1
     if (ahead > 0.002 && ahead < 0.998) t_ += ahead * 60 / host.bpm;
 }
 
+// one block of the engine, at 48 kHz, into the output's resampler
 void Terrarium::renderBlock() {
-    double end = t_ + BLOCK / sr_;
+    if (offline_ && t_ + LOOKAHEAD >= nextOfflineTick_) {
+        std::lock_guard<std::mutex> lock(lua_);
+        tickLocked(t_ + LOOKAHEAD);
+        nextOfflineTick_ = t_ + LOOKAHEAD + TICK;
+    }
+    double end = t_ + BLOCK / ENGINE_SR;
     // run what's due by the end of this block, in time order (they come mostly sorted)
     Command c;
     while (npending_ < (int)pending_.size() && queue_->pop(c)) pending_[npending_++] = c;
@@ -91,33 +102,32 @@ void Terrarium::renderBlock() {
         if (have) ++inRead_;
     }
     engine_.render(bufL_, bufR_, inL, inR);
+    out_.push(bufL_, bufR_, BLOCK);
     t_ = end;
     audioTime_.store(t_, std::memory_order_release);
 }
 
 void Terrarium::process(float* left, float* right, int n, const HostTime& host, bool offline, const float* inL,
                         const float* inR) {
+    offline_ = offline;
     follow(host);
-    size_t mask = inL_.size() - 1;
-    for (int i = 0; i < n && inWrite_ - inRead_ < inL_.size(); ++i, ++inWrite_) {
-        inL_[inWrite_ & mask] = inL ? inL[i] : 0.0f;
-        inR_[inWrite_ & mask] = inR ? inR[i] : (inL ? inL[i] : 0.0f);
-    }
-    for (int i = 0; i < n;) {
-        if (bufPos_ == BLOCK) {
-            if (offline && t_ + LOOKAHEAD >= nextOfflineTick_) {
-                std::lock_guard<std::mutex> lock(lua_);
-                tickLocked(t_ + LOOKAHEAD);
-                nextOfflineTick_ = t_ + LOOKAHEAD + TICK;
+    // the input, converted to 48 kHz, waits in a ring for the engine's blocks
+    static const float silence[512] = {};
+    for (int i = 0; i < n; i += 512) {
+        int k = std::min(512, n - i);
+        in_.push(inL ? inL + i : silence, inR ? inR + i : (inL ? inL + i : silence), k);
+        float l[1024], r[1024];
+        size_t mask = inL_.size() - 1;
+        for (int got; (got = in_.pull(l, r, 1024)) > 0;)
+            for (int j = 0; j < got && inWrite_ - inRead_ < inL_.size(); ++j, ++inWrite_) {
+                inL_[inWrite_ & mask] = l[j];
+                inR_[inWrite_ & mask] = r[j];
             }
-            renderBlock();
-            bufPos_ = 0;
-        }
-        int k = std::min(n - i, BLOCK - bufPos_);
-        std::memcpy(left + i, bufL_ + bufPos_, k * sizeof(float));
-        std::memcpy(right + i, bufR_ + bufPos_, k * sizeof(float));
-        bufPos_ += k;
-        i += k;
+    }
+    // the output: the engine's blocks, converted to the host's rate as the host asks for them
+    for (int i = 0; i < n;) {
+        i += out_.pull(left + i, right + i, n - i);
+        if (i < n) renderBlock();
     }
     // a loud moment from the voices shouldn't hit the host past full scale
     for (int i = 0; i < n; ++i) {
@@ -125,6 +135,8 @@ void Terrarium::process(float* left, float* right, int n, const HostTime& host, 
         right[i] = std::tanh(right[i] * 0.75f);
     }
 }
+
+void Terrarium::setStopWithTransport(bool on) { stopWithTransport_.store(on, std::memory_order_relaxed); }
 
 // ---------- the message thread ----------
 
@@ -134,6 +146,11 @@ void Terrarium::tickLocked(double t) {
     if (tempo != luaTempo_) {
         luaTempo_ = tempo;
         host_->setTempo(tempo);
+    }
+    bool running = running_.load(std::memory_order_relaxed);
+    if (running != luaRunning_) {
+        luaRunning_ = running;
+        host_->setRunning(running);
     }
     if (t < luaTime_) t = luaTime_;  // Lua's time never goes back
     luaTime_ = t;
@@ -194,11 +211,11 @@ void Terrarium::loadState(const std::map<std::string, std::string>& s) {
     if (!host_) return dflt
 
 std::string Terrarium::paramsJson() { WITH_LUA("[]"); return host_->paramsJson(); }
-void Terrarium::paramDelta(int index, double d) { WITH_LUA(); host_->paramDelta(index, d); }
-void Terrarium::paramDelta(const std::string& id, double d) { WITH_LUA(); host_->paramDelta(id, d); }
-void Terrarium::pset(const std::string& action, const std::string& slot) { WITH_LUA(); host_->pset(action, slot); }
+void Terrarium::paramDelta(int index, double d) { WITH_LUA(void()); host_->paramDelta(index, d); }
+void Terrarium::paramDelta(const std::string& id, double d) { WITH_LUA(void()); host_->paramDelta(id, d); }
+void Terrarium::pset(const std::string& action, const std::string& slot) { WITH_LUA(void()); host_->pset(action, slot); }
 bool Terrarium::getNorm(const std::string& id, double& out) { WITH_LUA(false); return host_->getNorm(id, out); }
-void Terrarium::setNorm(const std::string& id, double v) { WITH_LUA(); host_->setNorm(id, v); }
+void Terrarium::setNorm(const std::string& id, double v) { WITH_LUA(void()); host_->setNorm(id, v); }
 std::string Terrarium::paramId(int index) { WITH_LUA(""); return host_->paramId(index); }
 int Terrarium::paramIndex(const std::string& id) { WITH_LUA(0); return host_->paramIndex(id); }
 std::string Terrarium::paramName(const std::string& id) { WITH_LUA(""); return host_->paramName(id); }

@@ -9,6 +9,8 @@
 //     --seconds N     how long (default 20)
 //     --bpm N         the host's tempo (default 120)
 //     --stopped       the host's transport stopped (Lua's clock runs free)
+//     --stopped-between A B   the transport stops at A seconds and starts again at B
+//     --stop-with-transport   the plugin's setting: no weather while the transport is stopped
 //     --start BEATS   the host's position when it starts (default 0)
 //     --block N       the host's block size (default 512)
 //     --sr N          sample rate (default 48000)
@@ -71,7 +73,8 @@ int main(int argc, char** argv) {
     std::string script = ".", norns, mi = TERRARIUM_MI_DIR, out = "terrarium.wav";
     double seconds = 20, bpm = 120, start = 0;
     int block = 512, sr = 48000;
-    bool playing = true, quiet = false, checkParams = false;
+    bool playing = true, quiet = false, checkParams = false, stopWith = false;
+    double stopA = -1, stopB = -1;
     std::vector<std::string> lua;
     std::vector<std::pair<double, std::string>> at;
     for (int i = 1; i < argc; ++i) {
@@ -83,6 +86,10 @@ int main(int argc, char** argv) {
         else if (a == "--seconds") seconds = std::stod(next());
         else if (a == "--bpm") bpm = std::stod(next());
         else if (a == "--stopped") playing = false;
+        else if (a == "--stopped-between") {
+            stopA = std::stod(next());
+            stopB = std::stod(next());
+        } else if (a == "--stop-with-transport") stopWith = true;
         else if (a == "--start") start = std::stod(next());
         else if (a == "--block") block = std::stoi(next());
         else if (a == "--sr") sr = std::stoi(next());
@@ -120,6 +127,7 @@ int main(int argc, char** argv) {
         return 1;
     }
     t.prepare(sr);
+    t.setStopWithTransport(stopWith);
     for (auto& code : lua) t.repl(code);
 
     if (checkParams) {
@@ -160,7 +168,12 @@ int main(int argc, char** argv) {
     for (size_t pos = 0; pos < total; pos += block) {
         int n = (int)std::min<size_t>(block, total - pos);
         while (nextAt < at.size() && at[nextAt].first * sr <= (double)pos) t.repl(at[nextAt++].second);
-        host.ppq = start + (double)pos / sr * bpm / 60;
+        double secs = (double)pos / sr;
+        bool stopped = secs >= stopA && secs < stopB;
+        host.playing = playing && !stopped;
+        // stopped, the host's position holds; started again, it carries on from there
+        double played = stopA >= 0 && secs >= stopA ? stopA + std::max(0.0, secs - stopB) : secs;
+        host.ppq = start + played * bpm / 60;
         t.process(L.data() + pos, R.data() + pos, n, host, true);
     }
 
@@ -193,8 +206,15 @@ int main(int argc, char** argv) {
         std::printf("FAIL: %zu non-finite samples\n", bad);
         return 1;
     }
+    if (stopA >= 0) {
+        // the audio's time and Lua's line up within the lookahead; count by the audio's
+        int during = 0;
+        for (double n : notes)
+            if (n >= stopA + Terrarium::LOOKAHEAD + 0.2 && n < stopB) ++during;
+        std::printf("transport stopped %.1f..%.1f s: %d notes meanwhile\n", stopA, stopB, during);
+    }
     if (playing && notes.size() > 1)
         std::printf("on the host's grid: every note within %.2f ms of a 16th (%.2f ms = one block)\n",
-                    worst * 1000, 1000.0 * BLOCK / sr);
+                    worst * 1000, 1000.0 * BLOCK / Terrarium::ENGINE_SR);
     return errors ? 1 : 0;
 }

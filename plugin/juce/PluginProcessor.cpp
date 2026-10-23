@@ -34,6 +34,10 @@ TerrariumProcessor::TerrariumProcessor()
         slots_[(size_t)k] = new Slot(k + 1);
         addParameter(slots_[(size_t)k]);
     }
+    // off: the weather goes on when the host's transport stops, as a norns' does
+    stopWithTransport = new juce::AudioParameterBool(juce::ParameterID("stop_with_transport", 1),
+                                                     "stop with the DAW's transport", false);
+    addParameter(stopWithTransport);
     auto res = resources();
     core_ = std::make_unique<terrarium::Terrarium>(terrarium::Terrarium::Paths{
         res.getChildFile("norns-web/norns.lua").getFullPathName().toStdString(),
@@ -86,6 +90,7 @@ void TerrariumProcessor::processBlock(juce::AudioBuffer<float>& buffer, juce::Mi
         buffer.clear();
         return;
     }
+    core_->setStopWithTransport(stopWithTransport->get());
     terrarium::HostTime host;
     if (auto* ph = getPlayHead()) {
         if (auto pos = ph->getPosition()) {
@@ -183,6 +188,12 @@ void TerrariumProcessor::getStateInformation(juce::MemoryBlock& dest) {
         e->setAttribute("key", juce::String(k));
         e->addTextElement(juce::String(v));
     }
+    for (auto& [k, v] : uiPrefs) {
+        auto* e = xml.createNewChildElement("pref");
+        e->setAttribute("key", juce::String(k));
+        e->addTextElement(juce::String(v));
+    }
+    xml.setAttribute("stop_with_transport", stopWithTransport->get());
     for (int k = 0; k < SLOTS; ++k)
         if (!bound_[(size_t)k].empty()) {
             auto* e = xml.createNewChildElement("map");
@@ -200,6 +211,10 @@ void TerrariumProcessor::setStateInformation(const void* data, int size) {
     for (auto* e : xml->getChildWithTagNameIterator("store"))
         s[e->getStringAttribute("key").toStdString()] = e->getAllSubText().toStdString();
     core_->loadState(s);
+    uiPrefs.clear();
+    for (auto* e : xml->getChildWithTagNameIterator("pref"))
+        uiPrefs[e->getStringAttribute("key").toStdString()] = e->getAllSubText().toStdString();
+    *stopWithTransport = xml->getBoolAttribute("stop_with_transport", stopWithTransport->get());
     for (int k = 0; k < SLOTS; ++k) bind(k, "");
     for (auto* e : xml->getChildWithTagNameIterator("map")) {
         int k = e->getIntAttribute("slot") - 1;

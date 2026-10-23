@@ -383,6 +383,7 @@ end
 -- ---------- clock and metro (driven by norns_web.tick) ----------
 local now, tempo = 0, 120
 local routines, next_id = {}, 1
+local running = true -- false: the clock routines wait (a host's transport stopped); metros go on
 clock = {}
 function clock.run(f, ...)
   local args = table.pack(...)
@@ -440,7 +441,9 @@ local function run_clocks()
         local beats = math.max(v or 1, 1 / 64)
         local b = t / beat_sec
         r.wake = (math.floor(b / beats + 1e-6) + 1) * beats * beat_sec
+        r.sync = beats
       else
+        r.sync = nil
         r.wake = t + (v or 0)
         if r.wake < tick_now - 1 then r.wake = tick_now end -- don't try to catch up after a stall
       end
@@ -554,7 +557,7 @@ end
 
 function norns_web.tick(t)
   now = t
-  guarded(run_clocks)
+  if running then guarded(run_clocks) end
   guarded(run_metros)
   if dirty then
     dirty = false
@@ -582,3 +585,18 @@ end
 function norns_web.enc(n, d) if enc then guarded(enc, n, d) end end
 function norns_web.key(n, z) if key then guarded(key, n, z) end end
 function norns_web.set_tempo(t) tempo = t end
+-- a host's transport: stopped, the clock routines wait (the screen's metros go on); started
+-- again, one waiting on clock.sync lands on its next beat, one asleep wakes no earlier than now
+function norns_web.set_running(on)
+  if on == running then return end
+  running = on
+  if not on then return end
+  local beat_sec = 60 / tempo
+  for _, r in pairs(routines) do
+    if r.sync then
+      r.wake = math.max(r.wake, (math.floor(now / beat_sec / r.sync - 1e-6) + 1) * r.sync * beat_sec)
+    elseif r.wake < now then
+      r.wake = now
+    end
+  end
+end

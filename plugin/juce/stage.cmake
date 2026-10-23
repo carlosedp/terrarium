@@ -4,7 +4,8 @@
 #   mi-UGens/           the native mi-UGens' libraries
 #   web/                norns-web's page, the plugin's face: index.html and norns-web.js, a
 #                       files.json with norns-web.json's text (and no Lua: the plugin runs it),
-#                       and the icons it names, under script/
+#                       the icons it names, under script/, and its fonts (no Google Fonts: a
+#                       DAW may well be offline)
 file(REMOVE_RECURSE "${STAGE}")
 file(MAKE_DIRECTORY "${STAGE}/terrarium" "${STAGE}/norns-web" "${STAGE}/mi-UGens")
 file(COPY "${SCRIPT_DIR}/terrarium.lua" DESTINATION "${STAGE}/terrarium")
@@ -18,6 +19,10 @@ file(MAKE_DIRECTORY "${STAGE}/web")
 file(READ "${SCRIPT_DIR}/tools/norns-web/index.html" page)
 # no analytics inside a DAW: the page's Google tag (gtag.js) is for the website
 string(REGEX REPLACE "<!-- Google tag \\(gtag\\.js\\) -->.*gtag\\('config'[^<]*</script>" "" page "${page}")
+# the fonts from the bundle, not from Google
+string(REGEX REPLACE "<link rel=\"preconnect\"[^>]*>" "" page "${page}")
+string(REGEX REPLACE "<link rel=\"stylesheet\"[^>]*fonts\\.googleapis\\.com[^>]*>" "<link rel=\"stylesheet\" href=\"fonts/fonts.css\">" page "${page}")
+file(COPY "${SCRIPT_DIR}/tools/norns-web/fonts" DESTINATION "${STAGE}/web")
 file(WRITE "${STAGE}/web/index.html" "${page}")
 file(COPY "${SCRIPT_DIR}/tools/norns-web/norns-web.js" DESTINATION "${STAGE}/web")
 set(about "null")
