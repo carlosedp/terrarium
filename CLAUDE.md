@@ -60,14 +60,19 @@ Shuffle button, how-to-play controls, the gallery of parts, links, copyright foo
 - A voice module can define `play(sc, note, vel)` to play notes elsewhere as well as on the engine
   (visitors sends them out over MIDI), and `stop()` to end any still sounding (on a PSET load
   and at cleanup).
-- **Engine command changes go in three places:** `lib/Engine_Terrarium.sc`, the Lua that sends
-  them, and `lib/Engine_Terrarium.js` (the browser engine), or norns-web logs them as unknown.
+- **Engine command changes go in four places:** `lib/Engine_Terrarium.sc`, the Lua that sends
+  them, `lib/Engine_Terrarium.js` (the browser engine), or norns-web logs them as unknown, and
+  `plugin/core/Engine.cpp` (the plugin's engine), or the plugin says "unknown engine command".
 - **A SynthDef change goes in `Engine_Terrarium.js` too** (its `DEFS`, one function per SynthDef):
   it plays the same mi-UGens, built as WebAssembly in `lib/Engine_Terrarium/` (don't edit those;
   `make mi-wasm` rebuilds them from `~/projects/norns-mi-UGens`, `./build.sh --wasm`). Scalar vs
   control rate matters as in the SynthDef: a literal is a scalar, a SynthDef argument a control.
   The one exception is `terrarium_voice_input` (visitors): the browser has no MIDI out or input
   for it, so visitors are silent there.
+- **And in `plugin/core/Engine.cpp`** (one `Synth` class per SynthDef, the plugin's engine on the
+  native mi-UGens): the same graph, lags and scalar/control rates as the .sc; plain SC UGens are in
+  `plugin/core/Ugens.h`. `terrarium-render` (`plugin/README.md`) renders the jar without a DAW to
+  check it.
 - `tools/norns-web` must stay generic: nothing terrarium-specific in it. The browser runs Lua 5.4,
   so it won't catch 5.4-only code that would fail on norns (5.3).
 - A brain module must define `wind(sc)` (the sky drifts with it); `flash()` is optional.
@@ -97,7 +102,9 @@ form for Windows paths. `gh`, `podman`, `lua`/`luac` are available.
 ## Design references
 
 - `doc/DESIGN.md`: decisions and their reasons (read before changing behavior)
-- `doc/PLUGIN.md`: the plan for terrarium as a VST3/AU plugin (JUCE), phases and where it stands
+- `doc/PLUGIN.md`: the plan for terrarium as a VST3/AU plugin (JUCE), phases and where it stands;
+  `plugin/README.md` builds and tests it; `doc/PLUGIN-MANUAL.md` is its player's manual
+  (`make plugin-manual-pdf`), kept apart from the norns one
 - `doc/SOUND.md`: macro -> mi-UGen parameter map, ranges, couplings, open tuning questions
 - `tools/norns-web/README.md`: running the script in a browser (generic, not terrarium-specific)
 - `doc/MANUAL.md`: the player's manual (`make manual-pdf` rebuilds the PDF, `make manual-images`

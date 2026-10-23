@@ -15,37 +15,117 @@
     H = 64;
   const $ = (sel) => document.querySelector(sel);
 
+  // ---------- hosted: the face of a plugin that runs the script itself ----------
+  // Inside JUCE's WebBrowserComponent (window.__JUCE__), the plugin has its own Lua and its
+  // own sound: the page starts neither, and becomes the plugin's face. Encoders, keys,
+  // PARAMS, presets and the REPL call the plugin's native functions (enc, key, params,
+  // param_delta, repl, pset); the screen and the log arrive as its "frame" and "log" events.
+  // A plugin that also registers param_map and param_maps offers its host-automation slots,
+  // and PARAMS gets a "map" button per param; set_extra_height (or _width) lets the drawer
+  // grow the plugin's window instead of covering the device. JUCE's wire protocol: an "__juce__invoke" event
+  // { name, params, resultId }, answered by "__juce__complete" { promiseId, result }.
+  const juceBackend = window.__JUCE__ && window.__JUCE__.backend;
+  const hosted = !!(juceBackend && typeof juceBackend.emitEvent === "function");
+  const hostFunctions = (window.__JUCE__ && window.__JUCE__.initialisationData &&
+    window.__JUCE__.initialisationData.__juce__functions) || [];
+  const calls = new Map();
+  let nextCall = 0;
+  if (hosted)
+    juceBackend.addEventListener("__juce__complete", (p) => {
+      const resolve = p && calls.get(p.promiseId);
+      if (resolve) {
+        calls.delete(p.promiseId);
+        resolve(p.result);
+      }
+    });
+  const native = (name, ...params) =>
+    new Promise((resolve) => {
+      const resultId = nextCall++;
+      calls.set(resultId, resolve);
+      juceBackend.emitEvent("__juce__invoke", { name, params, resultId });
+    });
+  const canMap = hosted && hostFunctions.includes("param_map") && hostFunctions.includes("param_maps");
+  const canGrow = hosted && hostFunctions.includes("set_extra_height");
+  // with set_extra_width, the drawer opens at the right instead, and the window grows wider
+  const side = hosted && hostFunctions.includes("set_extra_width");
+  if (side) document.body.classList.add("side-drawer");
+
+  // The page's own settings (the look, the drawer): in the browser's storage, or, hosted by a
+  // plugin that passes them in (initialisationData "prefs") and takes them back (prefs_set),
+  // with the plugin, so they're saved in the project. Options the plugin offers
+  // (initialisationData "options": [{ id, label, value }], set_option(id, on)) go in Look.
+  const initData = (hosted && window.__JUCE__.initialisationData) || {};
+  const first = (v) => (Array.isArray(v) ? v[0] : v);
+  const hostPrefs = hosted && hostFunctions.includes("prefs_set") ? first(initData.prefs) || {} : null;
+  const prefs = {
+    get(k) {
+      if (hostPrefs) return k in hostPrefs ? String(hostPrefs[k]) : null;
+      try {
+        return localStorage.getItem(k);
+      } catch (e) {
+        return null;
+      }
+    },
+    set(k, v) {
+      if (hostPrefs) {
+        hostPrefs[k] = String(v);
+        native("prefs_set", k, String(v));
+        return;
+      }
+      try {
+        localStorage.setItem(k, v);
+      } catch (e) {}
+    },
+  };
+
+
   // ---------- under the hood: a drawer at the bottom of the window, closed until asked for ----------
   // Open, it shares the window with the device (opening it scrolls the device into view above it);
   // its height is dragged from the handle on its top edge. Open or closed and the height are remembered.
+  // In a plugin that offers set_extra_width (side), it's a drawer at the right, as wide as dragged.
   const hood = $("#hood"),
     badge = $("#hood-badge"),
     HOOD = "norns-web:hood",
-    HOOD_H = "norns-web:hood-height";
+    HOOD_H = side ? "norns-web:hood-width" : "norns-web:hood-height";
   const setDrawer = (px, save) => {
-    const h = Math.max(160, Math.min(Math.round(px), Math.round(window.innerHeight * 0.85)));
-    document.documentElement.style.setProperty("--drawer-h", h + "px");
+    const most = side ? 900 : window.innerHeight * 0.85;
+    const h = Math.max(side ? 300 : 160, Math.min(Math.round(px), Math.round(most)));
+    document.documentElement.style.setProperty(side ? "--drawer-w" : "--drawer-h", h + "px");
     if (save)
       try {
-        localStorage.setItem(HOOD_H, h);
+        prefs.set(HOOD_H, h);
       } catch (e) {}
   };
   try {
-    const h = +localStorage.getItem(HOOD_H);
+    const h = +prefs.get(HOOD_H);
     if (h) setDrawer(h);
-    hood.open = localStorage.getItem(HOOD) === "open";
+    hood.open = prefs.get(HOOD) === "open";
   } catch (e) {}
   // the page keeps room for the drawer at its bottom, so nothing hides behind it
-  new ResizeObserver(() =>
-    document.documentElement.style.setProperty("--hood-space", hood.offsetHeight + "px"),
-  ).observe(hood);
+  // A hosting plugin that offers set_extra_height grows its window by the open drawer's
+  // height instead (a plugin window can grow, a browser tab can't), so the device stays whole.
+  let extraAsked = 0;
+  new ResizeObserver(() => {
+    const summary = hood.querySelector("summary");
+    if (side) {
+      document.documentElement.style.setProperty("--hood-space-x", hood.offsetWidth + "px");
+      const extra = hood.open ? hood.offsetWidth - summary.offsetWidth : 0;
+      if (extra !== extraAsked) native("set_extra_width", (extraAsked = extra));
+      return;
+    }
+    document.documentElement.style.setProperty("--hood-space", hood.offsetHeight + "px");
+    if (canGrow) {
+      const extra = hood.open ? hood.offsetHeight - summary.offsetHeight : 0;
+      if (extra !== extraAsked) native("set_extra_height", (extraAsked = extra));
+    }
+  }).observe(hood);
   let restoring = hood.open;
   hood.addEventListener("toggle", () => {
     if (hood.open) {
       badge.hidden = true;
       badge.dataset.n = "0";
       logEl.scrollTop = logEl.scrollHeight;
-      if (!restoring)
+      if (!restoring && !canGrow && !side)
         requestAnimationFrame(() => {
           // the device's bottom just above the drawer, or its top at the window's if it doesn't fit
           const r = $("#device").getBoundingClientRect(),
@@ -57,25 +137,31 @@
     }
     restoring = false;
     try {
-      localStorage.setItem(HOOD, hood.open ? "open" : "closed");
+      prefs.set(HOOD, hood.open ? "open" : "closed");
     } catch (e) {}
   });
   {
+    // dragged from its top edge (up opens it further), or at the side from its left edge
     const grip = $("#hood-grip");
+    if (side) grip.setAttribute("aria-orientation", "vertical");
     let startY = 0,
       startH = 0;
-    const height = () => $("#hood .bench").getBoundingClientRect().height;
+    const pos = (e) => (side ? e.clientX : e.clientY);
+    const height = () => {
+      const r = $("#hood .bench").getBoundingClientRect();
+      return side ? r.width : r.height;
+    };
     grip.addEventListener("pointerdown", (e) => {
-      startY = e.clientY;
+      startY = pos(e);
       startH = height();
       grip.setPointerCapture(e.pointerId);
       e.preventDefault();
     });
     grip.addEventListener("pointermove", (e) => {
-      if (grip.hasPointerCapture(e.pointerId)) setDrawer(startH - (e.clientY - startY), true);
+      if (grip.hasPointerCapture(e.pointerId)) setDrawer(startH - (pos(e) - startY), true);
     });
     grip.addEventListener("keydown", (e) => {
-      const d = { ArrowUp: 24, ArrowDown: -24 }[e.key];
+      const d = side ? { ArrowLeft: 24, ArrowRight: -24 }[e.key] : { ArrowUp: 24, ArrowDown: -24 }[e.key];
       if (d) {
         setDrawer(height() + d, true);
         e.preventDefault();
@@ -138,28 +224,35 @@
     g2d.putImageData(img, 0, 0);
   }
 
-  // ---------- view: the shell (norns | shield) and the screen's color, remembered ----------
+  // ---------- view: the shell (norns | shield), the case's finish and the screen's color, remembered ----------
   const view = (() => {
     try {
-      return JSON.parse(localStorage.getItem("norns-web:view")) || {};
+      return JSON.parse(prefs.get("norns-web:view")) || {};
     } catch (e) {
       return {};
     }
   })();
   const query = new URLSearchParams(location.search);
   view.shell = query.get("shell") || view.shell || "shield";
-  view.screen = query.get("screen") || view.screen || "white";
+  view.finish = query.get("finish") || view.finish || "alu";
+  view.screen = query.get("screen") || view.screen || "yellow"; // the amber of a shield's OLED, by default
   function applyView() {
     $("#device").dataset.shell = view.shell;
+    $("#device").dataset.finish = view.finish;
     $("#v-shell").value = view.shell;
+    $("#v-finish").value = view.finish;
     $("#v-screen").value = view.screen;
     setTint(view.screen);
     try {
-      localStorage.setItem("norns-web:view", JSON.stringify(view));
+      prefs.set("norns-web:view", JSON.stringify(view));
     } catch (e) {}
   }
   $("#v-shell").addEventListener("change", (e) => {
     view.shell = e.target.value;
+    applyView();
+  });
+  $("#v-finish").addEventListener("change", (e) => {
+    view.finish = e.target.value;
     applyView();
   });
   $("#v-screen").addEventListener("change", (e) => {
@@ -167,6 +260,17 @@
     applyView();
   });
   applyView();
+  // a hosting plugin's options, as checkboxes in Look
+  for (const o of (hosted && hostFunctions.includes("set_option") && first(initData.options)) || []) {
+    const label = document.createElement("label");
+    label.className = "option";
+    const box = document.createElement("input");
+    box.type = "checkbox";
+    box.checked = !!o.value;
+    box.addEventListener("change", () => native("set_option", o.id, box.checked));
+    label.append(box, " " + o.label);
+    document.querySelector(".menu .pop").append(label);
+  }
   // the Look menu closes when you click elsewhere
   document.addEventListener("click", (e) => {
     document.querySelectorAll("details.menu[open]").forEach((d) => {
@@ -688,10 +792,42 @@
     },
   };
 
+
+  // A plugin's window doesn't scroll: the device and its buttons zoom down to fit its height
+  // (keys and encoders included, as in full screen), never up.
+  function fitHosted() {
+    const root = document.documentElement, night = $("#night");
+    root.style.setProperty("--fit", 1);
+    const over = night.scrollHeight - window.innerHeight;
+    if (over > 0) {
+      const zoomed = $("#frame").offsetHeight + $(".controls").offsetHeight;
+      root.style.setProperty("--fit", Math.max(0.3, (zoomed - over) / zoomed).toFixed(3));
+    }
+  }
+
+  function bootHosted() {
+    document.body.classList.add("hosted");
+    fitHosted();
+    window.addEventListener("resize", fitHosted);
+    $("#v-shell").addEventListener("change", () => requestAnimationFrame(fitHosted));
+    encFn = (n, d) => native("enc", n, d);
+    keyFn = (n, z) => native("key", n, z);
+    paramsJson = () => native("params");
+    paramDelta = (i, d) => native("param_delta", i, d);
+    replFn = (code) => native("repl", code);
+    psetFn = (action, n) => native("pset", action, String(n));
+    juceBackend.addEventListener("frame", (s) => {
+      if (typeof s === "string" && s.length >= W * H) blit(s);
+    });
+    juceBackend.addEventListener("log", (e) => log(String((e && e.text) || ""), (e && e.kind) || "print"));
+    renderParams();
+    setInterval(renderParams, 400);
+  }
+
   async function boot() {
     const [manifest, nornsLua] = await Promise.all([
       fetch("files.json", { cache: "no-store" }).then((r) => r.json()),
-      fetch("lib/norns.lua", { cache: "no-store" }).then((r) => r.text()),
+      hosted ? "" : fetch("lib/norns.lua", { cache: "no-store" }).then((r) => r.text()),
     ]);
     const { name, main, root, files, about, dev } = manifest;
     document.title = `${name} · norns-web`;
@@ -699,6 +835,7 @@
     $("#script-name").textContent = name;
     $(".brand").textContent = name;
     if (about) showAbout(about, root);
+    if (hosted) return bootHosted();
 
     // the engine stand-in, found from the script's engine.name before it runs
     const m = /engine\.name\s*=\s*["']([\w-]+)["']/.exec(files[main] || "");
@@ -775,7 +912,7 @@
   const angles = { 1: 0, 2: 0, 3: 0 };
   function spin(n, d) {
     angles[n] += d * 12;
-    const el = document.querySelector(`.enc[data-e="${n}"] i`);
+    const el = document.querySelector(`.enc[data-e="${n}"] .knurl`);
     if (el) el.style.transform = `rotate(${angles[n]}deg)`;
   }
   // the wheel: a mouse notch is one step; a trackpad's stream of small deltas adds up,
@@ -950,15 +1087,28 @@
   // ---------- PARAMS panel ----------
   // Rebuilt when the list of params changes; otherwise only the values update,
   // so open groups and the pointer position survive.
+  // Hosted, the list comes from the plugin (a promise); a "map" button per param binds it to
+  // one of the plugin's host-automation slots, or frees it.
   const paramsEl = $("#params");
   let shape = "",
     openGroups = new Set(),
-    valueEls = new Map();
-  function renderParams() {
-    if (!paramsJson) return;
-    let list;
+    valueEls = new Map(),
+    mapEls = new Map(),
+    rendering = false;
+  async function renderParams() {
+    if (!paramsJson || rendering) return;
+    rendering = true;
     try {
-      list = JSON.parse(paramsJson());
+      await renderParamsNow();
+    } finally {
+      rendering = false;
+    }
+  }
+  async function renderParamsNow() {
+    let list, maps = {};
+    try {
+      list = JSON.parse(await paramsJson());
+      if (canMap) maps = (await native("param_maps")) || {};
     } catch (e) {
       return;
     }
@@ -975,6 +1125,7 @@
         .forEach((d) => openGroups.delete(d.dataset.group));
       paramsEl.innerHTML = "";
       valueEls = new Map();
+      mapEls = new Map();
       let groupBody = null;
       for (const p of list) {
         if (p.kind === "separator") {
@@ -1034,6 +1185,18 @@
           continue;
         }
         row.append(label, minus, val, plus);
+        if (canMap && p.kind !== "text" && p.kind !== "file") {
+          const map = document.createElement("button");
+          map.type = "button";
+          map.className = "map";
+          map.addEventListener("click", async () => {
+            await native("param_map", p.i);
+            renderParams();
+          });
+          row.classList.add("mappable");
+          row.append(map);
+          mapEls.set(p.i, map);
+        }
         (p.group && groupBody ? groupBody : paramsEl).appendChild(row);
         valueEls.set(p.i, val);
       }
@@ -1041,6 +1204,18 @@
     for (const p of list) {
       const el = valueEls.get(p.i);
       if (el && el.textContent !== p.str) el.textContent = p.str ?? "";
+      const m = mapEls.get(p.i);
+      if (m) {
+        const slot = maps[p.i] || 0;
+        const text = slot ? `map ${slot}` : "map";
+        if (m.textContent !== text) {
+          m.textContent = text;
+          m.classList.toggle("on", !!slot);
+          m.title = slot
+            ? `${p.name} follows the host's automation slot "map ${slot}"; click to free it`
+            : `Bind ${p.name} to a host automation slot`;
+        }
+      }
     }
   }
 })();

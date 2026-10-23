@@ -15,7 +15,9 @@ import { chromium } from "playwright-core";
 
 const here = path.dirname(fileURLToPath(import.meta.url));
 const docDir = path.resolve(here, "../../doc");
-const out = path.join(docDir, "terrarium-manual.pdf");
+// node pdf.mjs [source in doc/, default MANUAL.md] [pdf in doc/, default terrarium-manual.pdf]
+const [srcName = "MANUAL.md", outName = "terrarium-manual.pdf"] = process.argv.slice(2);
+const out = path.join(docDir, outName);
 
 function findChromium() {
   if (process.env.CHROMIUM) return process.env.CHROMIUM;
@@ -73,7 +75,7 @@ h2#contents + ul li { margin-bottom: 2mm; }
 .more p > img:only-child { max-width: 58%; }
 `;
 
-const md = fs.readFileSync(path.join(docDir, "MANUAL.md"), "utf8");
+const md = fs.readFileSync(path.join(docDir, srcName), "utf8");
 const page_html = `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><base href="${pathToFileURL(docDir + "/").href}">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=JetBrains+Mono:wght@400;700&family=Silkscreen&display=swap">

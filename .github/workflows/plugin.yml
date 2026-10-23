@@ -1,0 +1,131 @@
+# terrarium as a plugin (doc/PLUGIN.md, plugin/): build it on Linux, macOS and Windows,
+# check the core renders on the beat, load the built plugin like a DAW and check it plays,
+# validate it (pluginval, on Linux), and keep the plugins as workflow artifacts.
+name: plugin
+
+on:
+  push:
+    branches: [plugin]
+    paths: ["plugin/**", "lib/**", "terrarium.lua", "tools/norns-web/lib/norns.lua", ".github/workflows/plugin.yml"]
+  pull_request:
+    paths: ["plugin/**", "lib/**", "terrarium.lua", "tools/norns-web/lib/norns.lua", ".github/workflows/plugin.yml"]
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: windows
+            os: windows-2022
+            vst3: build/juce/terrarium_plugin_artefacts/Release/VST3/terrarium.vst3
+            standalone: terrarium.exe
+            host_test: build/juce/terrarium_host_test_artefacts/Release/terrarium_host_test.exe
+          - name: macos
+            os: macos-14
+            vst3: build/juce/terrarium_plugin_artefacts/Release/VST3/terrarium.vst3
+            standalone: terrarium.app
+            host_test: build/juce/terrarium_host_test_artefacts/Release/terrarium_host_test
+          - name: linux
+            os: ubuntu-22.04
+            vst3: build/juce/terrarium_plugin_artefacts/Release/VST3/terrarium.vst3
+            standalone: terrarium
+            host_test: build/juce/terrarium_host_test_artefacts/Release/terrarium_host_test
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Linux dependencies (JUCE)
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt-get update -qq
+          sudo apt-get install -y -qq libasound2-dev libfreetype-dev libfontconfig1-dev libx11-dev \
+            libxrandr-dev libxinerama-dev libxcursor-dev libxext-dev libgl1-mesa-dev xvfb \
+            libwebkit2gtk-4.1-dev  # the face's WebView
+
+      # JUCE, Lua and the mi-UGens are downloaded by CMake: JUCE is ~100 MB, worth keeping
+      - name: Cache the downloads
+        uses: actions/cache@v4
+        with:
+          path: build/_deps
+          key: deps-${{ matrix.name }}-${{ hashFiles('plugin/CMakeLists.txt', 'plugin/juce/CMakeLists.txt') }}
+
+      - name: Build
+        run: |
+          cmake -S plugin -B build -DCMAKE_BUILD_TYPE=Release -Wno-dev
+          cmake --build build --config Release --parallel 4
+
+      - name: The core renders, on the beat
+        run: |
+          r=$(find build -name 'terrarium-render*' -type f \( -perm -u+x -o -name '*.exe' \) | head -1)
+          "$r" --script . --seconds 20 --bpm 93 --start 3.37 --block 441 --quiet --out render.wav
+          "$r" --script . --quiet --check-params
+          # every slot's modules swapped mid-play, twice a second (built off the audio thread)
+          args=(); i=0
+          for t in $(seq 1 0.5 19); do
+            case $((i % 6)) in
+              0) c="params:set('voice_kind', $((i % 4 + 1)))" ;; 1) c="params:set('color_kind', $((i % 2 + 1)))" ;;
+              2) c="params:set('air_kind', $((i % 3 + 1)))" ;;   3) c="params:set('drone_kind', $((i % 3 + 1)))" ;;
+              4) c="params:set('t_erosion', $((i % 5 + 1)))" ;;  5) c="params:set('brain_kind', $((i % 3 + 1)))" ;;
+            esac
+            args+=(--at "$t" "$c"); i=$((i + 1))
+          done
+          "$r" --script . --quiet --seconds 20 --out swaps.wav "${args[@]}"
+          # the engine runs at 48 kHz at any host rate: the same level at 44.1, 48 and 96 kHz
+          for sr in 44100 48000 96000; do
+            "$r" --script . --quiet --seconds 15 --sr $sr --out sr.wav | grep -o 'rms [0-9.]*'
+          done | sort -u | awk 'END { if (NR != 1) { print "levels differ by rate"; exit 1 } }'
+          # stop with the transport: no notes while it's stopped
+          "$r" --script . --quiet --seconds 25 --stopped-between 8 16 --stop-with-transport --out stop.wav \
+            | tee stop.txt
+          grep -q ': 0 notes meanwhile' stop.txt
+          # visitors: notes out to the DAW's MIDI port, the input let in
+          "$r" --script . --quiet --seconds 15 --midi-ports "DAW,device" --input-tone \
+            --lua "params:set('voice_kind', 4)" --lua "params:set('visitors_midi', 2)" --out visitors.wav | tee v.txt
+          grep -qE 'MIDI: [1-9][0-9]* messages to the DAW' v.txt
+
+      - name: The plugin plays, loaded like a DAW
+        run: |
+          run() { if [[ $RUNNER_OS == Linux ]]; then xvfb-run -a "$@"; else "$@"; fi; }
+          run "${{ matrix.host_test }}" "${{ matrix.vst3 }}" 20
+          # visitors: the side chain on, the soil on visitors (through the state), notes out of its MIDI
+          run "${{ matrix.host_test }}" "${{ matrix.vst3 }}" 15 --visitors
+
+      - name: pluginval
+        if: runner.os == 'Linux'
+        run: |
+          curl -sSL -o pv.zip https://github.com/Tracktion/pluginval/releases/latest/download/pluginval_Linux.zip
+          cmake -E tar xf pv.zip
+          xvfb-run -a ./pluginval --strictness-level 5 --timeout-ms 300000 --validate "${{ matrix.vst3 }}"
+
+      # Zipped here, with each OS's own archiver: upload-artifact's zip drops symlinks and the
+      # executable bit, which breaks macOS bundles and the Linux binaries. The products are
+      # named, not globbed: Visual Studio also leaves empty Debug/ bundle skeletons around.
+      - name: Package
+        env:
+          ART: build/juce/terrarium_plugin_artefacts/Release
+        run: |
+          pkg="terrarium-plugin-${{ matrix.name }}"
+          mkdir -p "_stage/$pkg" _dist
+          cp -R "$ART/VST3/terrarium.vst3" "_stage/$pkg/"
+          if [[ $RUNNER_OS == macOS ]]; then cp -R "$ART/AU/terrarium.component" "_stage/$pkg/"; fi
+          cp -R "$ART/Standalone/${{ matrix.standalone }}" "_stage/$pkg/"
+          if [[ $RUNNER_OS != macOS ]]; then cp -R "$ART/Standalone/terrarium-resources" "_stage/$pkg/"; fi
+          rm -f "_stage/$pkg/terrarium.vst3/desktop.ini"  # Windows' folder-icon hint: litter in a zip
+          cp render.wav "_stage/$pkg/"
+          case $RUNNER_OS in
+            Windows) (cd _stage && 7z a -tzip "../_dist/$pkg.zip" "$pkg" >/dev/null) ;;
+            macOS)   ditto -c -k --sequesterRsrc --keepParent "_stage/$pkg" "_dist/$pkg.zip" ;;
+            Linux)   (cd _stage && zip -qry "../_dist/$pkg.zip" "$pkg") ;;
+          esac
+          ls -l _dist
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: terrarium-plugin-${{ matrix.name }}
+          path: _dist/*.zip
+          if-no-files-found: error

@@ -1,12 +1,14 @@
 # <img src="doc/img/icon.svg" alt="" width="40" height="40" align="top"> terrarium
 
-![terrarium: rain falling on a meadow, a pond, clouds and an aurora, inside the glass of a jar](doc/img/hero.png)
+![terrarium on a norns shield, standing on the ground under a night sky: rain falls on a meadow and a pond on its screen](doc/art/banner.png)
 
 A small world of Mutable Instruments for [monome norns](https://monome.org/docs/norns/).
 
 **[Read the manual](doc/MANUAL.md)** for how to play it (also as a [PDF](doc/terrarium-manual.pdf)),
 or **[try it in your browser](https://carlosedp.github.io/terrarium/)**, phones included: the real
-script, playing the real Mutable Instruments code.
+script, playing the real Mutable Instruments code. It also comes as a **VST3 / AU plugin** for your
+DAW, on its tempo and automation: see [the plugin's manual](doc/PLUGIN-MANUAL.md) (and
+[plugin/](plugin/README.md) for building it).
 
 The patch is a landscape. Five parts each draw one piece of the scene and play one part of
 the sound. Swap a module and that piece of the scene changes; turn a macro and the scene moves
@@ -163,6 +165,17 @@ REPL, printing the result to paste back; PARAMS > levels balances the slots. See
 - [ ] tune ranges and curves in each module's `sound()` by ear (doc/SOUND.md lists open questions)
 - [ ] visitors with a real synth: MIDI out, its audio back into the input (and the monitor level turned down)
 - [ ] grid: phrase editing, key/scale picker
+
+## Wallpapers
+
+The device under the night sky, for a desktop (3840 × 2160) or a phone (1179 × 2556), in the
+aluminium case or the black one. `make art` renders them again from the running script.
+
+| Scene | Desktop | Phone |
+| ----- | ------- | ----- |
+| <img src="doc/art/wallpapers/meadow-desktop-alu.jpg" alt="Rain on a meadow and a pond, clouds, an aurora" width="320"><br>Rain on a meadow and a pond, clouds, an aurora | [aluminium](doc/art/wallpapers/meadow-desktop-alu.jpg) · [black](doc/art/wallpapers/meadow-desktop-black.jpg) | [aluminium](doc/art/wallpapers/meadow-phone-alu.jpg) · [black](doc/art/wallpapers/meadow-phone-black.jpg) |
+| <img src="doc/art/wallpapers/snow-desktop-alu.jpg" alt="Snow settling on crystals, mountains behind" width="320"><br>Snow settling on crystals, mountains behind | [aluminium](doc/art/wallpapers/snow-desktop-alu.jpg) · [black](doc/art/wallpapers/snow-desktop-black.jpg) | [aluminium](doc/art/wallpapers/snow-phone-alu.jpg) · [black](doc/art/wallpapers/snow-phone-black.jpg) |
+| <img src="doc/art/wallpapers/fireflies-desktop-alu.jpg" alt="Reeds over a pond, fireflies in the dark" width="320"><br>Reeds over a pond, fireflies in the dark | [aluminium](doc/art/wallpapers/fireflies-desktop-alu.jpg) · [black](doc/art/wallpapers/fireflies-desktop-black.jpg) | [aluminium](doc/art/wallpapers/fireflies-phone-alu.jpg) · [black](doc/art/wallpapers/fireflies-phone-black.jpg) |
 
 ## License and copyright
 

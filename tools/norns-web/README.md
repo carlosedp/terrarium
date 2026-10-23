@@ -24,9 +24,9 @@ encoders take the scroll wheel and dragging.
 ## The device
 
 Two shells, under the screen: **shield** (the default: compact, K1 top left and E1 top right, K2 K3 E2 E3
-along the bottom) or **norns**, and the screen's color: **white** or **yellow** (the amber some
-shields have). They're remembered by the browser, and the URL can set them:
-`?shell=norns&screen=yellow`. On a phone the page is touch-first: drag the encoders up and down,
+along the bottom) or **norns**, the case: **aluminium** (the default) or **black**, and the screen's
+color: **yellow** (the default: the amber some shields have) or **white**. They're remembered by the
+browser, and the URL can set them: `?shell=norns&finish=black&screen=white`. On a phone the page is touch-first: drag the encoders up and down,
 hold keys with one finger while tapping another.
 
 ## Publish a static copy
@@ -42,7 +42,7 @@ loads the same pinned version from jsdelivr.
 ## The page's text
 
 The page puts the device up front, standing on the ground under a night sky, with Start sound, the
-script's actions, How to play (also <kbd>?</kbd>), Full screen and a Look menu (shell and screen
+script's actions, How to play (also <kbd>?</kbd>), Full screen and a Look menu (shell, case and screen
 color); full screen shows just the device, under its own night sky (its buttons stack down the
 right side on a phone turned sideways, and a phone held upright is asked to turn). PARAMS, PSETs, the log and the
 REPL are in "Under the hood", a drawer at the bottom of the window: opening it scrolls the device into
@@ -70,6 +70,50 @@ An optional `norns-web.json` next to the script fills in the rest:
 - `gallery`: pictures of what's in the script, each with a name and a line; `build.mjs` copies them.
 - `more`, `install`, `links`: the About section (the install line has a copy button); `footer`:
   credits or license text.
+
+## In a plugin (hosted)
+
+A plugin that runs the script itself (its own Lua, its own sound) can use this page as its face,
+in JUCE's `WebBrowserComponent`. The page notices `window.__JUCE__` and starts neither Lua nor
+Web Audio: the encoders, keys, PARAMS, presets, the REPL and the page's actions call the plugin's
+native functions, and the screen and the log arrive as its events. The web page's own parts
+(Start sound, the gallery, how to play, about) are hidden; the device, its controls and the
+drawer stay.
+
+| page → plugin (native functions)      | does                                                        |
+| ------------------------------------- | ----------------------------------------------------------- |
+| `enc(n, d)`, `key(n, z)`              | the encoders and keys                                       |
+| `params()`                            | PARAMS as `norns_web.params_json()` gives it (a JSON string) |
+| `param_delta(index or id, d)`         | a step of one param                                         |
+| `repl(code)`, `pset(action, slot)`    | the REPL; save / load a PSET                                |
+| `param_map(index)`, `param_maps()`    | optional: bind a param to one of the plugin's host-automation slots (or free it), and `{ index: slot }`; with both, PARAMS gets a **map** button per param |
+| `set_extra_height(px)`                | optional: the drawer opened (or closed, 0): the plugin grows its window taller by it, so the device stays in view |
+| `set_extra_width(px)`                 | optional, instead: the drawer opens at the right (a tab along the edge, PARAMS above the log) and the plugin grows its window wider by it |
+| `prefs_set(key, value)`               | optional: the page's own settings (the look, the drawer) go to the plugin, to keep with the project; it passes them back in as `initialisationData` `prefs` (an object) |
+| `set_option(id, on)`                  | optional: the plugin's options, passed in as `initialisationData` `options` (`[{ id, label, value }]`), become checkboxes in Look |
+
+Hosted, the page never scrolls: the device and its buttons zoom down to fit the window's height.
+
+`fonts/` has the page's three fonts (OFL), for a host that may be offline: swap the Google Fonts
+links for `fonts/fonts.css` (terrarium's plugin does it when it stages the page).
+
+A host can give the script MIDI out: `js_bridge.midi_ports()` returns the port names
+`midi.vports` shows (up to 16), and a device from `midi.connect(port)` sends its `note_on`,
+`note_off`, `cc`, `pitchbend`, `program_change` and `send` through `js_bridge.midi_send(port,
+bytes...)`. Without them every port is "none" and sending is silent (as in the browser).
+
+`lib/norns.lua` also has `norns_web.set_running(on)`, for a host with a transport: stopped, the
+clock routines wait (the metros, and so the screen, go on); started again, a routine waiting on
+`clock.sync` lands on its next beat.
+
+| plugin → page (events) | carries                                                        |
+| ---------------------- | -------------------------------------------------------------- |
+| `frame`                | the screen: 128×64 letters, `"A"` (off) to `"P"` (full), as `norns_web.tick()` returns it |
+| `log`                  | `{ text, kind }`, kind `"print"` or `"error"`                  |
+
+The plugin serves the page's files itself (`index.html`, `norns-web.js`, and a `files.json`
+with no Lua files and the script's `norns-web.json` as `about`). terrarium's plugin
+(`plugin/juce/` in its repo) is an example.
 
 ## The engine stand-in
 
