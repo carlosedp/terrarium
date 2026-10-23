@@ -171,17 +171,22 @@ it for a moment; **E2 (opening)** lets some through between notes, **E3 (length)
 each note lasts. Mute the synth's own track (or set its output to the side chain only), or you'll
 hear it dry under the jar's version.
 
-<!-- To confirm: Reason's route for 1: DAW, and Live's instrument side chain. Live's 1: DAW route
-     and the virtual-port routes are tested (Windows, Live 12). -->
+<!-- To confirm: Reason's route for 1: DAW. Live's routes (1: DAW, the virtual port, the side
+     chain through Audio To) are tested (Windows, Live 12). -->
 
 ### In Ableton Live
 
-- **The notes:** pick **1: DAW** in terrarium (hold K2 + E2). Make a MIDI track with the synth, and
-  set its **MIDI From** to terrarium's track, then, in the menu just under it, to **terrarium**
-  (the plugin itself, not Pre FX or Post FX). Set the synth track's monitor to **In**.
-  A virtual port (loopMIDI on Windows, the IAC Driver on macOS) works too, as its **MIDI From**.
-- **The sound:** open terrarium's device, show its **Sidechain** section, and pick the synth's
-  track as the source.
+![Two of Live's track I/O sections: terrarium's track on the left; on the right the synth's track, MIDI From "1-terrarium" and "terrarium", Audio To "1-terrarium" and "Visitors-terrarium"](img/plugin-live.png)
+
+terrarium on one track (here "1-terrarium"), the synth on a MIDI track beside it:
+
+- **The notes:** pick **1: DAW** in terrarium (hold K2 + E2). On the synth's track, set **MIDI From**
+  to terrarium's track, then, in the menu just under it, to **terrarium** (the plugin itself, not
+  Pre FX or Post FX). Monitor on **Auto** (or **In**). A virtual port (loopMIDI on Windows, the IAC
+  Driver on macOS) works too, as its MIDI From, but isn't needed.
+- **The sound:** on the same track, set **Audio To** to terrarium's track, then, under it, to
+  **Visitors-terrarium**: the synth plays into terrarium's side chain, and only through it, so
+  you don't hear it dry.
 
 ### In Reason
 
