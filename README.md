@@ -1,6 +1,6 @@
 # <img src="doc/img/icon.svg" alt="" width="40" height="40" align="top"> terrarium
 
-![terrarium on a norns shield, standing on the ground under a night sky: rain falls on a meadow and a pond on its screen](doc/art/banner.png)
+![terrarium on a norns shield, standing on the ground under a night sky: rain falls on a meadow and a pond on its screen](doc/cover.png)
 
 🌱 A small world of modular instruments for [monome norns](https://monome.org/docs/norns/).
 
