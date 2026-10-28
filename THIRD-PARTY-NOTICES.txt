@@ -1,0 +1,100 @@
+terrarium: licences and notices
+===============================
+
+terrarium is © 2026 Voltage Foundry Modular. Its code is free software under the
+GNU General Public License v3.0 (LICENSE.txt, next to this file). The source, and
+the build that makes these plugins, is at https://github.com/carlosedp/terrarium
+(each release is a tag there). The terrarium name, its manuals and images are all
+rights reserved.
+
+terrarium is not a Mutable Instruments product. Mutable Instruments, monome, norns,
+VST and all other product names are trademarks of their respective owners, named
+only to say what terrarium is built on or works with. No affiliation with or
+endorsement by them is implied.
+
+The plugin and the standalone app carry the following work by others.
+
+
+Mutable Instruments eurorack code (the sound)
+---------------------------------------------
+https://github.com/pichenettes/eurorack, inside the mi-UGens below.
+
+  Copyright Emilie Gillet.
+
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
+
+  The above copyright notice and this permission notice shall be included in
+  all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+  THE SOFTWARE.
+
+
+mi-UGens
+--------
+Volker Böhm's SuperCollider ports of the Mutable Instruments modules,
+https://github.com/v7b1/mi-UGens, built by https://github.com/carlosedp/norns-mi-UGens
+(mi-UGens/BUILDINFO in the plugin's resources records the exact source).
+Copyright Volker Böhm. GNU General Public License v3.0 (LICENSE.txt).
+
+
+Lua 5.3
+-------
+https://www.lua.org
+
+  Copyright (C) 1994-2020 Lua.org, PUC-Rio.
+
+  Permission is hereby granted, free of charge, to any person obtaining
+  a copy of this software and associated documentation files (the
+  "Software"), to deal in the Software without restriction, including
+  without limitation the rights to use, copy, modify, merge, publish,
+  distribute, sublicense, and/or sell copies of the Software, and to
+  permit persons to whom the Software is furnished to do so, subject to
+  the following conditions:
+
+  The above copyright notice and this permission notice shall be
+  included in all copies or substantial portions of the Software.
+
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+  EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+  MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+  IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+  CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+  TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+  SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+
+
+JUCE
+----
+https://juce.com. Copyright Raw Material Software Limited. Used under the GNU
+Affero General Public License v3.0, https://www.gnu.org/licenses/agpl-3.0.html
+
+
+VST3 SDK
+--------
+VST is a trademark of Steinberg Media Technologies GmbH. The VST3 SDK, through
+JUCE, is (c) Steinberg Media Technologies GmbH, used under the GNU General Public
+License v3.0 (LICENSE.txt).
+
+
+Microsoft WebView2 (Windows only)
+---------------------------------
+The WebView2 SDK's loader, https://www.nuget.org/packages/Microsoft.Web.WebView2,
+Copyright (C) Microsoft Corporation. Used under its licence:
+https://www.nuget.org/packages/Microsoft.Web.WebView2/1.0.1901.177/License
+
+
+Fonts
+-----
+Atkinson Hyperlegible, JetBrains Mono and Silkscreen, under the SIL Open Font
+License 1.1. Their licence texts are in the plugin's resources, web/fonts/.

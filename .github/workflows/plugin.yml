@@ -96,6 +96,9 @@ jobs:
           if [[ $RUNNER_OS != macOS ]]; then cp -R "$ART/Standalone/terrarium-resources" "_stage/$pkg/"; fi
           rm -f "_stage/$pkg/terrarium.vst3/desktop.ini"  # Windows' folder-icon hint: litter in a zip
           cp render.wav "_stage/$pkg/"
+          # the licences travel with the binaries (MIT and the GPL ask for it)
+          cp LICENSE "_stage/$pkg/LICENSE.txt"
+          cp THIRD-PARTY-NOTICES.txt "_stage/$pkg/"
           case $RUNNER_OS in
             Windows) (cd _stage && 7z a -tzip "../_dist/$pkg.zip" "$pkg" >/dev/null) ;;
             macOS)   ditto -c -k --sequesterRsrc --keepParent "_stage/$pkg" "_dist/$pkg.zip" ;;
@@ -138,7 +141,7 @@ jobs:
           v="${GITHUB_REF_NAME}"
           {
             echo "terrarium ${v#v}: generative music in a jar, as a plugin for your DAW (VST3 on Windows and macOS,"
-            echo "AU on macOS, and a standalone app), with the same script and the same Mutable Instruments sound as on"
+            echo "AU on macOS, and a standalone app), with the same script and the same sound as on"
             echo "a norns. On a norns, install it from maiden: \`;install https://github.com/${GITHUB_REPOSITORY}\`."
             echo
             echo "**Plugin downloads:** \`terrarium-plugin-windows-${v}.zip\`, \`terrarium-plugin-macos-${v}.zip\`"

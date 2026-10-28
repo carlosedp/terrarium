@@ -1,6 +1,6 @@
 -- terrarium
--- a small world of
--- Mutable Instruments
+-- a small world of modular instruments
+-- built on Mutable Instruments code
 --
 -- E1 choose a part
 -- E2 E3 shape it

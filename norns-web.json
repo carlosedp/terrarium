@@ -78,7 +78,7 @@
   ],
   "downloads": {
     "title": "Use it in your music",
-    "intro": "terrarium also comes as a plugin for your DAW (VST3, and AU on macOS) and as a standalone app: the same jar and the same Mutable Instruments sound, on your session's tempo, with its knobs as automation lanes and its visitors playing your synths. It runs on your computer, no norns needed. Or put it on a norns, below.",
+    "intro": "terrarium also comes as a plugin for your DAW (VST3, and AU on macOS) and as a standalone app: the same jar and the same sound, from Émilie Gillet's open-source Mutable Instruments code, on your session's tempo, with its knobs as automation lanes and its visitors playing your synths. It runs on your computer, no norns needed. Or put it on a norns, below.",
     "items": [
       {
         "title": "Windows",

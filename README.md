@@ -2,7 +2,7 @@
 
 ![terrarium on a norns shield, standing on the ground under a night sky: rain falls on a meadow and a pond on its screen](doc/art/banner.png)
 
-A small world of Mutable Instruments for [monome norns](https://monome.org/docs/norns/).
+🌱 A small world of modular instruments for [monome norns](https://monome.org/docs/norns/).
 
 **[Read the manual](doc/MANUAL.md)** for how to play it (also as a [PDF](doc/terrarium-manual.pdf)),
 or **[try it in your browser](https://carlosedp.github.io/terrarium/)**, phones included: the real
@@ -14,13 +14,13 @@ The patch is a landscape. Five parts each draw one piece of the scene and play o
 the sound. Swap a module and that piece of the scene changes; turn a macro and the scene moves
 with the sound. The screen shows no numbers.
 
-| Part        | In the scene                                            | Modules                                                                                                             |
-| ----------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| **weather** | when notes happen and which ones                        | rain (clocked to the norns clock), lightning (random), snow (drifting, and it settles)                              |
-| **soil**    | what grows from the ground: what plays                  | meadow (Plaits), crystals (Plaits 6-op FM), reeds (Rings), visitors (MIDI out, the audio in back)                   |
-| **water**   | the pond and the fog: what shapes it                    | pond (Rings), fog (Ripples)                                                                                         |
-| **air**     | the sky: where it rings out                             | clouds (Clouds), fireflies (Beads), mountains (MiVerb)                                                              |
-| **hum**     | always there, under it all, on the key's root and fifth | aurora (Plaits), roots (Elements), none                                                                             |
+| Part        | In the scene                                            | Modules                                                                                           |
+| ----------- | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
+| **weather** | when notes happen and which ones                        | rain (clocked to the norns clock), lightning (random), snow (drifting, and it settles)            |
+| **soil**    | what grows from the ground: what plays                  | meadow (Plaits), crystals (Plaits 6-op FM), reeds (Rings), visitors (MIDI out, the audio in back) |
+| **water**   | the pond and the fog: what shapes it                    | pond (Rings), fog (Ripples)                                                                       |
+| **air**     | the sky: where it rings out                             | clouds (Clouds), fireflies (Beads), mountains (MiVerb)                                            |
+| **hum**     | always there, under it all, on the key's root and fifth | aurora (Plaits), roots (Elements), none                                                           |
 
 The whole scene sits behind the terrarium's glass. Rain beads up on it, and freezing the air
 frosts it over.
@@ -52,15 +52,15 @@ From the maiden REPL:
 
 ## Controls
 
-| Control      | Does                                                                                                                               |
-| ------------ | ---------------------------------------------------------------------------------------------------------------------------------- |
-| E1           | choose a part (the others dim for a moment)                                                                                        |
-| E2, E3       | that part's two macros (their names show for a moment while you turn)                                                              |
-| K2           | swap the part's module                                                                                                             |
+| Control      | Does                                                                                                                                  |
+| ------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
+| E1           | choose a part (the others dim for a moment)                                                                                           |
+| E2, E3       | that part's two macros (their names show for a moment while you turn)                                                                 |
+| K2           | swap the part's module                                                                                                                |
 | hold K2 + E2 | pick the module's variant: Plaits engine (meadow), DX bank (crystals), Rings model (reeds, pond), MIDI device (visitors), Clouds mode |
-| K3           | gesture: new phrase (weather), strike (soil, water), freeze (air), hush / rise (hum)                                               |
-| hold K1      | peek at all parts; while held, E2 picks a setting and E3 changes it                                                                |
-| hold K1 + K3 | a new terrarium: random modules, varieties, knobs and settings, all but the day (also PARAMS > randomize the jar)                  |
+| K3           | gesture: new phrase (weather), strike (soil, water), freeze (air), hush / rise (hum)                                                  |
+| hold K1      | peek at all parts; while held, E2 picks a setting and E3 changes it                                                                   |
+| hold K1 + K3 | a new terrarium: random modules, varieties, knobs and settings, all but the day (also PARAMS > randomize the jar)                     |
 
 **Climate** (a setting, off by default) lets a chaotic attractor slowly move the macros: fronts
 (Lorenz), gusts (Rössler), tides (Thomas) or squalls (Chua). It moves them, the way CV moves a module's knobs: the macro you set is the center and
@@ -172,11 +172,11 @@ REPL, printing the result to paste back; PARAMS > levels balances the slots. See
 The device under the night sky, for a desktop (3840 × 2160) or a phone (1179 × 2556), in the
 aluminium case or the black one. `make art` renders them again from the running script.
 
-| Scene | Desktop | Phone |
-| ----- | ------- | ----- |
-| <img src="doc/art/wallpapers/meadow-desktop-alu.jpg" alt="Rain on a meadow and a pond, clouds, an aurora" width="320"><br>Rain on a meadow and a pond, clouds, an aurora | [aluminium](doc/art/wallpapers/meadow-desktop-alu.jpg) · [black](doc/art/wallpapers/meadow-desktop-black.jpg) | [aluminium](doc/art/wallpapers/meadow-phone-alu.jpg) · [black](doc/art/wallpapers/meadow-phone-black.jpg) |
-| <img src="doc/art/wallpapers/snow-desktop-alu.jpg" alt="Snow settling on crystals, mountains behind" width="320"><br>Snow settling on crystals, mountains behind | [aluminium](doc/art/wallpapers/snow-desktop-alu.jpg) · [black](doc/art/wallpapers/snow-desktop-black.jpg) | [aluminium](doc/art/wallpapers/snow-phone-alu.jpg) · [black](doc/art/wallpapers/snow-phone-black.jpg) |
-| <img src="doc/art/wallpapers/fireflies-desktop-alu.jpg" alt="Reeds over a pond, fireflies in the dark" width="320"><br>Reeds over a pond, fireflies in the dark | [aluminium](doc/art/wallpapers/fireflies-desktop-alu.jpg) · [black](doc/art/wallpapers/fireflies-desktop-black.jpg) | [aluminium](doc/art/wallpapers/fireflies-phone-alu.jpg) · [black](doc/art/wallpapers/fireflies-phone-black.jpg) |
+| Scene                                                                                                                                                                    | Desktop                                                                                                             | Phone                                                                                                           |
+| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
+| <img src="doc/art/wallpapers/meadow-desktop-alu.jpg" alt="Rain on a meadow and a pond, clouds, an aurora" width="320"><br>Rain on a meadow and a pond, clouds, an aurora | [aluminium](doc/art/wallpapers/meadow-desktop-alu.jpg) · [black](doc/art/wallpapers/meadow-desktop-black.jpg)       | [aluminium](doc/art/wallpapers/meadow-phone-alu.jpg) · [black](doc/art/wallpapers/meadow-phone-black.jpg)       |
+| <img src="doc/art/wallpapers/snow-desktop-alu.jpg" alt="Snow settling on crystals, mountains behind" width="320"><br>Snow settling on crystals, mountains behind         | [aluminium](doc/art/wallpapers/snow-desktop-alu.jpg) · [black](doc/art/wallpapers/snow-desktop-black.jpg)           | [aluminium](doc/art/wallpapers/snow-phone-alu.jpg) · [black](doc/art/wallpapers/snow-phone-black.jpg)           |
+| <img src="doc/art/wallpapers/fireflies-desktop-alu.jpg" alt="Reeds over a pond, fireflies in the dark" width="320"><br>Reeds over a pond, fireflies in the dark          | [aluminium](doc/art/wallpapers/fireflies-desktop-alu.jpg) · [black](doc/art/wallpapers/fireflies-desktop-black.jpg) | [aluminium](doc/art/wallpapers/fireflies-phone-alu.jpg) · [black](doc/art/wallpapers/fireflies-phone-black.jpg) |
 
 ## License and copyright
 
@@ -192,7 +192,9 @@ terrarium is made by [Voltage Foundry Modular](https://vfmod.com). © 2026 Volta
   browser version carries WebAssembly builds of seven of them in `lib/Engine_Terrarium/`, built
   from [norns-mi-UGens](https://github.com/carlosedp/norns-mi-UGens) (`BUILDINFO` there records
   the source).
-  [wasmoon](https://github.com/ceifa/wasmoon) (MIT) is vendored in `tools/norns-web`.
+  [wasmoon](https://github.com/ceifa/wasmoon) (MIT) is vendored in `tools/norns-web`. The plugin's
+  downloads carry [THIRD-PARTY-NOTICES.txt](THIRD-PARTY-NOTICES.txt), with the licences of all it
+  includes.
 - Mutable Instruments, monome, norns and all other product names are trademarks of their
   respective owners, used only to identify what terrarium works with. No affiliation with or
   endorsement by them is implied.

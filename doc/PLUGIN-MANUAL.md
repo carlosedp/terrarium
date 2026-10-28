@@ -6,8 +6,8 @@ _generative music in a jar, in your DAW_ · version 1.0.0
 
 terrarium is a small world in a jar that makes music: weather falls on a landscape, and wherever
 it lands, a note plays. It was made for monome norns, and this is the same terrarium as a plugin
-(VST3 and AU) and a standalone app: the same script, the same Mutable Instruments sound, now on
-your DAW's tempo, its automation lanes and its mixer.
+(VST3 and AU) and a standalone app: the same script, the same sound (Émilie Gillet's open-source
+Mutable Instruments code), now on your DAW's tempo, its automation lanes and its mixer.
 
 This manual covers what's different in a DAW: installing it, the window, the tempo, automation,
 saving, and routing the visitors. What lives in the jar, and how each part sounds and behaves,
@@ -243,5 +243,7 @@ tenth of one core. Clouds, fireflies and roots are the heavy ones; mountains and
 terrarium is made by Voltage Foundry Modular (vfmod.com). Its code is free software under the
 GNU GPL v3.0; the terrarium name, this manual and its images are all rights reserved. The sound is
 Émilie Gillet's Mutable Instruments code (MIT), through Volker Böhm's mi-UGens (GPL-3.0).
+THIRD-PARTY-NOTICES.txt, in the download, has their licences and those of Lua, JUCE and the
+other parts the plugin carries.
 Mutable Instruments, monome, norns, Ableton, Live, Reason, Logic and VST are trademarks of their
 owners, named only to say what terrarium works with; no affiliation or endorsement is implied.
