@@ -28,7 +28,8 @@ frosts it over.
 Every note is a place: where it lands across the screen sets its pitch in the current key
 and scale. The weather keeps a Turing Machine-style phrase, and each note leaves a mark on the
 ground. **Change** sets how often notes are replaced, dropped to a rest or added back.
-**Seasons** (slow by default) let the key drift between close neighbors and find its way home.
+**Seasons** (slow by default) let the key drift between close neighbors and find its way home,
+at dawn and dusk when the day is on, a note at a time.
 
 > **Version 1.0.0.** The plugin and the browser version play the whole engine; on a norns it's
 > still untested on hardware: the Lua side runs headless against a mocked norns (see

@@ -6,9 +6,12 @@
 --   (75%) or dropped to a rest (25%); a rest gets a new note.
 -- * pitch: x is a place on the land, mapped to a fixed semitone (C3 at the far
 --   left) and stepped to the nearest note of the current key and scale.
--- * seasons: at the end of a phrase, every few phrases, the key moves to a
---   close neighbor (one note changed, or a pentatonic gaining or losing two),
---   drifting from home and finding its way back.
+-- * seasons: at the end of a phrase, now and then (every few dozen phrases, or
+--   at dawn and dusk when the day is on), the key moves to a close neighbor (one
+--   note changed, or a pentatonic gaining or losing two), drifting from home and
+--   finding its way back. The new key comes in a note at a time: a note whose
+--   pitch the turn would move keeps its old one (`keep`) until it is replaced or,
+--   at each phrase end, half of those still lingering let go.
 -- When notes happen is up to the brain modules (rain, lightning).
 
 local H = include('lib/helpers')
@@ -36,6 +39,7 @@ Brain.octaves = 3
 Brain.length = 8
 Brain.home = { root = 2, scale = 3 }
 Brain.season_every = 0 -- phrases between season turns, 0 = off
+Brain.season_due = false -- a turn asked for (by the day), taken at the next phrase end
 Brain.phrases = 0
 Brain.season_t = -9
 Brain.reg = {}
@@ -55,6 +59,18 @@ function Brain.key_name(r, s)
 end
 
 function Brain.set_home() Brain.home = { root = Brain.root, scale = Brain.scale } end
+
+-- the key was set by hand: every note takes it at once
+function Brain.settle()
+  for k = 1, 16 do if Brain.reg[k] then Brain.reg[k].keep = nil end end
+end
+
+-- at a phrase end, half the notes still on the old key (at least one) move to the new one
+local function release()
+  local left = {}
+  for k = 1, 16 do if Brain.reg[k] and Brain.reg[k].keep then left[#left + 1] = Brain.reg[k] end end
+  for _ = 1, math.ceil(#left / 2) do table.remove(left, math.random(#left)).keep = nil end
+end
 
 -- ---------- phrase ----------
 
@@ -80,10 +96,14 @@ function Brain.step(change, t)
   if not any then Brain.reg[i] = Brain.new_note(t) end -- never let the phrase go silent
   Brain.last_step, Brain.last_step_t = i, t
   if i == len and Brain.on_phrase then Brain.on_phrase(change, t) end
-  if i == len and Brain.season_every > 0 then
-    Brain.phrases = Brain.phrases + 1
-    if Brain.phrases >= Brain.season_every then
-      Brain.phrases = 0
+  if i == len then
+    release()
+    if Brain.season_every > 0 then
+      Brain.phrases = Brain.phrases + 1
+      if Brain.phrases >= Brain.season_every then Brain.season_due = true end
+    end
+    if Brain.season_due then
+      Brain.phrases, Brain.season_due = 0, false
       Brain.turn_season(t)
     end
   end
@@ -141,6 +161,9 @@ end
 -- the upper voice to play now: the fifth if a season turned the chosen interval out of key
 function Brain.drone_interval() return in_key(Brain.drone_top) and Brain.drone_top or 7 end
 
+-- the note an event plays: its own pitch while it lingers on the old key after a season turn
+function Brain.note_pitch(ev) return ev.keep or Brain.pitch(ev.x) end
+
 -- place on the land -> MIDI note
 function Brain.pitch(x)
   local span = 12 * Brain.octaves
@@ -195,10 +218,17 @@ function Brain.turn_season(t)
     for _, c in ipairs(cands) do
       w[#w + 1] = c
       if c.d == 1 then w[#w + 1] = c; w[#w + 1] = c end -- one-note moves are likelier
+      if c.r == Brain.root then w[#w + 1] = c; w[#w + 1] = c end -- and those the drone can stay through
     end
     pick = w[math.random(#w)]
   end
+  Brain.settle()
+  local old = {}
+  for k = 1, 16 do if Brain.reg[k] then old[k] = Brain.pitch(Brain.reg[k].x) end end
   Brain.root, Brain.scale, Brain.season_t = pick.r, pick.s, t
+  for k, p in pairs(old) do
+    if Brain.pitch(Brain.reg[k].x) ~= p then Brain.reg[k].keep = p end -- moves over the next phrases
+  end
   if Brain.on_season then Brain.on_season() end
 end
 

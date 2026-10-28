@@ -7,10 +7,12 @@ local M = dofile((arg[0]:match("^(.*)/[^/]+$") or ".") .. "/mock_norns.lua")
 math.randomseed(1)
 
 -- keep hold of the script's canvas, to look at the picture
-local real_include, cv = include, nil
+local real_include, cv, brain, day = include, nil, nil, nil
 function include(p)
   local m = real_include(p)
   if p == "lib/canvas" then cv = m end
+  if p == "lib/brain" then brain = m end
+  if p == "lib/daylight" then day = m end
   return m
 end
 dofile(M.ROOT .. "/terrarium.lua")
@@ -286,6 +288,33 @@ params:set("rain_change", 0.6)
 M.run(40)
 check("40 s with seasons quick")
 print(("    key drifted to %s %s"):format(params:string("t_root"), params:string("t_scale")))
+
+-- a season turn brings the new key in a note at a time: the notes it would move keep their
+-- old pitch, and half of those still lingering let go at each phrase end
+params:set("t_seasons", 1); params:set("rain_change", 0); params:set("t_length", 4)
+for k = 1, 16 do brain.reg[k] = brain.new_note(0) end
+local before, lingered = {}, 0
+for k = 1, 16 do before[k] = brain.note_pitch(brain.reg[k]) end
+brain.turn_season(0)
+for k = 1, 16 do
+  assert(brain.note_pitch(brain.reg[k]) == before[k], "a season turn moved a note at once")
+  if brain.reg[k].keep then lingered = lingered + 1 end
+end
+M.run(60)
+for k = 1, 16 do assert(not brain.reg[k].keep, "a note lingered on the old key") end
+check(("season: %d notes came in one by one"):format(lingered))
+
+-- with the day on, the season turns at its points (slow: dawn), not every so many phrases
+params:set("t_day", 2); params:set("t_seasons", 2)
+day.phase = 0.1
+local turned = brain.season_t
+M.run(120)
+assert(brain.season_t == turned, "a season turned in the middle of the day")
+day.phase = 0.999
+M.run(30)
+assert(brain.season_t ~= turned, "the season didn't turn at dawn")
+params:set("t_day", 1); params:set("t_seasons", 2)
+check("season turns at dawn")
 
 -- climate: every attractor moves the macros around where they're set, never out of range
 params:set("t_drift", 3) -- fast

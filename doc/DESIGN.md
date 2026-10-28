@@ -65,18 +65,28 @@ E1 picks a part, and the others dim for a moment so it's clear which one you're 
 - **Clouds is Clouds, Beads got its own scene (fireflies).** Both are granular, so they needed
   distinct pictures.
 - **The key never changes by itself unless you ask.** An early version picked random keys; that
-  felt like interruptions. (Seasons, below, now start on _slow_: a close neighbor every 8
-  phrases, always finding its way home, which reads as evolving, not interrupting. _off_ keeps
+  felt like interruptions. (Seasons, below, now start on _slow_: a close neighbor once a
+  day, or every 32 phrases with the day off, always finding its way home, which reads as evolving, not interrupting. _off_ keeps
   this rule.) Key, scale, range and phrase length are settings (K1 + E2/E3, PARAMS,
   grid later).
 - **Turing Machine phrase instead of a déjà vu toggle.** The brain keeps a register of notes and
   rests. `change` (E3) is the chance per step that a note is replaced (75%) or dropped (25%), or a
   rest filled, always within the key. At 0 the phrase loops forever, which replaced the toggle.
   The phrase is drawn as marks on the ground so you can watch it evolve.
-- **Seasons instead of random keys.** At a phrase boundary every 8/4/2 phrases, the key
+- **Seasons instead of random keys.** At a phrase boundary every so often (see below), the key
   moves to a close neighbor: a one-note swap (dorian → minor, C → G) or a pentatonic gaining or
   losing two notes. It can't stray more than 3 notes from home (the key you set) and heads back
   toward home 40% of the time. Named "Seasons" because it turns gradually and comes back around.
+- **Seasons follow the day, and cross over a note at a time (October 2026).** Counted in
+  phrases, _slow_ turned the key about every 40 seconds at the default rain, and every note on
+  the swapped pitch jumped at once mid-loop: it still felt like an interruption. The key should
+  be the slowest thing in the piece, so with the day on the seasons turn at its points (slow:
+  dawn; steady: dawn and dusk; quick: every quarter day); with it off, every 32/16/8 phrases.
+  At a turn, the notes it would move keep their old pitch (`keep`) and half of those still
+  lingering let go at each phrase end, while new notes are born in the new key: the old and
+  new notes overlap for a phrase or two like passing tones over the drone. Moves that keep the
+  root are likelier, so the drone holds still, and the key name no longer pops up on screen
+  (the light sweep and the aurora's flare say it).
 - **Pitch is a fixed semitone per place, snapped to the scale.** Each place maps to a semitone,
   and a note steps to the nearest scale tone only when its semitone isn't in the scale. That's
   what makes Seasons smooth: shared notes stay where they are. (Mapping by scale degree reshuffled

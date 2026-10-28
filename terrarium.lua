@@ -72,7 +72,15 @@ local EROSION = {
   { wow = 1, flutter = 0.8, crackle = 0.9, hiss = 0.5, tone = 0.7, drive = 0.5 },        -- ancient
 }
 local LENGTHS = { 4, 8, 12, 16 }
-local SEASONS = { 0, 8, 4, 2 } -- phrases between turns: off, slow, steady, quick
+-- how often the season turns (off, slow, steady, quick): with the day on, at these points of
+-- it (0 dawn, .25 noon, .5 dusk, .75 midnight); with it off, every so many phrases
+local SEASONS = { 0, 32, 16, 8 }
+local SEASON_AT = { {}, { 0 }, { 0, 0.5 }, { 0, 0.25, 0.5, 0.75 } }
+local seasons = 2
+local function seasons_follow()
+  Brain.season_every = Day.on() and 0 or SEASONS[seasons]
+  Brain.phrases, Brain.season_due = 0, false
+end
 
 -- climate: which attractor output (1 x, 2 y, 3 z) moves each macro, and how much
 -- by default (the per-macro cv param, -1..1; full cv swings a macro by +-0.5)
@@ -198,7 +206,7 @@ end
 
 -- step: where in the phrase it is (nil for a strike or a drip)
 local function play(ev, fresh, vel, step)
-  local voice, note = sc.cur(2), Brain.pitch(ev.x)
+  local voice, note = sc.cur(2), Brain.note_pitch(ev)
   vel = (vel or (fresh and 1 or 0.75)) * dynamics(note, step) * (1 - 0.35 * sc.cover) -- snow softens it
   vel = H.clamp(vel, 0, 1)
   local pan = (ev.x / 127 * 2 - 1) * 0.6 -- you hear a note from where it lands
@@ -283,12 +291,12 @@ local function add_params()
   params:set_action("t_root", function(v)
     Brain.root = v - 1
     dirty_sound = true -- the drone follows the key
-    if not seasoning then Brain.set_home() end
+    if not seasoning then Brain.set_home(); Brain.settle() end
   end)
   params:add_option("t_scale", "scale", Brain.scale_names(), Brain.scale)
   params:set_action("t_scale", function(v)
     Brain.scale = v
-    if not seasoning then Brain.set_home() end
+    if not seasoning then Brain.set_home(); Brain.settle() end
   end)
   params:add_number("t_range", "range", 1, 3, Brain.octaves, function(p) return p:get() .. " oct" end)
   params:set_action("t_range", function(v) Brain.octaves = v end)
@@ -299,8 +307,8 @@ local function add_params()
   end)
   params:add_option("t_seasons", "seasons", { "off", "slow", "steady", "quick" }, 2)
   params:set_action("t_seasons", function(v)
-    Brain.season_every = SEASONS[v]
-    Brain.phrases = 0
+    seasons = v
+    seasons_follow()
   end)
   params:add_option("t_climate", "climate", Climate.NAMES, 1)
   params:set_action("t_climate", function(v)
@@ -319,6 +327,7 @@ local function add_params()
   params:add_option("t_day", "day", Day.NAMES, 1)
   params:set_action("t_day", function(v)
     Day.set(v)
+    seasons_follow()
     dirty_sound = true
   end)
 
@@ -356,7 +365,6 @@ local function add_params()
   params.action_read = stop_notes
 end
 
--- the season turned: show it in the settings without moving home
 -- at each phrase end: breath may calm the weather, and the drone may follow it
 Brain.on_phrase = function(change, t)
   -- the next phrase comes a little forward or steps back, wandering around 0.9
@@ -366,12 +374,13 @@ Brain.on_phrase = function(change, t)
   dirty_sound = true
 end
 
+-- the season turned: show it in the settings without moving home (and quietly: the light
+-- sweeping the ground and the aurora's flare are all it says)
 Brain.on_season = function()
   seasoning = true
   params:set("t_root", Brain.root + 1)
   params:set("t_scale", Brain.scale)
   seasoning = false
-  say(Brain.key_name())
 end
 
 -- ---------- a new terrarium ----------
@@ -618,7 +627,15 @@ local function tick()
   hud_t = hud_t - dt
   if not installer.active then
     Climate.update(dt, params:get("t_drift"))
+    local was = Day.phase
     Day.update(dt)
+    local d = (Day.phase - was) % 1
+    if d > 0 and d < 0.01 then -- the day moved on (not a jump, as when it's switched to clock)
+      for _, at_p in ipairs(SEASON_AT[seasons]) do
+        local u = (at_p - was) % 1
+        if u > 0 and u <= d then Brain.season_due = true end -- the season turns at the next phrase end
+      end
+    end
     Breath.update(dt, Climate.on() and Climate.out[1] or nil)
     if moving() then dirty_sound = true end
     for i = 1, #LAYERS do

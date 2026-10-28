@@ -412,13 +412,15 @@ too.
 
 ### seasons
 
-Every few phrases, the key moves to a close neighbor, changing only one or two notes, so the
-music shifts gently instead of jumping. The key you set is home: the seasons wander away and
-keep finding their way back. A light sweeps along the ground when a season turns, and the
-aurora flares.
+Now and then the key moves to a close neighbor, changing only one or two notes, so the music
+shifts gently instead of jumping. The key you set is home: the seasons wander away and keep
+finding their way back. The new note doesn't arrive all at once: the notes it would move keep
+their old pitch for a phrase or two and come over one by one, while new notes already play in
+the new key. A light sweeps along the ground when a season turns, and the aurora flares.
 
-_slow_ (how terrarium starts), _steady_ and _quick_ turn the season every 8, 4 or 2 phrases;
-_off_ keeps the key where you set it.
+With the **day** on, the seasons follow it: _slow_ (how terrarium starts) turns the season at
+dawn, _steady_ at dawn and dusk, _quick_ at dawn, noon, dusk and midnight. With the day off they
+turn every 32, 16 or 8 phrases. _off_ keeps the key where you set it.
 
 ### climate and drift
 
@@ -594,7 +596,8 @@ output
 
 The phrase works like a Turing Machine: a loop of notes and rests where **change** sets the
 chance that a step mutates as it plays. **Seasons** move between keys that share all but one or
-two notes, and each place on the land is a fixed semitone, so shared notes stay where they are.
+two notes, and each place on the land is a fixed semitone, so shared notes stay where they are;
+the notes that do move cross over one at a time.
 
 The four climates are chaotic attractors, the same kind of slowly unfolding, never-repeating
 motion found in weather and electronics: **fronts** is the Lorenz attractor (Edward Lorenz found
