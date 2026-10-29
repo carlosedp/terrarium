@@ -1,12 +1,13 @@
 # terrarium: common tasks. `make` lists them.
 
 PORT  ?= 8800
+NORNS_WEB ?= https://github.com/carlosedp/norns-web
 NORNS ?= we@norns.local
 DEST  ?= /home/we/dust/code/terrarium
 MIUGENS ?= ../norns-mi-UGens
 
 .DEFAULT_GOAL := help
-.PHONY: help web norns-web stop test soak build clean deploy manual-images manual-pdf plugin-manual-pdf art mi-wasm logo
+.PHONY: help web norns-web stop test soak build clean deploy manual-images manual-pdf plugin-manual-pdf art mi-wasm logo norns-web-pull norns-web-push
 
 help: ## list the targets
 	@grep -E '^[a-z-]+:.*## ' $(MAKEFILE_LIST) | awk -F':.*## ' '{ printf "  make %-14s %s\n", $$1, $$2 }'
@@ -66,3 +67,14 @@ mi-wasm: ## rebuild lib/Engine_Terrarium/ (the browser's mi-UGens) from norns-mi
 	cp $(MIUGENS)/work/out-wasm/*.wasm $(MIUGENS)/work/out-wasm/mi-ugens.js \
 		$(MIUGENS)/work/out-wasm/mi-ugens-node.js $(MIUGENS)/work/out-wasm/BUILDINFO lib/Engine_Terrarium/
 	chmod -x lib/Engine_Terrarium/*
+
+# tools/norns-web is a git subtree of github.com/carlosedp/norns-web (NORNS_WEB=... for another
+# copy). git subtree needs GNU dirname: uutils' (Ubuntu 25.10+) turns tools/norns-web into tools,
+# so these put the GNU one first on the PATH when there is one.
+SUBTREE = d=$$(mktemp -d); g=$$(command -v gnudirname || command -v gdirname); \
+	[ -n "$$g" ] && ln -s "$$g" $$d/dirname; PATH=$$d:$$PATH git subtree
+norns-web-pull: ## update tools/norns-web from the norns-web repo (NORNS_WEB=..., BRANCH=main)
+	$(SUBTREE) pull --prefix=tools/norns-web $(NORNS_WEB) $(or $(BRANCH),main)
+norns-web-push: ## send commits to tools/norns-web back to the norns-web repo, as BRANCH
+	@[ -n "$(BRANCH)" ] || { echo "BRANCH=... please (a branch in norns-web to open a PR from)"; exit 1; }
+	$(SUBTREE) push --prefix=tools/norns-web $(NORNS_WEB) $(BRANCH)

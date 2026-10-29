@@ -79,6 +79,11 @@ footer) comes from
   check it.
 - `tools/norns-web` must stay generic: nothing terrarium-specific in it. The browser runs Lua 5.4,
   so it won't catch 5.4-only code that would fail on norns (5.3).
+- **`tools/norns-web` is a git subtree** of github.com/carlosedp/norns-web (its own repo since
+  2026-10-29; pollen uses it too). Commit changes to it apart from terrarium's, then send them
+  back with `make norns-web-push BRANCH=...`; `make norns-web-pull` brings in its updates. Keep
+  the paths: the Pages workflow, `plugin/juce/stage.cmake`, `plugin/render` and
+  `tools/manual/art.mjs` all read it at `tools/norns-web/`.
 - A brain module must define `wind(sc)` (the sky drifts with it); `flash()` is optional.
   `lookahead` (rain) plays each note a step after its spawn; `drifts` (snow) makes `spawn()`
   return the seconds until it lands, and the note plays then. `covers` (snow) means it owns

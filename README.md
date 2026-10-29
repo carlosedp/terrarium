@@ -141,7 +141,7 @@ no sound, no real screen.
 minutes, and fails on what only shows up over hours: growing memory or lists, values out of range
 or NaN, silence, a hum stuck hushed.
 
-To see and play the real script in a browser, run [norns-web](tools/norns-web/README.md):
+To see and play the real script in a browser, run [norns-web](tools/norns-web/README.md) (its own repo, [carlosedp/norns-web](https://github.com/carlosedp/norns-web), kept here as a git subtree; `make norns-web-pull` updates it):
 
 ```
 node tools/norns-web/serve.mjs     # then open http://localhost:8800/
