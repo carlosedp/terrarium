@@ -29,3 +29,6 @@ jobs:
         run: |
           node build.mjs test/hello _site
           test -f _site/index.html && test -f _site/files.json && test -f _site/vendor/wasmoon/glue.wasm
+          # built inside the script (as a Pages workflow does), it lists only the script's own files
+          node build.mjs test/hello test/hello/_site
+          node -e 'const f = Object.keys(require("./test/hello/_site/files.json").files); if (f.join() !== "hello.lua") { console.error(f); process.exit(1) }'

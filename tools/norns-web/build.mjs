@@ -41,7 +41,7 @@ for (const f of fs.existsSync(libDir) ? fs.readdirSync(libDir) : []) {
   if (/^Engine_.*\.js$/.test(f) && fs.existsSync(files) && fs.statSync(files).isDirectory())
     fs.cpSync(files, path.join(out, "script/lib", path.basename(files)), { recursive: true });
 }
-const m = manifest(scriptDir, "script/");
+const m = manifest(scriptDir, "script/", [out]);
 for (const f of [m.about?.icon, m.about?.touch_icon, ...(m.about?.gallery || []).map(g => g.img)].filter(Boolean)) {   // the page's icons and pictures (norns-web.json)
   fs.mkdirSync(path.dirname(path.join(out, "script", f)), { recursive: true });
   fs.copyFileSync(path.join(scriptDir, f), path.join(out, "script", f));
