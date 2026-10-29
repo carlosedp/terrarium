@@ -1,0 +1,4 @@
+dist/
+node_modules/
+# the vendored wasmoon is meant to be committed (a global ignore may hide vendor/)
+!vendor/

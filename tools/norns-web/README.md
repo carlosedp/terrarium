@@ -5,8 +5,40 @@ PARAMS are emulated, and engine commands go to a Web Audio stand-in for the Supe
 engine. How close the sound is depends on the stand-in: a sketch, or the real DSP code compiled
 to WebAssembly.
 
-It knows nothing about terrarium. Any script that sticks to `screen`, `params`, `clock`, `metro`
-and engine commands should run; midi, grid, arc, softcut, crow and poll are silent stubs.
+It knows nothing about any one script. Any script that sticks to `screen`, `params`, `clock`,
+`metro` and engine commands should run; midi, grid, arc, softcut, crow and poll are silent stubs.
+It started inside [terrarium](https://github.com/carlosedp/terrarium), which is still the most
+complete example (an engine stand-in on real mi-UGens, a plugin that uses this page as its face).
+
+## Add it to a script
+
+A script carries norns-web in its own repo, at `tools/norns-web/`, as a git subtree: no
+submodules to init, and CI and a fresh clone just work. The paths below assume that folder
+(`manifest.mjs` skips `tools/`, so norns-web's own files never show up as the script's).
+
+```
+git subtree add  --prefix=tools/norns-web https://github.com/carlosedp/norns-web main --squash
+git subtree pull --prefix=tools/norns-web https://github.com/carlosedp/norns-web main --squash   # update
+git subtree push --prefix=tools/norns-web https://github.com/carlosedp/norns-web <branch>        # send a fix back
+```
+
+Changes made in a script's copy stay generic (nothing about that script) and go back here with
+`subtree push`, then out to the other scripts with `subtree pull`.
+
+`git subtree` needs a GNU `dirname`. With uutils coreutils (Ubuntu 25.10 and later),
+`dirname tools/norns-web/.` gives `tools`, and subtree then works on all of `tools/`. Put the GNU
+one first on the PATH for these commands (`/usr/bin/gnudirname`, or Homebrew's `gdirname`, linked
+as `dirname` in a folder of its own).
+
+## Try it
+
+```
+node serve.mjs examples/hello      # then open http://localhost:8800/
+lua test/headless.lua [script dir] # boots a script on lib/norns.lua, no browser; fails on Lua errors
+```
+
+`examples/hello` is the smallest script it runs. CI runs the headless check on Lua 5.4 and 5.3
+and a static build of the example (`.github/workflows/test.yml`).
 
 ## Run it while working
 
@@ -171,3 +203,9 @@ value (`params:get("x")`), a statement just runs. Up and down recall history.
   `params:read(n)` from the REPL), not in files; no MIDI mapping, no clock params.
 - **Audio:** only what the stand-in plays.
 - `norns.system_cmd` is logged, not run.
+
+## License
+
+norns-web is free software under the GNU GPL v3.0 (see [LICENSE](LICENSE)). © 2026 Voltage
+Foundry Modular. [wasmoon](https://github.com/ceifa/wasmoon) (MIT) is vendored in `vendor/`, and
+the fonts in `fonts/` are under the SIL Open Font License (their `OFL-*.txt`).
