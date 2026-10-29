@@ -1,7 +1,7 @@
 -- hello: the smallest script norns-web runs, for trying it and for its tests.
 -- A dot drifts across the screen; E2 sets its speed, E3 its size, K3 reverses it.
 --
---   node serve.mjs examples/hello
+--   node serve.mjs test/hello
 
 local x, dir = 64, 1
 

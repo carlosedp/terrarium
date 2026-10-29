@@ -1,11 +1,11 @@
 -- Runs a script on lib/norns.lua without a browser, to check that it boots, draws and takes
 -- the controls without errors: the same calls norns-web.js makes, with js_bridge stubbed.
 --
---   lua test/headless.lua [script dir, default examples/hello] [seconds, default 5]
+--   lua test/headless.lua [script dir, default test/hello] [seconds, default 5]
 --
 -- Run from norns-web's folder. Exits 1 on any Lua error, or if the script never drew.
 
-local dir = (arg[1] or "examples/hello"):gsub("/$", "")
+local dir = (arg[1] or "test/hello"):gsub("/$", "")
 local seconds = tonumber(arg[2]) or 5
 local name = dir:match("([^/]+)$")
 

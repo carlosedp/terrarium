@@ -33,11 +33,11 @@ as `dirname` in a folder of its own).
 ## Try it
 
 ```
-node serve.mjs examples/hello      # then open http://localhost:8800/
+node serve.mjs test/hello      # then open http://localhost:8800/
 lua test/headless.lua [script dir] # boots a script on lib/norns.lua, no browser; fails on Lua errors
 ```
 
-`examples/hello` is the smallest script it runs. CI runs the headless check on Lua 5.4 and 5.3
+`test/hello` is the smallest script it runs (under `test/`, which the norns script menu skips, as it skips `lib/`). CI runs the headless check on Lua 5.4 and 5.3
 and a static build of the example (`.github/workflows/test.yml`).
 
 ## Run it while working
