@@ -130,12 +130,12 @@
     },
     {
       "label": "terrarium on splines catalog",
-      "url": "https://splines.vfmod.com/scripts/terrarium/"
+      "url": "https://splines.cc/scripts/terrarium/"
     },
     {
-      "label": "Voltage Foundry Modular",
-      "url": "https://vfmod.com"
+      "label": "glassgarden.",
+      "url": "https://glassgarden.cc"
     }
   ],
-  "footer": "© 2026 Voltage Foundry Modular. terrarium's code is free software under the GNU GPL v3.0; the terrarium name, its manual and images are all rights reserved. Mutable Instruments, monome and norns are trademarks of their respective owners, named only to say what terrarium works with; no affiliation or endorsement is implied. In the browser it runs on norns-web, with wasmoon (MIT)."
+  "footer": "© 2026 glassgarden, a project by Carlos Eduardo. terrarium's code is free software under the GNU GPL v3.0; the terrarium name, its manual and images are all rights reserved. Mutable Instruments, monome and norns are trademarks of their respective owners, named only to say what terrarium works with; no affiliation or endorsement is implied. In the browser it runs on norns-web, with wasmoon (MIT)."
 }

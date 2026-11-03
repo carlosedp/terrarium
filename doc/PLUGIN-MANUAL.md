@@ -18,14 +18,22 @@ and [the slow settings](MANUAL.md#letting-it-grow-the-slow-settings) apply here 
 
 ## Contents
 
-- [Installing it](#installing-it)
-- [The window](#the-window)
-- [Playing it](#playing-it)
-- [In time with your DAW](#in-time-with-your-daw)
-- [Automation](#automation)
-- [Saving](#saving)
-- [Visitors: a synth beside the jar](#visitors-a-synth-beside-the-jar)
-- [If something seems wrong](#if-something-seems-wrong)
+- [terrarium, the plugin](#terrarium-the-plugin)
+  - [Contents](#contents)
+  - [Installing it](#installing-it)
+  - [The window](#the-window)
+    - [Under the hood](#under-the-hood)
+  - [Playing it](#playing-it)
+  - [In time with your DAW](#in-time-with-your-daw)
+    - [When the transport stops](#when-the-transport-stops)
+  - [Automation](#automation)
+  - [Saving](#saving)
+  - [Visitors: a synth beside the jar](#visitors-a-synth-beside-the-jar)
+    - [In Ableton Live](#in-ableton-live)
+    - [In Reason](#in-reason)
+    - [In Logic Pro](#in-logic-pro)
+    - [With a hardware synth](#with-a-hardware-synth)
+  - [If something seems wrong](#if-something-seems-wrong)
 
 ---
 
@@ -36,7 +44,7 @@ Each download holds the plugin and a standalone app.
 **Windows** (64-bit, Windows 10 or 11):
 
 - Copy **terrarium.vst3** (the whole folder) into `C:\Program Files\Common Files\VST3\`.
-- Rescan your plugins, and find **terrarium** (Voltage Foundry Modular) among the instruments.
+- Rescan your plugins, and find **terrarium** (under glassgarden) among the instruments.
 - The standalone: run **terrarium.exe**, with the **terrarium-resources** folder beside it.
 
 **macOS** (Intel or Apple Silicon):
@@ -240,7 +248,7 @@ tenth of one core. Clouds, fireflies and roots are the heavy ones; mountains and
 
 ---
 
-terrarium is made by Voltage Foundry Modular (vfmod.com). Its code is free software under the
+terrarium is made by glassgarden - Voltage Foundry Modular (glassgarden.cc). Its code is free software under the
 GNU GPL v3.0; the terrarium name, this manual and its images are all rights reserved. The sound is
 Émilie Gillet's Mutable Instruments code (MIT), through Volker Böhm's mi-UGens (GPL-3.0).
 THIRD-PARTY-NOTICES.txt, in the download, has their licences and those of Lua, JUCE and the

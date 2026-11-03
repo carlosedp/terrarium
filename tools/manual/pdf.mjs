@@ -16,18 +16,26 @@ import { chromium } from "playwright-core";
 const here = path.dirname(fileURLToPath(import.meta.url));
 const docDir = path.resolve(here, "../../doc");
 // node pdf.mjs [source in doc/, default MANUAL.md] [pdf in doc/, default terrarium-manual.pdf]
-const [srcName = "MANUAL.md", outName = "terrarium-manual.pdf"] = process.argv.slice(2);
+const [srcName = "MANUAL.md", outName = "terrarium-manual.pdf"] =
+  process.argv.slice(2);
 const out = path.join(docDir, outName);
 
 function findChromium() {
   if (process.env.CHROMIUM) return process.env.CHROMIUM;
   const cache = path.join(os.homedir(), ".cache/ms-playwright");
-  const builds = fs.existsSync(cache) ? fs.readdirSync(cache).filter(d => /^chromium-\d+$/.test(d)).sort() : [];
+  const builds = fs.existsSync(cache)
+    ? fs
+        .readdirSync(cache)
+        .filter((d) => /^chromium-\d+$/.test(d))
+        .sort()
+    : [];
   for (const b of builds.reverse()) {
     const exe = path.join(cache, b, "chrome-linux/chrome");
     if (fs.existsSync(exe)) return exe;
   }
-  throw new Error("no Chromium found: set CHROMIUM=/path/to/chrome (or: npx playwright install chromium)");
+  throw new Error(
+    "no Chromium found: set CHROMIUM=/path/to/chrome (or: npx playwright install chromium)",
+  );
 }
 
 const CSS = `
@@ -90,10 +98,16 @@ try {
   await page.evaluate(() => {
     // GitHub-style ids, so the contents links work in the PDF
     for (const h of document.querySelectorAll("h1, h2, h3, h4")) {
-      h.id = h.textContent.trim().toLowerCase().replace(/[^\w\- ]+/g, "").replace(/ /g, "-");
+      h.id = h.textContent
+        .trim()
+        .toLowerCase()
+        .replace(/[^\w\- ]+/g, "")
+        .replace(/ /g, "-");
     }
     // the cover: the title, its subtitle and the hero picture
-    const h1 = document.querySelector("h1"), sub = h1.nextElementSibling, hero = sub.nextElementSibling;
+    const h1 = document.querySelector("h1"),
+      sub = h1.nextElementSibling,
+      hero = sub.nextElementSibling;
     const cover = document.createElement("section");
     cover.className = "cover";
     h1.before(cover);
@@ -101,37 +115,61 @@ try {
     cover.append(h1, sub, hero);
     const made = document.createElement("p");
     made.className = "made";
-    made.innerHTML = "player's manual<br><br>Voltage Foundry Modular · vfmod.com<br>© 2026";
+    made.innerHTML =
+      "player's manual<br><br>glassgarden · glassgarden.cc<br>© 2026";
     cover.append(made);
     // a card per module: an h4, its first picture beside its text (up to the next heading);
     // any further pictures (the flowers, condensation, frost) go below the card
-    const isPicture = n => n.tagName === "P" && n.children.length === 1 && n.firstElementChild.tagName === "IMG" && n.textContent.trim() === "";
+    const isPicture = (n) =>
+      n.tagName === "P" &&
+      n.children.length === 1 &&
+      n.firstElementChild.tagName === "IMG" &&
+      n.textContent.trim() === "";
     for (const h4 of [...document.querySelectorAll("h4")]) {
-      const card = document.createElement("div"), pic = document.createElement("div"), text = document.createElement("div");
+      const card = document.createElement("div"),
+        pic = document.createElement("div"),
+        text = document.createElement("div");
       const more = document.createElement("div");
-      card.className = "module"; pic.className = "pic"; text.className = "text"; more.className = "more";
+      card.className = "module";
+      pic.className = "pic";
+      text.className = "text";
+      more.className = "more";
       h4.before(card);
       text.append(h4);
       let n = card.nextElementSibling;
-      while (n && !/^(H2|H3|H4|HR)$/.test(n.tagName) && !n.classList.contains("module")) {
+      while (
+        n &&
+        !/^(H2|H3|H4|HR)$/.test(n.tagName) &&
+        !n.classList.contains("module")
+      ) {
         const next = n.nextElementSibling;
         if (isPicture(n)) (pic.childElementCount ? more : pic).append(n);
-        else if (more.childElementCount) more.append(n); // text after a later picture stays with it
+        else if (more.childElementCount)
+          more.append(n); // text after a later picture stays with it
         else text.append(n);
         n = next;
       }
-      card.append(pic.childElementCount ? pic : document.createElement("div"), text);
+      card.append(
+        pic.childElementCount ? pic : document.createElement("div"),
+        text,
+      );
       if (more.childElementCount) card.after(more);
     }
   });
   await page.evaluate(() => document.fonts.ready);
   await page.pdf({
-    path: out, format: "A4", printBackground: true, preferCSSPageSize: true,
-    displayHeaderFooter: true, headerTemplate: "<span></span>",
+    path: out,
+    format: "A4",
+    printBackground: true,
+    preferCSSPageSize: true,
+    displayHeaderFooter: true,
+    headerTemplate: "<span></span>",
     footerTemplate: `<div style="width:100%;font:8px 'JetBrains Mono',monospace;color:#8a8f8a;padding:0 17mm;display:flex;justify-content:space-between">
-      <span>terrarium · Voltage Foundry Modular</span><span class="pageNumber"></span></div>`,
+      <span>terrarium · glassgarden.</span><span class="pageNumber"></span></div>`,
   });
-  console.log(`${path.relative(process.cwd(), out)} (${Math.round(fs.statSync(out).size / 1024)} KB)`);
+  console.log(
+    `${path.relative(process.cwd(), out)} (${Math.round(fs.statSync(out).size / 1024)} KB)`,
+  );
 } finally {
   await browser.close();
   fs.rmSync(tmp, { force: true });

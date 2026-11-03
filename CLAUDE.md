@@ -8,9 +8,9 @@ doc/DESIGN.md for why things are the way they are.
 
 **Status:** 1.0.0 (2026-10-23; releases come from `v*` tags, `.github/workflows/plugin.yml`;
 pushes and PRs run the plugin core's quick check, `plugin-core.yml` / `plugin/tests.sh`).
-The plugin (`plugin/`) and norns-web play the whole engine. Still never run on a norns (the user's
-norns hadn't arrived): the Lua side passes a headless smoke test; `lib/Engine_Terrarium.sc` has
-never been compiled.
+The plugin (`plugin/`) and norns-web play the whole engine. Tested and working on a real norns
+(2026-10-30); published on norns.community (<https://norns.community/terrarium/>), which renders
+README.md: keep its images and links absolute URLs (relative ones break there).
 
 ## Commands
 
@@ -27,7 +27,7 @@ make mi-wasm                          # rebuild the browser's mi-UGens (lib/Engi
 Run the smoke test after every Lua change. It also asserts that params group counts match.
 
 GitHub Pages (`.github/workflows/pages.yml`) runs the smoke test on Lua 5.3 and publishes norns-web on
-every push to main, at https://carlosedp.github.io/terrarium/. The page's text (title, intro, the
+every push to main, at <https://terrarium.glassgarden.cc/>. The page's text (title, intro, the
 Shuffle button, how-to-play controls, the gallery of parts, the plugin's downloads, links, copyright
 footer) comes from
 `norns-web.json`; keep its `controls` in step with the Controls in README.md.
@@ -35,7 +35,7 @@ footer) comes from
 ## Rules that are easy to break
 
 - **Never write mi-UGens class names in the .sc file.** Look them up with `\MiPlaits.asClass`.
-  A missing class makes sclang fail to compile, which breaks SuperCollider for *every* norns
+  A missing class makes sclang fail to compile, which breaks SuperCollider for _every_ norns
   script, not just this one. The Lua installer handles missing mi-UGens instead.
 - **Never pass `seed` to MiBeads.** Any input there counts as "patched" and stops density from
   generating grains.

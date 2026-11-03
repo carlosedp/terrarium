@@ -44,10 +44,11 @@ manual-images: ## re-render the manual's scene pictures (doc/img) from the Lua
 	lua tools/manual/lib/shots.lua . tools/manual/pgm > /dev/null
 	python3 tools/manual/topng.py tools/manual/pgm doc/img
 
-logo: ## draw the mark (doc/img/icon.svg, logo.svg, icon-touch.svg and its 180 px PNG)
+logo: ## draw the mark (doc/img/icon.svg, logo.svg, icon-touch.svg and their PNGs)
 	python3 tools/manual/logo.py doc/img
 	@[ -d tools/manual/node_modules ] || npm --prefix tools/manual install --no-fund --no-audit
 	node tools/manual/svg2png.mjs doc/img/icon-touch.svg doc/img/icon-touch.png 180
+	node tools/manual/svg2png.mjs doc/img/icon.svg doc/img/icon.png 128
 
 manual-pdf: ## build doc/terrarium-manual.pdf from doc/MANUAL.md (node + a Chromium)
 	@[ -d tools/manual/node_modules ] || npm --prefix tools/manual install --no-fund --no-audit

@@ -89,15 +89,15 @@ the sky.
 
 Terrarium has **five parts**: weather, soil, water, air and hum. You pick a part, then shape it.
 
-|                       |                                                                                                         |
-| --------------------- | ------------------------------------------------------------------------------------------------------- |
-| **E1**                | choose a part: weather, soil (what grows), water (pond or fog), air (the sky) or hum (always there)       |
-| **E2, E3**            | shape that part (each part has two knobs)                                                               |
-| **K2**                | swap what lives in that part (meadow → crystals → reeds…)                                               |
-| **hold K2 + turn E2** | choose its variety (which flowers, which kind of resonance, which NB voice…)                            |
-| **K3**                | that part's gesture (see below)                                                                         |
-| **hold K1**           | peek at everything, and change the settings                                                             |
-| **hold K1 + K3**      | a new terrarium: everything chosen at random                                                            |
+|                       |                                                                                                     |
+| --------------------- | --------------------------------------------------------------------------------------------------- |
+| **E1**                | choose a part: weather, soil (what grows), water (pond or fog), air (the sky) or hum (always there) |
+| **E2, E3**            | shape that part (each part has two knobs)                                                           |
+| **K2**                | swap what lives in that part (meadow → crystals → reeds…)                                           |
+| **hold K2 + turn E2** | choose its variety (which flowers, which kind of resonance, which NB voice…)                        |
+| **K3**                | that part's gesture (see below)                                                                     |
+| **hold K1**           | peek at everything, and change the settings                                                         |
+| **hold K1 + K3**      | a new terrarium: everything chosen at random                                                        |
 
 ### Choosing a part
 
@@ -133,12 +133,12 @@ meadow, a different resonance in the pond. Its name appears as you turn.
 
 ### Gestures (K3)
 
-| Part         | K3                                                                  |
-| ------------ | ------------------------------------------------------------------- |
-| weather      | a new phrase: the weather forgets its notes and starts another      |
-| soil, water  | strike: play a note right now                                       |
-| air          | freeze: hold the sky still (and the jar frosts over); again to thaw |
-| hum          | hush: the hum fades out; again to let it rise                       |
+| Part        | K3                                                                  |
+| ----------- | ------------------------------------------------------------------- |
+| weather     | a new phrase: the weather forgets its notes and starts another      |
+| soil, water | strike: play a note right now                                       |
+| air         | freeze: hold the sky still (and the jar frosts over); again to thaw |
+| hum         | hush: the hum fades out; again to let it rise                       |
 
 ### Peeking (hold K1)
 
@@ -629,13 +629,14 @@ See [tools/norns-web](../tools/norns-web/README.md).
 
 ## Credits
 
-terrarium is made by **[Voltage Foundry Modular](https://vfmod.com)**: Eurorack modules, mostly,
-and adventures into anything else that makes sound.
+terrarium is made by **[glassgarden](https://glassgarden.cc)**, a project by Carlos Eduardo and
+[Voltage Foundry Modular](https://vfmod.com), : Eurorack modules, mostly, and adventures into
+anything else that makes sound.
 
 Its sound is built on Émilie Gillet's Mutable Instruments modules, brought to SuperCollider by
 Volker Böhm's mi-UGens, and runs on monome's norns. Thank you all.
 
-© 2026 Voltage Foundry Modular. The terrarium name, this manual and its images are all rights
+© 2026 glassgarden. The terrarium name, this manual and its images are all rights
 reserved. The code is free software under the GNU GPL v3.0. Mutable Instruments, monome, norns
 and all other product names are trademarks of their respective owners, used only to identify
 what terrarium works with; no affiliation or endorsement is implied.

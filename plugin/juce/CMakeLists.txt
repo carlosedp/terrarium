@@ -33,8 +33,8 @@ endif()
 
 juce_add_plugin(terrarium_plugin
   PRODUCT_NAME "terrarium"
-  COMPANY_NAME "Voltage Foundry Modular"
-  BUNDLE_ID com.vfmod.terrarium
+  COMPANY_NAME "glassgarden"
+  BUNDLE_ID cc.glassgarden.terrarium
   ICON_BIG "${SCRIPT_DIR}/doc/img/icon-touch.svg"  # the jar, on its night (the app's and the window's icon)
   ICON_SMALL "${SCRIPT_DIR}/doc/img/icon-touch.svg"
   PLUGIN_MANUFACTURER_CODE Vfmd

@@ -1,14 +1,14 @@
-# <img src="doc/img/icon.svg" alt="" width="40" height="40" align="top"> terrarium
+# <img src="https://raw.githubusercontent.com/carlosedp/terrarium/main/doc/img/icon.png" alt="" width="40" height="40" align="top"> terrarium
 
-![terrarium on a norns shield, standing on the ground under a night sky: rain falls on a meadow and a pond on its screen](doc/cover.png)
+![terrarium on a norns shield, standing on the ground under a night sky: rain falls on a meadow and a pond on its screen](https://raw.githubusercontent.com/carlosedp/terrarium/main/doc/cover.png)
 
 🌱 A small world of modular instruments for [monome norns](https://monome.org/docs/norns/).
 
-**[Read the manual](doc/MANUAL.md)** for how to play it (also as a [PDF](doc/terrarium-manual.pdf)),
-or **[try it in your browser](https://carlosedp.github.io/terrarium/)**, phones included: the real
+**[Read the manual](https://github.com/carlosedp/terrarium/blob/main/doc/MANUAL.md)** for how to play it (also as a [PDF](https://raw.githubusercontent.com/carlosedp/terrarium/main/doc/terrarium-manual.pdf)),
+or **[try it in your browser](https://terrarium.glassgarden.cc/)**, phones included: the real
 script, playing the real Mutable Instruments code. It also comes as a **VST3 / AU plugin** for your
-DAW, on its tempo and automation: see [the plugin's manual](doc/PLUGIN-MANUAL.md) (and
-[plugin/](plugin/README.md) for building it).
+DAW, on its tempo and automation: see [the plugin's manual](https://github.com/carlosedp/terrarium/blob/main/doc/PLUGIN-MANUAL.md) (and
+[plugin/](https://github.com/carlosedp/terrarium/blob/main/plugin/README.md) for building it).
 
 The patch is a landscape. Five parts each draw one piece of the scene and play one part of
 the sound. Swap a module and that piece of the scene changes; turn a macro and the scene moves
@@ -30,10 +30,6 @@ and scale. The weather keeps a Turing Machine-style phrase, and each note leaves
 ground. **Change** sets how often notes are replaced, dropped to a rest or added back.
 **Seasons** (slow by default) let the key drift between close neighbors and find its way home,
 at dawn and dusk when the day is on, a note at a time.
-
-> **Version 1.0.0.** The plugin and the browser version play the whole engine; on a norns it's
-> still untested on hardware: the Lua side runs headless against a mocked norns (see
-> [Development](#development)), and the SuperCollider engine still needs a real norns.
 
 ## Requirements
 
@@ -92,100 +88,29 @@ climate, drift, day, breath, erosion),
 every macro, and each module's fixed options (Plaits engine, DX bank, Rings model, Clouds
 mode) are also in PARAMS, so they save with PSETs and can be MIDI-mapped.
 
-## How it's built
-
-```
-terrarium.lua            script: parts, params, controls, drawing, the brain clock
-lib/Engine_Terrarium.sc  engine: 2 Plaits voices -> color slot -> air slot -> out
-lib/brain.lua            phrase, pitch mapping, seasons
-lib/canvas.lua           128x64 framebuffer, blitted to the screen as merged runs
-lib/glass.lua            the glass over the scene: rim, condensation, frost
-lib/climate.lua          chaotic attractors that modulate the macros
-lib/scene/*.lua          one file per module: its drawing, macros and sound mapping
-lib/installer.lua        mi-UGens check and installer
-doc/SOUND.md             macro -> mi-UGen parameter map (the tuning reference)
-lib/Engine_Terrarium.js  the engine for norns-web: the same graphs, in Web Audio (norns ignores it)
-lib/Engine_Terrarium/    the mi-UGens it plays, built as WebAssembly (`make mi-wasm`)
-tools/norns-web/         runs the script's real Lua in a browser
-test/                    mocked norns runtime and a smoke test
-```
-
-The Lua side owns every macro-to-parameter mapping (each module's `sound()` function, written
-from [doc/SOUND.md](doc/SOUND.md)); the engine only exposes raw parameters per slot. Tuning the
-sound means editing those functions.
-
-On screen the parts are weather, soil, water, air and hum; in the code (param ids, `tune()`,
-module files) they keep their working names: brain, voice, color, air and drone.
-
-A module is one file under `lib/scene/` with `macros`, `draw`, `update`, and either
-`wait`/`spawn`/`wind` (brain; `flash` optional) or `sound`/`on_note` (voice, color, air). Add it to `LAYERS` in `terrarium.lua`; a new
-color or air module also needs a `terrarium_<id>` SynthDef in the engine.
-
 ## Development
 
-`make` lists the common tasks: `make web` (the script in a browser), `make test`, `make deploy`
-(copy to a norns over ssh; `NORNS=we@<ip>` if `norns.local` doesn't resolve).
-
-Run the smoke test on a computer (Lua 5.3+):
-
-```
-lua test/smoke.lua
-```
-
-It loads the script against `test/mock_norns.lua`, plays every module, gesture and setting,
-exercises the installer path, and prints screen calls per frame. It checks the Lua logic only:
-no sound, no real screen.
-
-`lua test/soak.lua [hours]` (`make soak`) runs the jar for hours of jar time (8 by default, about
-1.5 minutes each) with climate, a day, seasons and breath on and a new terrarium every 20
-minutes, and fails on what only shows up over hours: growing memory or lists, values out of range
-or NaN, silence, a hum stuck hushed.
-
-To see and play the real script in a browser, run [norns-web](tools/norns-web/README.md) (its own repo, [carlosedp/norns-web](https://github.com/carlosedp/norns-web), kept here as a git subtree; `make norns-web-pull` updates it):
-
-```
-node tools/norns-web/serve.mjs     # then open http://localhost:8800/
-```
-
-It runs this Lua as is (screen, controls, clocks, PARAMS). The engine is `lib/Engine_Terrarium.js`:
-each SynthDef rebuilt in Web Audio around the same mi-UGens, compiled to WebAssembly by
-[norns-mi-UGens](https://github.com/carlosedp/norns-mi-UGens) (`./build.sh --wasm`) and kept in
-`lib/Engine_Terrarium/` (`make mi-wasm` rebuilds them). Every push to main publishes it to
-<https://carlosedp.github.io/terrarium/> (`.github/workflows/pages.yml`).
-
-## Tuning
-
-Each module's macro → parameter mapping is a table that `tune()` changes live from the maiden
-REPL, printing the result to paste back; PARAMS > levels balances the slots. See
-[doc/SOUND.md](doc/SOUND.md#tuning-on-the-norns) for the syntax and a first-night checklist.
-
-## To do on hardware
-
-- [ ] engine loads and every slot sounds; fix anything SuperCollider complains about
-- [ ] CPU with the heaviest combination (2 Plaits + Rings + Beads); pick voice count from it
-- [ ] screen frame time (the smoke test averages about 730 screen calls per frame and peaks around 1,550 with fog or a lightning flash; the pond's reflection is the main extra cost)
-- [ ] tune ranges and curves in each module's `sound()` by ear (doc/SOUND.md lists open questions)
-- [ ] visitors with a real synth: MIDI out, its audio back into the input (and the monitor level turned down)
-- [ ] grid: phrase editing, key/scale picker
+How it's built, testing without a norns, running it in a browser, tuning and what's left to do on
+hardware: see [doc/DEVELOPMENT.md](https://github.com/carlosedp/terrarium/blob/main/doc/DEVELOPMENT.md).
 
 ## Wallpapers
 
 The device under the night sky, for a desktop (3840 × 2160) or a phone (1179 × 2556), in the
-aluminium case or the black one. `make art` renders them again from the running script.
+aluminium case or the black one.
 
-| Scene                                                                                                                                                                    | Desktop                                                                                                             | Phone                                                                                                           |
-| ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| <img src="doc/art/wallpapers/meadow-desktop-alu.jpg" alt="Rain on a meadow and a pond, clouds, an aurora" width="320"><br>Rain on a meadow and a pond, clouds, an aurora | [aluminium](doc/art/wallpapers/meadow-desktop-alu.jpg) · [black](doc/art/wallpapers/meadow-desktop-black.jpg)       | [aluminium](doc/art/wallpapers/meadow-phone-alu.jpg) · [black](doc/art/wallpapers/meadow-phone-black.jpg)       |
-| <img src="doc/art/wallpapers/snow-desktop-alu.jpg" alt="Snow settling on crystals, mountains behind" width="320"><br>Snow settling on crystals, mountains behind         | [aluminium](doc/art/wallpapers/snow-desktop-alu.jpg) · [black](doc/art/wallpapers/snow-desktop-black.jpg)           | [aluminium](doc/art/wallpapers/snow-phone-alu.jpg) · [black](doc/art/wallpapers/snow-phone-black.jpg)           |
-| <img src="doc/art/wallpapers/fireflies-desktop-alu.jpg" alt="Reeds over a pond, fireflies in the dark" width="320"><br>Reeds over a pond, fireflies in the dark          | [aluminium](doc/art/wallpapers/fireflies-desktop-alu.jpg) · [black](doc/art/wallpapers/fireflies-desktop-black.jpg) | [aluminium](doc/art/wallpapers/fireflies-phone-alu.jpg) · [black](doc/art/wallpapers/fireflies-phone-black.jpg) |
+| Scene                                                                                                                                                                                                                               | Desktop                                                                                                                                                                                                                                   | Phone                                                                                                                                                                                                                                 |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| <img src="https://raw.githubusercontent.com/carlosedp/terrarium/main/doc/art/wallpapers/meadow-desktop-alu.jpg" alt="Rain on a meadow and a pond, clouds, an aurora" width="320"><br>Rain on a meadow and a pond, clouds, an aurora | [aluminium](https://raw.githubusercontent.com/carlosedp/terrarium/main/doc/art/wallpapers/meadow-desktop-alu.jpg) · [black](https://raw.githubusercontent.com/carlosedp/terrarium/main/doc/art/wallpapers/meadow-desktop-black.jpg)       | [aluminium](https://raw.githubusercontent.com/carlosedp/terrarium/main/doc/art/wallpapers/meadow-phone-alu.jpg) · [black](https://raw.githubusercontent.com/carlosedp/terrarium/main/doc/art/wallpapers/meadow-phone-black.jpg)       |
+| <img src="https://raw.githubusercontent.com/carlosedp/terrarium/main/doc/art/wallpapers/snow-desktop-alu.jpg" alt="Snow settling on crystals, mountains behind" width="320"><br>Snow settling on crystals, mountains behind         | [aluminium](https://raw.githubusercontent.com/carlosedp/terrarium/main/doc/art/wallpapers/snow-desktop-alu.jpg) · [black](https://raw.githubusercontent.com/carlosedp/terrarium/main/doc/art/wallpapers/snow-desktop-black.jpg)           | [aluminium](https://raw.githubusercontent.com/carlosedp/terrarium/main/doc/art/wallpapers/snow-phone-alu.jpg) · [black](https://raw.githubusercontent.com/carlosedp/terrarium/main/doc/art/wallpapers/snow-phone-black.jpg)           |
+| <img src="https://raw.githubusercontent.com/carlosedp/terrarium/main/doc/art/wallpapers/fireflies-desktop-alu.jpg" alt="Reeds over a pond, fireflies in the dark" width="320"><br>Reeds over a pond, fireflies in the dark          | [aluminium](https://raw.githubusercontent.com/carlosedp/terrarium/main/doc/art/wallpapers/fireflies-desktop-alu.jpg) · [black](https://raw.githubusercontent.com/carlosedp/terrarium/main/doc/art/wallpapers/fireflies-desktop-black.jpg) | [aluminium](https://raw.githubusercontent.com/carlosedp/terrarium/main/doc/art/wallpapers/fireflies-phone-alu.jpg) · [black](https://raw.githubusercontent.com/carlosedp/terrarium/main/doc/art/wallpapers/fireflies-phone-black.jpg) |
 
 ## License and copyright
 
-terrarium is made by [Voltage Foundry Modular](https://vfmod.com). © 2026 Voltage Foundry Modular.
+terrarium is made by [glassgarden](https://glassgarden.cc). © 2026 glassgarden.
 
-- **The code** is free software under the GNU GPL v3.0 (see [LICENSE](LICENSE)): you can use,
+- **The code** is free software under the GNU GPL v3.0 (see [LICENSE](https://github.com/carlosedp/terrarium/blob/main/LICENSE)): you can use,
   study, share and change it under its terms.
-- **The terrarium name, the manual and its images** are © 2026 Voltage Foundry Modular, all rights
+- **The terrarium name, the manual and its images** are © 2026 glassgarden, all rights
   reserved.
 - **Built on others' work:** the sound is Émilie Gillet's
   [Mutable Instruments code](https://github.com/pichenettes/eurorack), via Volker Böhm's
@@ -194,7 +119,7 @@ terrarium is made by [Voltage Foundry Modular](https://vfmod.com). © 2026 Volta
   from [norns-mi-UGens](https://github.com/carlosedp/norns-mi-UGens) (`BUILDINFO` there records
   the source).
   [wasmoon](https://github.com/ceifa/wasmoon) (MIT) is vendored in `tools/norns-web`. The plugin's
-  downloads carry [THIRD-PARTY-NOTICES.txt](THIRD-PARTY-NOTICES.txt), with the licences of all it
+  downloads carry [THIRD-PARTY-NOTICES.txt](https://github.com/carlosedp/terrarium/blob/main/THIRD-PARTY-NOTICES.txt), with the licences of all it
   includes.
 - Mutable Instruments, monome, norns and all other product names are trademarks of their
   respective owners, used only to identify what terrarium works with. No affiliation with or

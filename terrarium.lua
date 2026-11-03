@@ -12,10 +12,10 @@
 --
 -- needs mi-UGens
 --
--- by Voltage Foundry Modular
--- vfmod.com
+-- by glassgarden
+-- glassgarden.cc
 
--- Copyright (C) 2026 Voltage Foundry Modular. Free software under the GNU GPL v3.0
+-- Copyright (C) 2026 glassgarden. Free software under the GNU GPL v3.0
 -- (see LICENSE); the terrarium name, manual and images are all rights reserved.
 
 engine.name = "Terrarium"
