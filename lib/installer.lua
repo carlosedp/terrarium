@@ -12,18 +12,19 @@
 local REPO = "carlosedp/norns-mi-UGens"
 local URL = "https://github.com/" .. REPO .. "/releases/latest/download/mi-UGens-norns.tar.gz"
 local EXT = "/home/we/.local/share/SuperCollider/Extensions"
-local LOCAL_GLOB = "/home/we/dust/mi-UGens-norns*.tar.gz"
+local LOCAL_GLOB = _path.dust .. "mi-UGens-norns*.tar.gz"
 
 local installer = { ok = false, active = false, busy = false, lines = {} }
 local NEEDS = { "MiPlaits", "MiRings", "MiRipples", "MiClouds", "MiVerb", "MiBeads", "MiElements" }
 
-local function has(class)
-  return util.os_capture("find " .. EXT .. " -name " .. class .. ".sc 2>/dev/null | head -1") ~= ""
-end
-
+-- one look through Extensions for every class it needs (each a <Class>.sc file there)
 function installer.check()
+  local found = {}
+  for name in util.os_capture("find " .. EXT .. " -name 'Mi*.sc' 2>/dev/null", true):gmatch("([%w_]+)%.sc") do
+    found[name] = true
+  end
   installer.ok = true
-  for _, class in ipairs(NEEDS) do installer.ok = installer.ok and has(class) end
+  for _, class in ipairs(NEEDS) do installer.ok = installer.ok and found[class] == true end
   installer.lines = { "terrarium needs mi-UGens", "", "K3: download + install", "K2: install from dust/" }
 end
 

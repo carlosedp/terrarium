@@ -249,6 +249,11 @@ E1 picks a part, and the others dim for a moment so it's clear which one you're 
   move, and a norns left running all evening could burn them in. The whole picture drifts a
   pixel every four minutes around a small square (text moves with it), and after a minute with
   no touch the part dots fade out and the ground line dims a step.
+- **Every launch starts from the defaults (November 2026).** `init()` doesn't load the last
+  PSET: a launch plays the plain jar, and a saved terrarium comes back from PARAMS > PSET (its
+  load ends any visitors' notes still sounding). Loading the last one would be
+  `params:default()` before the bang; it was left out so a launch never surprises with
+  whatever was saved last, possibly visitors playing a MIDI device that isn't there.
 
 ## Open questions
 

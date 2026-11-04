@@ -26,11 +26,20 @@ local KINDS = { "ant", "beetle", "moth" }
 -- under snow (at full cover): the outside comes in less between notes
 visitors.muffle = { open = 0.6 }
 
-function visitors:add_params(changed)
+-- the device names, by port; the option keeps its index (the port), so PSETs keep their choice
+local function port_names()
   local ports = { "none" }
   for i = 1, 16 do ports[i + 1] = i .. ": " .. (midi.vports[i] and midi.vports[i].name or "none") end
-  params:add_option("visitors_midi", "visitors midi out", ports, 1)
+  return ports
+end
+
+function visitors:add_params(changed)
+  params:add_option("visitors_midi", "visitors midi out", port_names(), 1)
   params:add_number("visitors_channel", "visitors midi channel", 1, 16, 1)
+  -- a device plugged in (or out) later: its name shows up at the next frame, in PARAMS too
+  self.ports_changed = false
+  midi.add = function() self.ports_changed = true end
+  midi.remove = function() self.ports_changed = true end
 end
 
 -- the same device always brings the same kind of creature
@@ -74,8 +83,10 @@ function visitors:play(sc, note, vel)
   local key = port .. " " .. ch .. " " .. n
   dev:note_on(n, v, ch)
   self.held[key] = (self.held[key] or 0) + 1
+  local held = self.held -- stop() starts a new table: a note it ended is no longer this clock's
   clock.run(function()
     clock.sleep(seconds(sc))
+    if self.held ~= held or not held[key] then return end
     self.held[key] = self.held[key] - 1
     if self.held[key] <= 0 then -- a repeat of the same note ends with the last one
       self.held[key] = nil
@@ -106,6 +117,11 @@ function visitors:on_note(x, sc)
 end
 
 function visitors:update(dt, sc)
+  if self.ports_changed then
+    self.ports_changed = false
+    params:lookup_param("visitors_midi").options = port_names()
+    if _menu and _menu.rebuild_params then _menu.rebuild_params() end
+  end
   local name = params:string("visitors_midi")
   if name ~= self.device_name then -- another device: another kind of creature walks in
     self.device_name = name

@@ -9,7 +9,7 @@ local M = { now = 0, screen_calls = 0, engine_calls = {}, sets = {}, metros = {}
 local ROOT = (arg and arg[0] or ""):match("^(.*)/test/[^/]+$") or "."
 function include(path) return dofile(ROOT .. "/" .. path .. ".lua") end
 M.ROOT = ROOT
-_path = { code = ROOT .. "/" }
+_path = { code = ROOT .. "/", dust = "/home/we/dust/" }
 
 -- ---------- the time of day ----------
 -- always noon, so a run doesn't depend on when it happens (the day's "clock" follows it)
@@ -162,10 +162,15 @@ end
 -- ---------- util / norns ----------
 M.has_mi, M.has_beads = true, true
 util = {}
+-- find in Extensions: every class the installer needs, or none, or all but Beads
+local MI = { "MiPlaits", "MiRings", "MiRipples", "MiClouds", "MiVerb", "MiBeads", "MiElements" }
 function util.os_capture(cmd)
-  if cmd:match("^find .*MiBeads") then return M.has_beads and "/x/MiBeads.sc" or "" end
-  if cmd:match("^find ") then return M.has_mi and "/x/Mi.sc" or "" end
-  return ""
+  if not cmd:match("^find ") or not M.has_mi then return "" end
+  local out = {}
+  for _, c in ipairs(MI) do
+    if c ~= "MiBeads" or M.has_beads then out[#out + 1] = "/x/" .. c .. "/" .. c .. ".sc" end
+  end
+  return table.concat(out, "\n")
 end
 function util.acronym(s) return s:sub(1, 3) end
 function util.clamp(v, a, b) return math.max(a, math.min(b, v)) end

@@ -71,6 +71,20 @@ assert(M.midi_on > midi_before, "visitors: no notes went out over MIDI")
 assert((M.engine_calls.note or 0) > engine_before, "visitors: notes didn't open the input")
 assert(M.sets.voice_set.open > open_before, "visitors: E2 didn't open the input")
 assert(M.sets.voice_set.len and M.sets.voice_set.len > 0, "visitors: no note length for the input")
+-- a PSET loaded with notes still sounding: they end then, and their own note-off clocks,
+-- waking after, leave alone what the new table holds (and don't fail)
+params:set("visitors_length", 1)
+key(3, 1); key(3, 0) -- a strike: a note that rings about a second
+local sounding = M.midi_held
+params.action_read()
+assert(sounding > 0 and M.midi_held < sounding, "visitors: a PSET load didn't end the sounding notes")
+M.run(0.3) -- notes played since, still sounding
+M.run(5)
+-- a device plugged in later: its name in the option at the next frame, its index kept
+midi.vports[2].name = "late synth"; midi.add({})
+M.run(0.1)
+assert(params:lookup_param("visitors_midi").options[3] == "2: late synth", "visitors: a new MIDI device's name didn't show")
+midi.vports[2].name = "none"; midi.remove({}); M.run(0.1)
 params:set("visitors_midi", 1); M.run(5) -- no device now; longer than any note: all ended
 assert(M.midi_held == 0, ("visitors: %d MIDI notes left hanging"):format(M.midi_held))
 check(("visitors over MIDI (%d notes)"):format(M.midi_on - midi_before))

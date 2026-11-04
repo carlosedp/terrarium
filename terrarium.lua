@@ -107,8 +107,8 @@ function sc.m(i, k)
   if not moving() then return v end
   if Climate.on() then
     local mod = sc.cur(i)
-    local cv = params:get(mod.id .. "_" .. mod.macros[k].id .. "_cv")
-    v = v + cv * 0.5 * Climate.out[CV_SRC[i][k]]
+    local amt = params:get(mod.id .. "_" .. mod.macros[k].id .. "_cv")
+    v = v + amt * 0.5 * Climate.out[CV_SRC[i][k]]
   end
   v = v + Day.offset(i, k)
   return H.clamp(math.floor(v * 200 + 0.5) / 200, 0, 1)
