@@ -315,7 +315,7 @@ for k = 1, 16 do
   if brain.reg[k].keep then lingered = lingered + 1 end
 end
 M.run(60)
-for k = 1, 16 do assert(not brain.reg[k].keep, "a note lingered on the old key") end
+for k = 1, 16 do assert(not (brain.reg[k] and brain.reg[k].keep), "a note lingered on the old key") end -- (false: a rest)
 check(("season: %d notes came in one by one"):format(lingered))
 
 -- with the day on, the season turns at its points (slow: dawn), not every so many phrases

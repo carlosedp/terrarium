@@ -190,13 +190,22 @@ function util.acronym(s) return s:sub(1, 3) end
 function util.clamp(v, a, b) return math.max(a, math.min(b, v)) end
 tab = {}
 function tab.invert(t) local r = {} for k, v in pairs(t) do r[v] = k end return r end
--- one MIDI device on port 1, counting the notes it's sent and how many still sound
+-- one MIDI device on port 1, counting the notes it's sent and how many still sound. Like a
+-- synth, a pitch sounds or doesn't: a second note on of it changes nothing, one note off ends it
 M.midi_on, M.midi_held = 0, 0
+local sounding = {}
 midi = { vports = {} }
 for i = 1, 16 do midi.vports[i] = { name = i == 1 and "test synth" or "none" } end
 local midi_dev = {
-  note_on = function() M.midi_on = M.midi_on + 1; M.midi_held = M.midi_held + 1 end,
-  note_off = function() M.midi_held = M.midi_held - 1 end,
+  note_on = function(_, n, v, ch)
+    M.midi_on = M.midi_on + 1
+    local k = (ch or 1) .. " " .. n
+    if not sounding[k] then sounding[k] = true; M.midi_held = M.midi_held + 1 end
+  end,
+  note_off = function(_, n, v, ch)
+    local k = (ch or 1) .. " " .. n
+    if sounding[k] then sounding[k] = nil; M.midi_held = M.midi_held - 1 end
+  end,
 }
 function midi.connect(port) return midi_dev end
 _menu = { rebuild_params = function() end }
