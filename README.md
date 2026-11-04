@@ -79,9 +79,10 @@ meltwater drips a few soft notes) and the night lets it build up again.
 **Breath** (a setting, gentle by default) adds silence: now and then the weather calms for a phrase
 or three, notes rest (the phrase keeps them) and their marks dim, then it breathes in again.
 
-**Presets:** norns saves them for you: in the norns menu, PARAMS > PSET > save / load. A preset
-holds everything, including modules, variants, settings, levels, and whether the air is frozen
-or the hum hushed.
+**Presets:** the jar you leave (for another script, or SLEEP) comes back the next time you open
+terrarium; PARAMS > reset the jar brings back the plain one. To keep more than one, norns saves
+presets for you: in the norns menu, PARAMS > PSET > save / load. A preset holds everything,
+including modules, variants, settings, levels, and whether the air is frozen or the hum hushed.
 
 A quick tap of K1 still opens the norns menu. Settings (key, scale, range, length, seasons,
 climate, drift, day, breath, erosion),

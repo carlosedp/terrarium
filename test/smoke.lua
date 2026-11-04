@@ -351,6 +351,55 @@ for c = 2, #params:lookup_param("t_climate").options do
 end
 params:set("t_climate", 1)
 
+-- PARAMS > reset the jar: every param as a first launch has it, after any scrambling
+local LAST = norns.state.data .. "last.pset"
+local fresh = { "brain_kind", "voice_kind", "color_kind", "air_kind", "drone_kind", "t_root", "t_scale",
+  "t_seasons", "t_day", "air_freeze", "drone_hush", "meadow_harmonics", "level_drone" }
+assert(not util.file_exists(LAST), "a jar was saved before any cleanup")
+M.relaunch() -- a first launch: nothing saved, so every param at its default
+dofile(M.ROOT .. "/terrarium.lua")
+init()
+local want = {}
+for _, id in ipairs(fresh) do want[id] = params:get(id) end
+for _ = 1, 3 do hold1(function() press(3) end) end
+params:set("air_freeze", 2); params:set("t_day", 2); params:set("level_drone", -20)
+params:set("t_reset", 1); M.run(0.5)
+for _, id in ipairs(fresh) do
+  assert(params:get(id) == want[id], ("reset: %s is %s, not %s"):format(id, params:get(id), want[id]))
+end
+check("PARAMS > reset the jar")
+
+-- the jar you left comes back: saved at cleanup (another script, SLEEP), read at launch
+params:set("voice_kind", 2); params:set("drone_kind", 2); params:set("drone_hush", 2)
+params:set("crystals_ratio", 0.83); params:set("t_root", 5); params:set("level_air", -7)
+local left = {}
+for _, id in ipairs({ "voice_kind", "drone_kind", "drone_hush", "crystals_ratio", "t_root", "level_air" }) do
+  left[id] = params:get(id)
+end
+M.run(1)
+cleanup()
+assert(util.file_exists(LAST), "cleanup didn't save the jar")
+M.relaunch()
+dofile(M.ROOT .. "/terrarium.lua")
+init()
+M.run(1)
+for id, v in pairs(left) do
+  assert(params:get(id) == v, ("resume: %s came back as %s, not %s"):format(id, params:get(id), v))
+end
+assert(M.last_engine and M.sets.voice_set, "resume: nothing sent to the engine")
+-- the browser and the plugin keep their own state: no reading or writing there
+cleanup()
+local saved = M.files[LAST]
+norns.version = { update = "norns-web" }
+M.relaunch()
+dofile(M.ROOT .. "/terrarium.lua")
+init()
+assert(params:get("voice_kind") == 1, "norns-web: the saved jar was read")
+params:set("voice_kind", 3); cleanup()
+assert(M.files[LAST] == saved, "norns-web: a jar was saved")
+norns.version = nil
+check("the last jar, back at launch")
+
 -- an older mi-UGens install without Beads: the installer, like none at all
 M.relaunch()
 M.has_beads = false
@@ -371,6 +420,9 @@ init()
 key(3, 1); key(3, 0)
 assert(loaded.last_system_cmd and loaded.last_system_cmd:match("install.sh"), "installer did not run install.sh")
 M.run(0.5)
+local kept = M.files[LAST]
+cleanup() -- no params on the installer's screen: the jar saved before stays as it was
+assert(kept and M.files[LAST] == kept, "the installer's cleanup touched the saved jar")
 check("installer path (no mi-UGens)")
 
 print(("\nframes: %d, screen calls per frame: avg %.0f, max %d"):format(

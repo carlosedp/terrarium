@@ -478,7 +478,12 @@ deepens, more dust settles on the jar's glass, and now and then a speck pops wit
 
 ## Saving what you like
 
-norns keeps presets for you. In the norns menu (a quick tap of K1), go to **PARAMS**, and
+Terrarium remembers the jar you leave. Open another script or put the norns to sleep, and the
+next time you open terrarium it's just as you left it. To start again from the plain jar, go to
+**PARAMS > reset the jar**. (Pulling the power skips this: the jar comes back as you last left
+it properly.)
+
+To keep more than one, norns keeps presets for you. In the norns menu (a quick tap of K1), go to **PARAMS**, and
 **PSET** is at the top: _save_, _load_, _delete_. A preset remembers everything: which modules
 live in each part, their varieties, every knob, the settings, and even whether the air is frozen
 or the hum hushed.

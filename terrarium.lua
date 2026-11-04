@@ -144,6 +144,12 @@ local sent = { {}, {}, {}, {} } -- last values sent to the engine, per slot
 local seasoning = false
 local redraw_metro
 
+-- the jar you left: saved on the way out (another script, SLEEP), back at the next launch.
+-- Only on a norns: the plugin's DAW and the browser keep their own.
+local LAST = "last.pset" -- in norns.state.data, apart from the numbered PSETs
+local function resumes() return not (norns.version and norns.version.update == "norns-web") end
+local defaults -- every param as first added: { index, id, value }, for PARAMS > reset the jar
+
 -- names on touch: what an encoder just moved, shown for a moment, never resting on screen
 local hud, hud_t = nil, 0 -- { part = i } after E1, { part = i, k = macro } after E2/E3
 local HUD_SEC, HUD_PART_SEC, HUD_BAR = 1.2, 2.5, 20 -- after E1 the names stay as long as the dimming
@@ -159,7 +165,7 @@ local function at(x, y) screen.move(x + cv.ox, y + cv.oy) end
 
 local function say(text) toast, toast_t, hud_t = text, 1.8, 0 end
 local function touched(t) hud, hud_t, toast_t = t, t.k and HUD_SEC or HUD_PART_SEC, 0 end
-local scramble -- a new terrarium (below)
+local scramble, reset -- a new terrarium, the plain one (below)
 local function focus() focus_t = 2.5 end
 
 -- ---------- sound ----------
@@ -281,6 +287,8 @@ local function add_params()
   params:add_separator("terrarium", "terrarium")
   params:add_trigger("t_randomize", "randomize the jar")
   params:set_action("t_randomize", function() scramble() end)
+  params:add_trigger("t_reset", "reset the jar")
+  params:set_action("t_reset", function() reset() end)
   params:add_group("terrarium_levels", "levels", #LEVELS)
   for _, l in ipairs(LEVELS) do
     params:add_control(l[1], l[2], controlspec.new(-60, 6, "lin", 0, l[4], "dB", 0.01))
@@ -405,6 +413,26 @@ scramble = function()
   params:set("t_range", math.random(1, 3))
   Brain.season_t = sc.t -- the light sweeps along the ground, like a season turning
   say("new: " .. Brain.key_name())
+end
+
+-- PARAMS > reset the jar: every param back to how a first launch has it (the day too, and
+-- the levels). The triggers aren't values; the rest is whatever add_params left them at.
+local TRIGGERS = { t_randomize = true, t_reset = true }
+local function snapshot()
+  local list = {}
+  for id, i in pairs(params.lookup) do
+    if not TRIGGERS[id] then
+      local ok, v = pcall(params.get, params, id) -- separators and groups have no value
+      if ok and type(v) == "number" then list[#list + 1] = { i, id, v } end
+    end
+  end
+  table.sort(list, function(a, b) return a[1] < b[1] end)
+  return list
+end
+
+reset = function()
+  for _, d in ipairs(defaults) do params:set(d[2], d[3]) end
+  say("the plain jar")
 end
 
 -- ---------- tuning from maiden ----------
@@ -749,6 +777,9 @@ function init()
     return
   end
   add_params()
+  defaults = snapshot()
+  local last = norns.state.data .. LAST
+  if resumes() and util.file_exists(last) then params:read(last, true) end -- silent: one bang
   params:bang()
   Brain.new_phrase(sc.t)
   clock.run(brain_loop)
@@ -759,4 +790,6 @@ end
 function cleanup()
   if redraw_metro then redraw_metro:stop() end
   stop_notes()
+  -- (not from the installer's screen: no params then, and the jar saved before stays)
+  if defaults and resumes() then params:write(norns.state.data .. LAST, "last") end
 end

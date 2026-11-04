@@ -113,6 +113,20 @@ function P:string(id)
   if p.formatter then return p.formatter({ get = function() return p.value end }) end
   return tostring(p.value)
 end
+-- PSETs by path, kept in memory across relaunches (M.files), as a norns keeps dust/data
+M.files = {}
+function P:write(path, name)
+  local t = {}
+  for _, p in ipairs(self.list) do if p.kind ~= "trigger" then t[p.id] = p.value end end
+  M.files[path] = t
+  if self.action_write then self.action_write(path, name) end
+end
+function P:read(path, silent)
+  local t = M.files[path]
+  if not t then return end
+  for id, v in pairs(t) do if self.by_id[id] then self:set(id, v, silent) end end
+  if self.action_read then self.action_read(path, silent) end
+end
 -- like norns, bang skips triggers (a trigger's action is a one-off, like "randomize")
 function P:bang() for _, p in ipairs(self.list) do if p.action and p.kind ~= "trigger" then p.action(p.value) end end end
 function P:check_groups()
@@ -187,7 +201,8 @@ local midi_dev = {
 function midi.connect(port) return midi_dev end
 _menu = { rebuild_params = function() end }
 
-norns = { system_cmd = function(cmd, cb) M.last_system_cmd = cmd; if cb then cb("installed: MiPlaits\nexit=0") end end }
+function util.file_exists(path) return M.files[path] ~= nil end
+norns = { state = { data = "/home/we/dust/data/terrarium/" }, system_cmd = function(cmd, cb) M.last_system_cmd = cmd; if cb then cb("installed: MiPlaits\nexit=0") end end }
 
 -- run the frame metro and clocks for `sec` seconds of simulated time
 function M.run(sec)
